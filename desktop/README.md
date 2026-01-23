@@ -117,6 +117,12 @@ Build for macOS:
 npm run build:mac
 ```
 
+Build DMG only:
+
+```bash
+npm run build:dmg
+```
+
 Build for Windows:
 
 ```bash

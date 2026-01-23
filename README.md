@@ -113,7 +113,11 @@ claude-monitor/
 │   ├── index.html              # Renderer
 │   ├── package.json            # npm dependencies
 │   ├── start.sh                # Startup script
-│   └── README.md               # Desktop app documentation
+│   ├── README.md               # Desktop app documentation
+│   └── assets/                 # Application icons
+│       ├── icon.png            # Linux icon (512x512)
+│       ├── icon.icns           # macOS icon
+│       └── icon.ico            # Windows icon
 └── README.md                   # This document
 ```
 
