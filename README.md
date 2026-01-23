@@ -102,8 +102,26 @@ claude-status-display/
 ├── claude-status-display.ino   # 메인 코드
 ├── sprites.h                   # 캐릭터 그리기 함수
 ├── User_Setup.h                # TFT 디스플레이 설정
+├── simulator/                  # 웹 시뮬레이터
+│   └── index.html              # 브라우저에서 테스트
 └── README.md                   # 이 문서
 ```
+
+## 시뮬레이터
+
+하드웨어 없이 브라우저에서 디스플레이를 미리 볼 수 있습니다.
+
+```bash
+# 시뮬레이터 실행
+open simulator/index.html
+# 또는 브라우저에서 파일 열기
+```
+
+시뮬레이터 기능:
+- 5가지 상태 버튼으로 전환 테스트
+- Project/Tool 이름 입력
+- JSON 페이로드 미리보기
+- 실시간 애니메이션 (깜빡임, 로딩 점, 반짝이)
 
 ## WiFi 모드 (선택사항)
 
@@ -163,5 +181,5 @@ screen /dev/cu.usbmodem1101 115200
 
 ## 버전 히스토리
 
-- **v2.0**: 픽셀 아트 캐릭터 버전 (Claude 마스코트)
+- **v2.0**: 픽셀 아트 캐릭터 버전 (Claude 마스코트, 128x128, 웹 시뮬레이터)
 - **v1.0**: 원형 상태 표시 버전
