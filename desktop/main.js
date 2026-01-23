@@ -136,6 +136,18 @@ function updateState(data) {
   updateTrayMenu();
 }
 
+// 창을 보이게 하고 우측 상단으로 이동
+function showAndPositionWindow() {
+  if (mainWindow) {
+    const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
+    mainWindow.setPosition(screenWidth - 172, 20);
+    mainWindow.show();
+    mainWindow.focus();
+    return true;
+  }
+  return false;
+}
+
 function startHttpServer() {
   httpServer = http.createServer((req, res) => {
     // CORS headers
@@ -169,6 +181,10 @@ function startHttpServer() {
     } else if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'ok' }));
+    } else if (req.method === 'POST' && req.url === '/show') {
+      const shown = showAndPositionWindow();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: shown }));
     } else {
       res.writeHead(404);
       res.end('Not Found');
