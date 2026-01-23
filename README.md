@@ -102,11 +102,16 @@ claude-monitor/
 ├── claude-monitor.ino          # Main firmware
 ├── sprites.h                   # Character drawing functions
 ├── User_Setup.h                # TFT display configuration
+├── CLAUDE.md                   # AI development guidelines
 ├── simulator/                  # Web simulator
 │   └── index.html              # Browser testing
 ├── desktop/                    # Electron desktop app
-│   ├── main.js                 # Main process
-│   └── index.html              # Renderer
+│   ├── main.js                 # Main process (HTTP server)
+│   ├── preload.js              # IPC bridge
+│   ├── index.html              # Renderer
+│   ├── package.json            # npm dependencies
+│   ├── start.sh                # Startup script
+│   └── README.md               # Desktop app documentation
 └── README.md                   # This document
 ```
 
