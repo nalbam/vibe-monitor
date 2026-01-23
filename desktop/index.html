@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background: transparent;
+      overflow: hidden;
+    }
+
+    /* Draggable title bar */
+    .title-bar {
+      -webkit-app-region: drag;
+      height: 28px;
+      background: rgba(45, 45, 45, 0.95);
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      justify-content: space-between;
+    }
+
+    .title-bar-buttons {
+      -webkit-app-region: no-drag;
+      display: flex;
+      gap: 8px;
+    }
+
+    .title-bar-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-close {
+      background: #ff5f57;
+    }
+
+    .btn-close:hover {
+      background: #ff3b30;
+    }
+
+    .btn-minimize {
+      background: #febc2e;
+    }
+
+    .btn-minimize:hover {
+      background: #ff9500;
+    }
+
+    .title-text {
+      color: #888;
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Device Frame */
+    .device-frame {
+      background: rgba(45, 45, 45, 0.95);
+      padding: 0;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    /* Display Screen */
+    .display {
+      width: 172px;
+      height: 320px;
+      background: #000;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+
+    /* Character Canvas - 128x128, centered */
+    #character-canvas {
+      position: absolute;
+      top: 20px;
+      left: 22px;
+      width: 128px;
+      height: 128px;
+      image-rendering: pixelated;
+    }
+
+    /* Status Text */
+    .status-text {
+      position: absolute;
+      top: 160px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+    }
+
+    /* Loading Dots */
+    .loading-dots {
+      position: absolute;
+      top: 195px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7BEF7B;
+      transition: background 0.1s;
+    }
+
+    .dot.dim {
+      background: #3a3a3a;
+    }
+
+    /* Info Text */
+    .info-text {
+      position: absolute;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: white;
+      left: 10px;
+    }
+
+    .project-text {
+      top: 235px;
+    }
+
+    .tool-text {
+      top: 255px;
+    }
+
+    .brand-text {
+      top: 295px;
+      color: #7BEF7B;
+    }
+
+    .info-label {
+      color: white;
+    }
+
+    .info-value {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <!-- Draggable Title Bar -->
+  <div class="title-bar">
+    <div class="title-bar-buttons">
+      <button class="title-bar-btn btn-close" onclick="window.electronAPI.closeWindow()"></button>
+      <button class="title-bar-btn btn-minimize" onclick="window.electronAPI.minimizeWindow()"></button>
+    </div>
+    <span class="title-text">Claude</span>
+    <div style="width: 20px;"></div>
+  </div>
+
+  <!-- Display -->
+  <div class="device-frame">
+    <div class="display" id="display">
+      <canvas id="character-canvas" width="128" height="128"></canvas>
+      <div class="status-text" id="status-text">Ready</div>
+      <div class="loading-dots" id="loading-dots">
+        <div class="dot dim"></div>
+        <div class="dot dim"></div>
+        <div class="dot dim"></div>
+        <div class="dot dim"></div>
+      </div>
+      <div class="info-text project-text">
+        <span class="info-label">Project: </span>
+        <span class="info-value" id="project-value">-</span>
+      </div>
+      <div class="info-text tool-text" id="tool-line">
+        <span class="info-label">Tool: </span>
+        <span class="info-value" id="tool-value">-</span>
+      </div>
+      <div class="info-text brand-text">Claude Monitor</div>
+    </div>
+  </div>
+
+  <script>
+    // Character size (128x128, doubled from 64)
+    const CHAR_SIZE = 128;
+    const SCALE = 2;
+
+    // State configuration
+    const states = {
+      idle: {
+        bgColor: '#00AA00',
+        text: 'Ready',
+        eyeType: 'normal',
+        showLoading: false,
+        textColor: '#FFFFFF'
+      },
+      working: {
+        bgColor: '#0066CC',
+        text: 'Working',
+        eyeType: 'focused',
+        showLoading: true,
+        textColor: '#FFFFFF'
+      },
+      notification: {
+        bgColor: '#FFCC00',
+        text: 'Input?',
+        eyeType: 'alert',
+        showLoading: false,
+        textColor: '#000000'
+      },
+      session_start: {
+        bgColor: '#00CCCC',
+        text: 'Hello!',
+        eyeType: 'sparkle',
+        showLoading: false,
+        textColor: '#000000'
+      },
+      tool_done: {
+        bgColor: '#00AA00',
+        text: 'Done!',
+        eyeType: 'happy',
+        showLoading: false,
+        textColor: '#FFFFFF'
+      }
+    };
+
+    // Colors
+    const COLOR_CLAUDE = '#E07B39';
+    const COLOR_EYE = '#000000';
+    const COLOR_WHITE = '#FFFFFF';
+
+    // Current state
+    let currentState = 'idle';
+    let currentProject = '-';
+    let currentTool = '-';
+    let animFrame = 0;
+    let blinkFrame = 0;
+
+    // Canvas
+    const canvas = document.getElementById('character-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Helper: draw scaled rect
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x * SCALE, y * SCALE, w * SCALE, h * SCALE);
+    }
+
+    // Initialize
+    function init() {
+      updateDisplay();
+      startAnimation();
+
+      // Listen for state updates from main process
+      if (window.electronAPI) {
+        window.electronAPI.onStateUpdate((data) => {
+          if (data.state) currentState = data.state;
+          if (data.project) currentProject = data.project;
+          if (data.tool) currentTool = data.tool;
+          updateDisplay();
+        });
+      }
+    }
+
+    // Update display
+    function updateDisplay() {
+      const state = states[currentState] || states.idle;
+      const display = document.getElementById('display');
+      const statusText = document.getElementById('status-text');
+      const loadingDots = document.getElementById('loading-dots');
+      const toolLine = document.getElementById('tool-line');
+      const projectValue = document.getElementById('project-value');
+      const toolValue = document.getElementById('tool-value');
+
+      // Update background
+      display.style.background = state.bgColor;
+
+      // Update text and color
+      statusText.textContent = state.text;
+      statusText.style.color = state.textColor;
+
+      // Update loading dots visibility
+      loadingDots.style.display = state.showLoading ? 'flex' : 'none';
+
+      // Update tool line visibility
+      toolLine.style.display = currentState === 'working' ? 'block' : 'none';
+
+      // Update values
+      const displayProject = currentProject.length > 16
+        ? currentProject.substring(0, 13) + '...'
+        : currentProject;
+      projectValue.textContent = displayProject;
+      toolValue.textContent = currentTool;
+
+      // Update all text colors based on state
+      document.querySelectorAll('.info-text').forEach(el => {
+        el.style.color = state.textColor;
+      });
+      document.querySelectorAll('.info-label').forEach(el => {
+        el.style.color = state.textColor;
+      });
+      document.querySelectorAll('.info-value').forEach(el => {
+        el.style.color = state.textColor;
+      });
+
+      // Draw character
+      drawCharacter(state.eyeType);
+    }
+
+    // Draw character (128x128, scaled 2x from 64x64)
+    function drawCharacter(eyeType) {
+      const state = states[currentState] || states.idle;
+
+      // Clear with background color
+      ctx.fillStyle = state.bgColor;
+      ctx.fillRect(0, 0, CHAR_SIZE, CHAR_SIZE);
+
+      // Main body (wider: 52x36)
+      drawRect(6, 8, 52, 36, COLOR_CLAUDE);
+
+      // Arms (attached to body: 6x10)
+      drawRect(0, 22, 6, 10, COLOR_CLAUDE);
+      drawRect(58, 22, 6, 10, COLOR_CLAUDE);
+
+      // Legs (4 legs)
+      drawRect(10, 44, 6, 12, COLOR_CLAUDE);
+      drawRect(18, 44, 6, 12, COLOR_CLAUDE);
+      drawRect(40, 44, 6, 12, COLOR_CLAUDE);
+      drawRect(48, 44, 6, 12, COLOR_CLAUDE);
+
+      // Draw eyes
+      drawEyes(eyeType);
+    }
+
+    // Draw eyes (scaled 2x)
+    function drawEyes(eyeType) {
+      const leftX = 14;
+      const rightX = 44;
+      const eyeY = 22;
+
+      switch (eyeType) {
+        case 'normal':
+          drawRect(leftX, eyeY, 6, 6, COLOR_EYE);
+          drawRect(rightX, eyeY, 6, 6, COLOR_EYE);
+          break;
+
+        case 'focused':
+          drawRect(leftX, eyeY + 2, 6, 3, COLOR_EYE);
+          drawRect(rightX, eyeY + 2, 6, 3, COLOR_EYE);
+          break;
+
+        case 'alert':
+          drawRect(leftX + 1, eyeY, 4, 6, COLOR_EYE);
+          drawRect(leftX, eyeY + 1, 6, 4, COLOR_EYE);
+          drawRect(rightX + 1, eyeY, 4, 6, COLOR_EYE);
+          drawRect(rightX, eyeY + 1, 6, 4, COLOR_EYE);
+          drawQuestionMark(50, 2);
+          break;
+
+        case 'sparkle':
+          drawRect(leftX, eyeY, 6, 6, COLOR_EYE);
+          drawRect(rightX, eyeY, 6, 6, COLOR_EYE);
+          drawSparkle(50, 8);
+          break;
+
+        case 'happy':
+          drawRect(leftX + 2, eyeY, 2, 2, COLOR_EYE);
+          drawRect(leftX + 1, eyeY + 2, 2, 2, COLOR_EYE);
+          drawRect(leftX + 3, eyeY + 2, 2, 2, COLOR_EYE);
+          drawRect(leftX, eyeY + 4, 2, 2, COLOR_EYE);
+          drawRect(leftX + 4, eyeY + 4, 2, 2, COLOR_EYE);
+          drawRect(rightX + 2, eyeY, 2, 2, COLOR_EYE);
+          drawRect(rightX + 1, eyeY + 2, 2, 2, COLOR_EYE);
+          drawRect(rightX + 3, eyeY + 2, 2, 2, COLOR_EYE);
+          drawRect(rightX, eyeY + 4, 2, 2, COLOR_EYE);
+          drawRect(rightX + 4, eyeY + 4, 2, 2, COLOR_EYE);
+          break;
+
+        case 'blink':
+          drawRect(leftX, eyeY + 2, 6, 2, COLOR_EYE);
+          drawRect(rightX, eyeY + 2, 6, 2, COLOR_EYE);
+          break;
+      }
+    }
+
+    // Draw sparkle (scaled 2x)
+    function drawSparkle(x, y) {
+      const frame = animFrame % 4;
+      drawRect(x + 2, y + 2, 2, 2, COLOR_WHITE);
+
+      if (frame === 0 || frame === 2) {
+        drawRect(x + 2, y, 2, 2, COLOR_WHITE);
+        drawRect(x + 2, y + 4, 2, 2, COLOR_WHITE);
+        drawRect(x, y + 2, 2, 2, COLOR_WHITE);
+        drawRect(x + 4, y + 2, 2, 2, COLOR_WHITE);
+      } else {
+        drawRect(x, y, 2, 2, COLOR_WHITE);
+        drawRect(x + 4, y, 2, 2, COLOR_WHITE);
+        drawRect(x, y + 4, 2, 2, COLOR_WHITE);
+        drawRect(x + 4, y + 4, 2, 2, COLOR_WHITE);
+      }
+    }
+
+    function drawQuestionMark(x, y) {
+      const color = '#000000';
+      drawRect(x + 1, y, 4, 2, color);
+      drawRect(x + 4, y + 2, 2, 2, color);
+      drawRect(x + 2, y + 4, 2, 2, color);
+      drawRect(x + 2, y + 6, 2, 2, color);
+      drawRect(x + 2, y + 10, 2, 2, color);
+    }
+
+    // Animation loop
+    function startAnimation() {
+      setInterval(() => {
+        animFrame++;
+
+        if (currentState === 'working') {
+          updateLoadingDots();
+        }
+
+        if (currentState === 'session_start') {
+          drawCharacter('sparkle');
+        }
+
+        if (currentState === 'idle') {
+          blinkFrame++;
+          if (blinkFrame === 30) {
+            drawCharacter('blink');
+          } else if (blinkFrame === 31) {
+            drawCharacter('normal');
+            blinkFrame = 0;
+          }
+        }
+      }, 100);
+    }
+
+    // Update loading dots
+    function updateLoadingDots() {
+      const dots = document.querySelectorAll('.dot');
+      const activeIndex = animFrame % 4;
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('dim', i !== activeIndex);
+      });
+    }
+
+    // Initialize on load
+    window.onload = init;
+  </script>
+</body>
+</html>

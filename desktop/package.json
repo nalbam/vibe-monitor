@@ -1,0 +1,33 @@
+{
+  "name": "claude-monitor-desktop",
+  "version": "1.0.0",
+  "description": "Claude Code Status Monitor - Frameless Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:dmg": "electron-builder --mac dmg"
+  },
+  "author": "nalbam",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.nalbam.claude-monitor",
+    "productName": "Claude Monitor",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "assets/icon.icns",
+      "target": ["dmg", "zip"]
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**/*"
+    ]
+  }
+}

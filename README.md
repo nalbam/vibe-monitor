@@ -99,12 +99,14 @@ ls /dev/ttyUSB* /dev/ttyACM*
 
 ```
 claude-monitor/
-├── claude-monitor.ino          # Main code
+├── claude-monitor.ino          # Main firmware
 ├── sprites.h                   # Character drawing functions
 ├── User_Setup.h                # TFT display configuration
 ├── simulator/                  # Web simulator
 │   └── index.html              # Browser testing
-├── CLAUDE.md                   # AI development guide
+├── desktop/                    # Electron desktop app
+│   ├── main.js                 # Main process
+│   └── index.html              # Renderer
 └── README.md                   # This document
 ```
 
@@ -124,6 +126,49 @@ Simulator features:
 - Input Project/Tool names
 - JSON payload preview
 - Real-time animations (blink, loading dots, sparkle)
+
+## Desktop App (macOS)
+
+Frameless desktop app for monitoring Claude Code status.
+
+### Quick Start
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+### Features
+
+- **Frameless window**: Clean floating design
+- **Always on Top**: Stays above other windows
+- **System Tray**: Quick control from menubar
+- **HTTP API**: Easy integration with Claude Code hooks (port 19280)
+- **Draggable**: Move window anywhere
+
+### Claude Code Hooks Integration
+
+Desktop app support is integrated into `claude-config/hooks/esp32-status.sh`.
+
+The hook sends status updates to:
+1. **Desktop App** (`http://127.0.0.1:19280`) - always attempted first
+2. **ESP32 USB Serial** - if configured
+3. **ESP32 HTTP** - if configured
+
+Just run the desktop app and use Claude Code with the configured hooks.
+
+### HTTP API
+
+```bash
+# Update status
+curl -X POST http://127.0.0.1:19280/status \
+  -H "Content-Type: application/json" \
+  -d '{"state":"working","tool":"Bash","project":"my-project"}'
+
+# Get current status
+curl http://127.0.0.1:19280/status
+```
 
 ## WiFi Mode (Optional)
 
