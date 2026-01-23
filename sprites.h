@@ -123,6 +123,8 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType) {
       tft.fillRect(leftEyeX, eyeY + (1 * SCALE), 6 * SCALE, 4 * SCALE, COLOR_EYE);
       tft.fillRect(rightEyeX + (1 * SCALE), eyeY, 4 * SCALE, 6 * SCALE, COLOR_EYE);
       tft.fillRect(rightEyeX, eyeY + (1 * SCALE), 6 * SCALE, 4 * SCALE, COLOR_EYE);
+      // Question mark above head
+      drawQuestionMark(tft, x + (50 * SCALE), y + (2 * SCALE));
       break;
 
     case EYE_SPARKLE:
@@ -175,6 +177,24 @@ void drawSparkle(TFT_eSPI &tft, int x, int y) {
     tft.fillRect(x, y + (4 * SCALE), 2 * SCALE, 2 * SCALE, sparkleColor);
     tft.fillRect(x + (4 * SCALE), y + (4 * SCALE), 2 * SCALE, 2 * SCALE, sparkleColor);
   }
+}
+
+// Draw question mark effect (scaled 2x)
+void drawQuestionMark(TFT_eSPI &tft, int x, int y) {
+  uint16_t color = TFT_BLACK;  // Dark on yellow background
+
+  // Question mark shape (6x10 pixels, scaled)
+  //   ████
+  //       ██
+  //     ██
+  //     ██
+  //
+  //     ██
+  tft.fillRect(x + (1 * SCALE), y, 4 * SCALE, 2 * SCALE, color);              // Top curve
+  tft.fillRect(x + (4 * SCALE), y + (2 * SCALE), 2 * SCALE, 2 * SCALE, color); // Right side
+  tft.fillRect(x + (2 * SCALE), y + (4 * SCALE), 2 * SCALE, 2 * SCALE, color); // Middle
+  tft.fillRect(x + (2 * SCALE), y + (6 * SCALE), 2 * SCALE, 2 * SCALE, color); // Lower middle
+  tft.fillRect(x + (2 * SCALE), y + (10 * SCALE), 2 * SCALE, 2 * SCALE, color); // Dot
 }
 
 // Draw loading dots animation

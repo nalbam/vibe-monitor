@@ -543,6 +543,8 @@
           drawRect(leftX, eyeY + 1, 6, 4, COLOR_EYE);
           drawRect(rightX + 1, eyeY, 4, 6, COLOR_EYE);
           drawRect(rightX, eyeY + 1, 6, 4, COLOR_EYE);
+          // Question mark above head
+          drawQuestionMark(50, 2);
           break;
 
         case 'sparkle':
@@ -596,6 +598,17 @@
         drawRect(x, y + 4, 2, 2, COLOR_WHITE);
         drawRect(x + 4, y + 4, 2, 2, COLOR_WHITE);
       }
+    }
+
+    function drawQuestionMark(x, y) {
+      const color = '#000000';  // Dark on yellow background
+
+      // Question mark shape
+      drawRect(x + 1, y, 4, 2, color);        // Top curve
+      drawRect(x + 4, y + 2, 2, 2, color);    // Right side
+      drawRect(x + 2, y + 4, 2, 2, color);    // Middle
+      drawRect(x + 2, y + 6, 2, 2, color);    // Lower middle
+      drawRect(x + 2, y + 10, 2, 2, color);   // Dot
     }
 
     // Animation loop
