@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen } = require('electron');
 const path = require('path');
 const http = require('http');
+const { createCanvas } = require('canvas');
 
 let mainWindow;
 let tray;
@@ -14,6 +15,78 @@ let currentMemory = '';
 // HTTP server for receiving status updates
 let httpServer;
 const HTTP_PORT = 19280;
+
+// State colors (matching index.html)
+const STATE_COLORS = {
+  idle: '#00AA00',
+  working: '#0066CC',
+  notification: '#FFCC00',
+  session_start: '#00CCCC',
+  tool_done: '#00AA00'
+};
+
+const COLOR_CLAUDE = '#E07B39';
+const COLOR_EYE = '#000000';
+
+// Tray icon cache for performance
+const trayIconCache = new Map();
+
+// Create tray icon with state-based background color using canvas for proper PNG encoding
+function createTrayIcon(state) {
+  // Return cached icon if available
+  if (trayIconCache.has(state)) {
+    return trayIconCache.get(state);
+  }
+
+  const size = 22;
+  const canvas = createCanvas(size, size);
+  const ctx = canvas.getContext('2d');
+
+  const bgColor = STATE_COLORS[state] || STATE_COLORS.idle;
+
+  // Helper to draw filled rectangle
+  function rect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+  }
+
+  // Clear canvas (transparent)
+  ctx.clearRect(0, 0, size, size);
+
+  // Draw rounded background
+  const radius = 4;
+  ctx.fillStyle = bgColor;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, radius);
+  ctx.fill();
+
+  // Draw simplified character for 22x22
+  // Body (centered, 14x8)
+  rect(4, 6, 14, 8, COLOR_CLAUDE);
+
+  // Arms (2x3 each)
+  rect(2, 8, 2, 3, COLOR_CLAUDE);   // Left arm
+  rect(18, 8, 2, 3, COLOR_CLAUDE);  // Right arm
+
+  // Legs (2x4 each, 4 legs)
+  rect(5, 14, 2, 4, COLOR_CLAUDE);   // Left outer
+  rect(8, 14, 2, 4, COLOR_CLAUDE);   // Left inner
+  rect(12, 14, 2, 4, COLOR_CLAUDE);  // Right inner
+  rect(15, 14, 2, 4, COLOR_CLAUDE);  // Right outer
+
+  // Eyes (2x2 each)
+  rect(6, 9, 2, 2, COLOR_EYE);   // Left eye
+  rect(14, 9, 2, 2, COLOR_EYE);  // Right eye
+
+  // Convert canvas to PNG buffer and create nativeImage
+  const pngBuffer = canvas.toBuffer('image/png');
+  const icon = nativeImage.createFromBuffer(pngBuffer);
+
+  // Cache the icon for future use
+  trayIconCache.set(state, icon);
+
+  return icon;
+}
 
 function createWindow() {
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
@@ -30,6 +103,7 @@ function createWindow() {
     skipTaskbar: false,
     hasShadow: true,
     show: false,
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -53,34 +127,17 @@ function createWindow() {
 }
 
 function createTray() {
-  // Create a simple tray icon (orange circle)
-  const iconSize = 16;
-  const canvas = Buffer.alloc(iconSize * iconSize * 4);
-  for (let y = 0; y < iconSize; y++) {
-    for (let x = 0; x < iconSize; x++) {
-      const idx = (y * iconSize + x) * 4;
-      const cx = iconSize / 2, cy = iconSize / 2, r = 6;
-      const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-      if (dist <= r) {
-        canvas[idx] = 0xE0;     // R
-        canvas[idx + 1] = 0x7B; // G
-        canvas[idx + 2] = 0x39; // B
-        canvas[idx + 3] = 255;  // A
-      } else {
-        canvas[idx + 3] = 0;    // Transparent
-      }
-    }
-  }
-
-  const icon = nativeImage.createFromBuffer(canvas, {
-    width: iconSize,
-    height: iconSize
-  });
-
+  const icon = createTrayIcon(currentState);
   tray = new Tray(icon);
   tray.setToolTip('Claude Monitor');
-
   updateTrayMenu();
+}
+
+function updateTrayIcon() {
+  if (tray) {
+    const icon = createTrayIcon(currentState);
+    tray.setImage(icon);
+  }
 }
 
 function updateTrayMenu() {
@@ -147,6 +204,7 @@ function updateState(data) {
   if (mainWindow) {
     mainWindow.webContents.send('state-update', data);
   }
+  updateTrayIcon();
   updateTrayMenu();
 }
 
