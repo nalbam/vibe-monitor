@@ -149,8 +149,7 @@ function showAndPositionWindow() {
   if (mainWindow) {
     const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
     mainWindow.setPosition(screenWidth - 172, 20);
-    mainWindow.show();
-    mainWindow.focus();
+    mainWindow.showInactive();
     return true;
   }
   return false;
