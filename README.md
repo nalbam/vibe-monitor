@@ -46,6 +46,8 @@ Real-time status monitor for Claude Code with pixel art character.
 | `session_start` | Cyan | ■ ■ + ✦ | Rotating sparkle |
 | `tool_done` | Green | ∨ ∨ Happy | - |
 
+**Common Animation**: All states have a gentle floating animation (±5px vertical movement, ~3.2s cycle).
+
 ## Installation
 
 ### 1. Arduino IDE Setup
@@ -141,7 +143,7 @@ Simulator features:
 - Switch between 5 states with buttons
 - Input Project/Tool/Model/Memory values
 - JSON payload preview
-- Real-time animations (blink, loading dots, sparkle)
+- Real-time animations (floating, blink, loading dots, sparkle)
 
 ## Desktop App (macOS)
 
