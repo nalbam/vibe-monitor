@@ -48,7 +48,7 @@ ESP32 firmware that displays Claude Code's status in real-time using a pixel art
 ### Key Patterns
 - State-based rendering: `state` value determines color, eyeType, text
 - Animation: `animFrame % N` approach (100ms tick, frame-independent)
-- JSON communication: Required fields `{"state", "event", "tool", "project"}`
+- JSON communication: Fields `{"state", "event", "tool", "project", "model", "memory"}`
 
 ## Testing
 
@@ -61,10 +61,10 @@ open simulator/index.html
 ### Hardware Testing (USB Serial)
 ```bash
 # Test idle state
-echo '{"state":"idle","event":"Stop","tool":"","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"idle","event":"Stop","tool":"","project":"test","model":"opus","memory":"45%"}' > /dev/cu.usbmodem1101
 
 # Test working state
-echo '{"state":"working","event":"PreToolUse","tool":"Bash","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"working","event":"PreToolUse","tool":"Bash","project":"test","model":"opus","memory":"50%"}' > /dev/cu.usbmodem1101
 ```
 
 ## Important Notes

@@ -78,7 +78,7 @@
     /* Loading Dots */
     .loading-dots {
       position: absolute;
-      top: 195px;
+      top: 190px;
       width: 100%;
       display: flex;
       justify-content: center;
@@ -107,15 +107,23 @@
     }
 
     .project-text {
-      top: 235px;
+      top: 220px;
     }
 
     .tool-text {
-      top: 255px;
+      top: 235px;
+    }
+
+    .model-text {
+      top: 250px;
+    }
+
+    .memory-text {
+      top: 265px;
     }
 
     .brand-text {
-      top: 295px;
+      top: 290px;
       color: #7BEF7B;
     }
 
@@ -289,6 +297,14 @@
           <span class="info-label">Tool: </span>
           <span class="info-value" id="tool-value">Bash</span>
         </div>
+        <div class="info-text model-text" id="model-line">
+          <span class="info-label">Model: </span>
+          <span class="info-value" id="model-value">opus</span>
+        </div>
+        <div class="info-text memory-text" id="memory-line">
+          <span class="info-label">Memory: </span>
+          <span class="info-value" id="memory-value">45%</span>
+        </div>
         <div class="info-text brand-text">Claude Monitor</div>
       </div>
     </div>
@@ -335,6 +351,14 @@
       <div class="input-group">
         <label class="input-label">Tool Name</label>
         <input type="text" class="input-field" id="tool-input" value="Bash" oninput="updateDisplay()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Model</label>
+        <input type="text" class="input-field" id="model-input" value="opus" oninput="updateDisplay()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Memory Usage</label>
+        <input type="text" class="input-field" id="memory-input" value="45%" oninput="updateDisplay()">
       </div>
 
       <!-- JSON Preview -->
@@ -428,8 +452,12 @@
       const statusText = document.getElementById('status-text');
       const loadingDots = document.getElementById('loading-dots');
       const toolLine = document.getElementById('tool-line');
+      const modelLine = document.getElementById('model-line');
+      const memoryLine = document.getElementById('memory-line');
       const projectValue = document.getElementById('project-value');
       const toolValue = document.getElementById('tool-value');
+      const modelValue = document.getElementById('model-value');
+      const memoryValue = document.getElementById('memory-value');
       const currentStateDisplay = document.getElementById('current-state-display');
       const jsonPreview = document.getElementById('json-preview');
 
@@ -449,8 +477,16 @@
       // Update values from inputs
       const projectName = document.getElementById('project-input').value;
       const toolName = document.getElementById('tool-input').value;
+      const modelName = document.getElementById('model-input').value;
+      const memoryUsage = document.getElementById('memory-input').value;
       projectValue.textContent = projectName.length > 16 ? projectName.substring(0, 13) + '...' : projectName;
       toolValue.textContent = toolName;
+      modelValue.textContent = modelName.length > 14 ? modelName.substring(0, 11) + '...' : modelName;
+      memoryValue.textContent = memoryUsage;
+
+      // Update model/memory visibility
+      modelLine.style.display = modelName ? 'block' : 'none';
+      memoryLine.style.display = memoryUsage ? 'block' : 'none';
 
       // Update all text colors based on state
       document.querySelectorAll('.info-text').forEach(el => {
@@ -471,7 +507,9 @@
         state: currentState,
         event: getEventName(currentState),
         tool: currentState === 'working' ? toolName : '',
-        project: projectName
+        project: projectName,
+        model: modelName,
+        memory: memoryUsage
       };
       jsonPreview.textContent = JSON.stringify(json, null, 2);
 

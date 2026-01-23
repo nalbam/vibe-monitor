@@ -31,7 +31,7 @@ npm start
 # Change to working state
 curl -X POST http://127.0.0.1:19280/status \
   -H "Content-Type: application/json" \
-  -d '{"state":"working","tool":"Bash","project":"my-project"}'
+  -d '{"state":"working","tool":"Bash","project":"my-project","model":"opus","memory":"45%"}'
 
 # Check current status
 curl http://127.0.0.1:19280/status
@@ -69,7 +69,9 @@ Update status
   "state": "working",
   "event": "PreToolUse",
   "tool": "Bash",
-  "project": "claude-monitor"
+  "project": "claude-monitor",
+  "model": "opus",
+  "memory": "45%"
 }
 ```
 
@@ -79,7 +81,11 @@ Get current status
 
 ```json
 {
-  "state": "idle"
+  "state": "working",
+  "project": "claude-monitor",
+  "tool": "Bash",
+  "model": "opus",
+  "memory": "45%"
 }
 ```
 

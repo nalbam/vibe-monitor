@@ -108,7 +108,7 @@
     /* Loading Dots */
     .loading-dots {
       position: absolute;
-      top: 195px;
+      top: 190px;
       width: 100%;
       display: flex;
       justify-content: center;
@@ -137,15 +137,23 @@
     }
 
     .project-text {
-      top: 235px;
+      top: 220px;
     }
 
     .tool-text {
-      top: 255px;
+      top: 235px;
+    }
+
+    .model-text {
+      top: 250px;
+    }
+
+    .memory-text {
+      top: 265px;
     }
 
     .brand-text {
-      top: 295px;
+      top: 290px;
       color: #7BEF7B;
     }
 
@@ -187,6 +195,14 @@
       <div class="info-text tool-text" id="tool-line">
         <span class="info-label">Tool: </span>
         <span class="info-value" id="tool-value">-</span>
+      </div>
+      <div class="info-text model-text" id="model-line">
+        <span class="info-label">Model: </span>
+        <span class="info-value" id="model-value">-</span>
+      </div>
+      <div class="info-text memory-text" id="memory-line">
+        <span class="info-label">Memory: </span>
+        <span class="info-value" id="memory-value">-</span>
       </div>
       <div class="info-text brand-text">Claude Monitor</div>
     </div>
@@ -245,6 +261,8 @@
     let currentState = 'idle';
     let currentProject = '-';
     let currentTool = '-';
+    let currentModel = '-';
+    let currentMemory = '-';
     let animFrame = 0;
     let blinkFrame = 0;
 
@@ -269,6 +287,8 @@
           if (data.state) currentState = data.state;
           if (data.project) currentProject = data.project;
           if (data.tool) currentTool = data.tool;
+          if (data.model) currentModel = data.model;
+          if (data.memory) currentMemory = data.memory;
           updateDisplay();
         });
       }
@@ -281,8 +301,12 @@
       const statusText = document.getElementById('status-text');
       const loadingDots = document.getElementById('loading-dots');
       const toolLine = document.getElementById('tool-line');
+      const modelLine = document.getElementById('model-line');
+      const memoryLine = document.getElementById('memory-line');
       const projectValue = document.getElementById('project-value');
       const toolValue = document.getElementById('tool-value');
+      const modelValue = document.getElementById('model-value');
+      const memoryValue = document.getElementById('memory-value');
 
       // Update background
       display.style.background = state.bgColor;
@@ -303,6 +327,17 @@
         : currentProject;
       projectValue.textContent = displayProject;
       toolValue.textContent = currentTool;
+
+      // Update model value (truncate if too long)
+      const displayModel = currentModel.length > 14
+        ? currentModel.substring(0, 11) + '...'
+        : currentModel;
+      modelValue.textContent = displayModel;
+      memoryValue.textContent = currentMemory;
+
+      // Update model/memory visibility
+      modelLine.style.display = currentModel && currentModel !== '-' ? 'block' : 'none';
+      memoryLine.style.display = currentMemory && currentMemory !== '-' ? 'block' : 'none';
 
       // Update all text colors based on state
       document.querySelectorAll('.info-text').forEach(el => {

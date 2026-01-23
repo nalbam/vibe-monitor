@@ -19,6 +19,8 @@ A pixel art status monitor for Claude Code, built for ESP32-C6-LCD-1.47
 ├────────────────────┤
 │ Project: dotfiles  │
 │ Tool: Bash         │
+│ Model: opus        │
+│ Memory: 45%        │
 ├────────────────────┤
 │ Claude Monitor     │
 └────────────────────┘
@@ -128,7 +130,7 @@ open simulator/index.html
 
 Simulator features:
 - Switch between 5 states with buttons
-- Input Project/Tool names
+- Input Project/Tool/Model/Memory values
 - JSON payload preview
 - Real-time animations (blink, loading dots, sparkle)
 
@@ -169,10 +171,11 @@ Just run the desktop app and use Claude Code with the configured hooks.
 # Update status
 curl -X POST http://127.0.0.1:19280/status \
   -H "Content-Type: application/json" \
-  -d '{"state":"working","tool":"Bash","project":"my-project"}'
+  -d '{"state":"working","tool":"Bash","project":"my-project","model":"opus","memory":"45%"}'
 
 # Get current status
 curl http://127.0.0.1:19280/status
+# Response: {"state":"working","project":"my-project","tool":"Bash","model":"opus","memory":"45%"}
 
 # Health check
 curl http://127.0.0.1:19280/health
@@ -201,7 +204,7 @@ const char* password = "YOUR_PASSWORD";
 # POST /status - Update status
 curl -X POST http://192.168.1.100/status \
   -H "Content-Type: application/json" \
-  -d '{"state":"working","event":"PreToolUse","tool":"Bash","project":"test"}'
+  -d '{"state":"working","event":"PreToolUse","tool":"Bash","project":"test","model":"opus","memory":"45%"}'
 
 # Response
 {"ok":true}
@@ -214,19 +217,19 @@ curl -X POST http://192.168.1.100/status \
 
 ```bash
 # USB Serial test - idle (green, square eyes)
-echo '{"state":"idle","event":"Stop","tool":"","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"idle","event":"Stop","tool":"","project":"test","model":"opus","memory":"45%"}' > /dev/cu.usbmodem1101
 
 # working (blue, focused eyes)
-echo '{"state":"working","event":"PreToolUse","tool":"Bash","project":"dotfiles"}' > /dev/cu.usbmodem1101
+echo '{"state":"working","event":"PreToolUse","tool":"Bash","project":"dotfiles","model":"opus","memory":"50%"}' > /dev/cu.usbmodem1101
 
 # notification (yellow, round eyes)
-echo '{"state":"notification","event":"Notification","tool":"","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"notification","event":"Notification","tool":"","project":"test","model":"opus","memory":"60%"}' > /dev/cu.usbmodem1101
 
 # session_start (cyan, sparkle)
-echo '{"state":"session_start","event":"SessionStart","tool":"","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"session_start","event":"SessionStart","tool":"","project":"test","model":"opus","memory":"10%"}' > /dev/cu.usbmodem1101
 
 # tool_done (green, happy eyes)
-echo '{"state":"tool_done","event":"PostToolUse","tool":"Bash","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"tool_done","event":"PostToolUse","tool":"Bash","project":"test","model":"opus","memory":"55%"}' > /dev/cu.usbmodem1101
 ```
 
 ## Troubleshooting

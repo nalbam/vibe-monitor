@@ -6,6 +6,10 @@ let mainWindow;
 let tray;
 let isAlwaysOnTop = true;
 let currentState = 'idle';
+let currentProject = '';
+let currentTool = '';
+let currentModel = '';
+let currentMemory = '';
 
 // HTTP server for receiving status updates
 let httpServer;
@@ -130,6 +134,10 @@ function updateTrayMenu() {
 
 function updateState(data) {
   currentState = data.state || 'idle';
+  if (data.project !== undefined) currentProject = data.project;
+  if (data.tool !== undefined) currentTool = data.tool;
+  if (data.model !== undefined) currentModel = data.model;
+  if (data.memory !== undefined) currentMemory = data.memory;
   if (mainWindow) {
     mainWindow.webContents.send('state-update', data);
   }
@@ -177,7 +185,13 @@ function startHttpServer() {
       });
     } else if (req.method === 'GET' && req.url === '/status') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ state: currentState }));
+      res.end(JSON.stringify({
+        state: currentState,
+        project: currentProject,
+        tool: currentTool,
+        model: currentModel,
+        memory: currentMemory
+      }));
     } else if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'ok' }));

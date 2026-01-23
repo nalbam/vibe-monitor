@@ -29,16 +29,20 @@ TFT_eSPI tft = TFT_eSPI();
 #define CHAR_X        22   // (172 - 128) / 2 = 22
 #define CHAR_Y        20
 #define STATUS_TEXT_Y 160
-#define LOADING_Y     195
-#define PROJECT_Y     235
-#define TOOL_Y        255
-#define BRAND_Y       295
+#define LOADING_Y     190
+#define PROJECT_Y     220
+#define TOOL_Y        235
+#define MODEL_Y       250
+#define MEMORY_Y      265
+#define BRAND_Y       290
 
 // State
 String currentState = "idle";
 String previousState = "";
 String currentProject = "";
 String currentTool = "";
+String currentModel = "";
+String currentMemory = "";
 unsigned long lastUpdate = 0;
 unsigned long lastBlink = 0;
 int animFrame = 0;
@@ -98,6 +102,8 @@ void processInput(String input) {
   currentState = doc["state"].as<String>();
   currentProject = doc["project"].as<String>();
   currentTool = doc["tool"].as<String>();
+  currentModel = doc["model"].as<String>();
+  currentMemory = doc["memory"].as<String>();
 
   // Redraw if state changed
   if (currentState != previousState) {
@@ -180,6 +186,29 @@ void drawStatus() {
     tft.setCursor(10, TOOL_Y);
     tft.print("Tool: ");
     tft.println(currentTool);
+  }
+
+  // Model name
+  if (currentModel.length() > 0) {
+    tft.setTextColor(textColor);
+    tft.setTextSize(1);
+    tft.setCursor(10, MODEL_Y);
+    tft.print("Model: ");
+
+    String displayModel = currentModel;
+    if (displayModel.length() > 14) {
+      displayModel = displayModel.substring(0, 11) + "...";
+    }
+    tft.println(displayModel);
+  }
+
+  // Memory usage
+  if (currentMemory.length() > 0) {
+    tft.setTextColor(textColor);
+    tft.setTextSize(1);
+    tft.setCursor(10, MEMORY_Y);
+    tft.print("Memory: ");
+    tft.println(currentMemory);
   }
 
   // Brand
