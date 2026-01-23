@@ -29,6 +29,7 @@ function createWindow() {
     resizable: false,
     skipTaskbar: false,
     hasShadow: true,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -40,6 +41,11 @@ function createWindow() {
 
   // Allow window to be dragged
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  // Show window without stealing focus
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.showInactive();
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
