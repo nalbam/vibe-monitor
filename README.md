@@ -1,6 +1,11 @@
 # Claude Monitor
 
-A pixel art status monitor for Claude Code, built for ESP32-C6-LCD-1.47
+Real-time status monitor for Claude Code with pixel art character.
+
+**Supported Platforms:**
+- 🖥️ **Desktop App** - Electron app for macOS, Windows, Linux
+- 🔌 **ESP32 Hardware** - Dedicated LCD display (ESP32-C6-LCD-1.47)
+- 🌐 **Web Simulator** - Browser-based preview (no installation)
 
 ## Preview
 
