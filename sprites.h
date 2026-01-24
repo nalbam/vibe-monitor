@@ -14,7 +14,7 @@
 #define COLOR_KIRO        0xFFFF  // #FFFFFF White ghost
 #define COLOR_EYE         0x0000  // #000000 Black
 #define COLOR_TRANSPARENT 0x0000  // Transparent (same as background)
-#define COLOR_EFFECT_ALT  0xFFE0  // #FFFF00 Yellow for white character effects
+#define COLOR_EFFECT_ALT  0xFD20  // #FFA500 Orange for white character effects
 
 // Kiro sprite (64x64) - string-based pixel art
 // '0' = transparent, '1' = white body

@@ -1,7 +1,7 @@
 import { COLOR_EYE, COLOR_WHITE, CHARACTER_CONFIG, DEFAULT_CHARACTER } from './config.js';
 
-// Effect color for white characters (yellow)
-const COLOR_EFFECT_ALT = '#FFFF00';
+// Effect color for white characters (orange)
+const COLOR_EFFECT_ALT = '#FFA500';
 
 // Get effect color based on character color
 function getEffectColor(char) {
