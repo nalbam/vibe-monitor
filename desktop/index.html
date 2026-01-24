@@ -173,10 +173,25 @@
 
     .info-label {
       color: white;
+      display: inline-flex;
+      align-items: center;
     }
 
     .info-value {
       color: #aaa;
+    }
+
+    .pixel-icon {
+      width: 8px;
+      height: 8px;
+      margin-right: 2px;
+      image-rendering: pixelated;
+      vertical-align: middle;
+      display: none;
+    }
+
+    .emoji-icon {
+      display: inline;
     }
   </style>
 </head>
@@ -203,19 +218,19 @@
         <div class="dot dim"></div>
       </div>
       <div class="info-text project-text">
-        <span class="info-label">📂 </span>
+        <span class="info-label"><span class="emoji-icon">📂 </span><canvas class="pixel-icon" id="icon-project" width="8" height="8"></canvas></span>
         <span class="info-value" id="project-value">-</span>
       </div>
       <div class="info-text tool-text" id="tool-line">
-        <span class="info-label">🛠️ </span>
+        <span class="info-label"><span class="emoji-icon">🛠️ </span><canvas class="pixel-icon" id="icon-tool" width="8" height="8"></canvas></span>
         <span class="info-value" id="tool-value">-</span>
       </div>
       <div class="info-text model-text" id="model-line">
-        <span class="info-label">🤖 </span>
+        <span class="info-label"><span class="emoji-icon">🤖 </span><canvas class="pixel-icon" id="icon-model" width="8" height="8"></canvas></span>
         <span class="info-value" id="model-value">-</span>
       </div>
       <div class="info-text memory-text" id="memory-line">
-        <span class="info-label">🧠 </span>
+        <span class="info-label"><span class="emoji-icon">🧠 </span><canvas class="pixel-icon" id="icon-memory" width="8" height="8"></canvas></span>
         <span class="info-value" id="memory-value">-</span>
       </div>
       <div class="memory-bar-container" id="memory-bar-container">
@@ -225,6 +240,10 @@
   </div>
 
   <script>
+    // Platform detection: macOS uses emoji, Windows/Linux uses pixel art
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const useEmoji = isMac;
+
     // Character size (128x128, doubled from 64)
     const CHAR_SIZE = 128;
     const SCALE = 2;
@@ -499,8 +518,110 @@
         el.style.color = state.textColor;
       });
 
+      // Draw pixel art icons
+      drawInfoIcons(state.textColor, state.bgColor);
+
       // Draw character
       drawCharacter(state.eyeType);
+    }
+
+    // Draw folder icon (📂) - 8x7 pixels
+    function drawFolderIcon(iconCtx, color) {
+      iconCtx.fillStyle = color;
+      // Folder tab (top)
+      iconCtx.fillRect(0, 0, 3, 1);
+      // Folder body
+      iconCtx.fillRect(0, 1, 8, 6);
+      // Inner fold line
+      iconCtx.fillStyle = '#000000';
+      iconCtx.fillRect(1, 2, 6, 1);
+    }
+
+    // Draw tool/wrench icon (🛠️) - 8x8 pixels
+    function drawToolIcon(iconCtx, color) {
+      iconCtx.fillStyle = color;
+      // Wrench head (top)
+      iconCtx.fillRect(1, 0, 6, 3);
+      iconCtx.fillStyle = '#000000';
+      iconCtx.fillRect(3, 0, 2, 1);  // Notch
+      // Handle
+      iconCtx.fillStyle = color;
+      iconCtx.fillRect(3, 3, 2, 5);
+    }
+
+    // Draw robot icon (🤖) - 8x8 pixels
+    function drawRobotIcon(iconCtx, color) {
+      iconCtx.fillStyle = color;
+      // Antenna
+      iconCtx.fillRect(3, 0, 2, 1);
+      // Head
+      iconCtx.fillRect(1, 1, 6, 5);
+      // Eyes
+      iconCtx.fillStyle = '#000000';
+      iconCtx.fillRect(2, 2, 1, 2);
+      iconCtx.fillRect(5, 2, 1, 2);
+      // Mouth
+      iconCtx.fillRect(2, 5, 4, 1);
+      // Ears
+      iconCtx.fillStyle = color;
+      iconCtx.fillRect(0, 2, 1, 2);
+      iconCtx.fillRect(7, 2, 1, 2);
+    }
+
+    // Draw brain icon (🧠) - 8x7 pixels
+    function drawBrainIcon(iconCtx, color) {
+      iconCtx.fillStyle = color;
+      // Brain shape (simplified)
+      iconCtx.fillRect(1, 0, 6, 7);
+      iconCtx.fillRect(0, 1, 8, 5);
+      // Brain folds (center line)
+      iconCtx.fillStyle = '#000000';
+      iconCtx.fillRect(4, 1, 1, 5);
+      // Top bumps
+      iconCtx.fillRect(2, 0, 1, 1);
+      iconCtx.fillRect(5, 0, 1, 1);
+    }
+
+    // Draw all info icons
+    function drawInfoIcons(color, bgColor) {
+      // Toggle visibility based on platform
+      document.querySelectorAll('.emoji-icon').forEach(el => {
+        el.style.display = useEmoji ? 'inline' : 'none';
+      });
+      document.querySelectorAll('.pixel-icon').forEach(el => {
+        el.style.display = useEmoji ? 'none' : 'inline-block';
+      });
+
+      // Draw pixel icons only if not using emoji
+      if (!useEmoji) {
+        // Project icon
+        const projectCanvas = document.getElementById('icon-project');
+        const projectCtx = projectCanvas.getContext('2d');
+        projectCtx.fillStyle = bgColor;
+        projectCtx.fillRect(0, 0, 8, 8);
+        drawFolderIcon(projectCtx, color);
+
+        // Tool icon
+        const toolCanvas = document.getElementById('icon-tool');
+        const toolCtx = toolCanvas.getContext('2d');
+        toolCtx.fillStyle = bgColor;
+        toolCtx.fillRect(0, 0, 8, 8);
+        drawToolIcon(toolCtx, color);
+
+        // Model icon
+        const modelCanvas = document.getElementById('icon-model');
+        const modelCtx = modelCanvas.getContext('2d');
+        modelCtx.fillStyle = bgColor;
+        modelCtx.fillRect(0, 0, 8, 8);
+        drawRobotIcon(modelCtx, color);
+
+        // Memory icon
+        const memoryCanvas = document.getElementById('icon-memory');
+        const memoryCtx = memoryCanvas.getContext('2d');
+        memoryCtx.fillStyle = bgColor;
+        memoryCtx.fillRect(0, 0, 8, 8);
+        drawBrainIcon(memoryCtx, color);
+      }
     }
 
     // Draw character (128x128, scaled 2x from 64x64)
