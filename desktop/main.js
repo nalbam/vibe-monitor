@@ -32,13 +32,13 @@ const STATE_COLORS = {
 const CHARACTER_CONFIG = {
   clawd: {
     name: 'clawd',
-    displayName: 'Clawd (Claude)',
+    displayName: 'Clawd',
     color: '#E07B39',
     isGhost: false
   },
   kiro: {
     name: 'kiro',
-    displayName: 'Kiro (Ghost)',
+    displayName: 'Kiro',
     color: '#FFFFFF',
     isGhost: true
   }

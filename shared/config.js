@@ -56,7 +56,7 @@ export const states = {
 export const CHARACTER_CONFIG = {
   clawd: {
     name: 'clawd',
-    displayName: 'Clawd (Claude)',
+    displayName: 'Clawd',
     color: '#E07B39',
     body: { x: 6, y: 8, w: 52, h: 36 },
     arms: { left: { x: 0, y: 22, w: 6, h: 10 }, right: { x: 58, y: 22, w: 6, h: 10 } },
@@ -72,17 +72,17 @@ export const CHARACTER_CONFIG = {
   },
   kiro: {
     name: 'kiro',
-    displayName: 'Kiro (Ghost)',
+    displayName: 'Kiro',
     color: '#FFFFFF',
-    body: { x: 10, y: 6, w: 44, h: 40 },
+    body: { x: 8, y: 4, w: 44, h: 40 },
     arms: null,
     legs: [],
     tail: [
-      { x: 10, y: 46, w: 10, h: 8 },
-      { x: 24, y: 50, w: 16, h: 6 },
-      { x: 44, y: 46, w: 10, h: 8 }
+      { x: 14, y: 44, w: 12, h: 10 },
+      { x: 36, y: 44, w: 12, h: 10 },
+      { x: 48, y: 28, w: 8, h: 10 }
     ],
-    eyes: { left: { x: 16, y: 20 }, right: { x: 38, y: 20 }, size: 6 },
+    eyes: { left: { x: 14, y: 18 }, right: { x: 32, y: 18 }, size: 6 },
     isGhost: true
   }
 };

@@ -58,20 +58,20 @@ const CharacterGeometry CHAR_CLAWD = {
 const CharacterGeometry CHAR_KIRO = {
   "kiro",
   COLOR_KIRO,
-  // Body: x=10, y=6, w=44, h=40
-  10, 6, 44, 40,
+  // Body: x=8, y=4, w=44, h=40 (chick-like round ghost)
+  8, 4, 44, 40,
   true,   // Is a ghost
   // Arms: hasArms=false
   false,
   0, 0, 0, 0, 0,
-  // Tail: 3 parts (wavy bottom)
+  // Tail: 3 parts (left shin, right shin, short tail)
   3,
-  {10, 24, 44, 0},   // partX
-  {46, 50, 46, 0},   // partY
-  {10, 16, 10, 0},   // partW
-  {8, 6, 8, 0},      // partH
-  // Eyes
-  16, 38, 20, 6      // leftX, rightX, y, size
+  {14, 36, 48, 0},   // partX
+  {44, 44, 28, 0},   // partY
+  {12, 12, 8, 0},    // partW
+  {10, 10, 10, 0},   // partH
+  // Eyes (looking 30 degrees left)
+  14, 32, 18, 6      // leftX, rightX, y, size
 };
 
 // Character array for dynamic lookup
