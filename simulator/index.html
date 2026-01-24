@@ -638,6 +638,11 @@
 
     // Initialize
     function init() {
+      // Set random initial memory value (10-90%)
+      const randomMemory = Math.floor(Math.random() * 81) + 10;
+      document.getElementById('memory-input').value = randomMemory;
+      document.getElementById('memory-display').textContent = randomMemory + '%';
+
       setState('idle');
       startAnimation();
     }
