@@ -104,8 +104,11 @@ cp hooks/.env.sample ~/.claude/.env.local
 **3. Edit `~/.claude/.env.local`:**
 
 ```bash
-# Desktop App path (auto-launches on SessionStart)
+# Desktop App path (auto-launches on SessionStart if not running)
 export CLAUDE_MONITOR_DESKTOP="~/claude-monitor/desktop"
+
+# Desktop App URL (sends status updates)
+export CLAUDE_MONITOR_URL="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
@@ -131,7 +134,7 @@ export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
 ### Hook Priority
 
 The hook sends status updates in order (only if configured):
-1. **Desktop App** (`http://127.0.0.1:19280`) - if `CLAUDE_MONITOR_DESKTOP` is set
+1. **Desktop App** - if `CLAUDE_MONITOR_URL` is set (auto-launches via `CLAUDE_MONITOR_DESKTOP` on SessionStart)
 2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
 3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
 

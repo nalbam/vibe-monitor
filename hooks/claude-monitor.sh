@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Claude Monitor Hook
-# Desktop App (localhost:19280) + ESP32 (USB Serial / HTTP)
+# Desktop App + ESP32 (USB Serial / HTTP)
 # Note: Model and Memory are provided by statusline.sh (accurate data)
 
 DEBUG="${DEBUG:-0}"
@@ -100,26 +100,17 @@ send_http() {
     > /dev/null 2>&1
 }
 
-send_desktop() {
-  local data="$1"
-
-  curl -s -X POST "http://127.0.0.1:19280/status" \
-    -H "Content-Type: application/json" \
-    -d "$data" \
-    --connect-timeout 1 \
-    --max-time 2 \
-    > /dev/null 2>&1
-}
-
-is_desktop_running() {
-  curl -s "http://127.0.0.1:19280/health" \
+is_monitor_running() {
+  local url="$1"
+  curl -s "$url/health" \
     --connect-timeout 1 \
     --max-time 1 \
     > /dev/null 2>&1
 }
 
-show_desktop_window() {
-  curl -s -X POST "http://127.0.0.1:19280/show" \
+show_monitor_window() {
+  local url="$1"
+  curl -s -X POST "$url/show" \
     --connect-timeout 1 \
     --max-time 1 \
     > /dev/null 2>&1
@@ -130,7 +121,7 @@ launch_desktop() {
 
   if [ -x "$start_script" ]; then
     debug_log "Launching Desktop App: $start_script"
-    "$start_script" > /dev/null 2>&1
+    "$start_script" > /dev/null 2>&1 &
     sleep 2
   else
     debug_log "Desktop App start script not found: $start_script"
@@ -166,18 +157,25 @@ main() {
 
   debug_log "Payload: $payload"
 
-  # Send to Desktop App
-  if [ -n "${CLAUDE_MONITOR_DESKTOP}" ]; then
-    if [ "$event_name" = "SessionStart" ]; then
-      if is_desktop_running; then
-        debug_log "Desktop App running, showing window..."
-        show_desktop_window
-      else
-        debug_log "Desktop App not running, launching..."
-        launch_desktop
-      fi
+  # Launch Desktop App if not running (on SessionStart)
+  if [ -n "${CLAUDE_MONITOR_DESKTOP}" ] && [ "$event_name" = "SessionStart" ]; then
+    if ! is_monitor_running "${CLAUDE_MONITOR_URL:-http://127.0.0.1:19280}"; then
+      debug_log "Desktop App not running, launching..."
+      launch_desktop
     fi
-    send_desktop "$payload"
+  fi
+
+  # Send to Desktop App via HTTP
+  if [ -n "${CLAUDE_MONITOR_URL}" ]; then
+    debug_log "Trying Desktop App: ${CLAUDE_MONITOR_URL}"
+    if [ "$event_name" = "SessionStart" ]; then
+      show_monitor_window "${CLAUDE_MONITOR_URL}"
+    fi
+    if send_http "${CLAUDE_MONITOR_URL}" "$payload"; then
+      debug_log "Sent to Desktop App"
+    else
+      debug_log "Desktop App failed"
+    fi
   fi
 
   # Send to ESP32 USB Serial
@@ -192,11 +190,11 @@ main() {
 
   # Send to ESP32 HTTP
   if [ -n "${ESP32_HTTP_URL}" ]; then
-    debug_log "Trying HTTP: ${ESP32_HTTP_URL}"
+    debug_log "Trying ESP32 HTTP: ${ESP32_HTTP_URL}"
     if send_http "${ESP32_HTTP_URL}" "$payload"; then
-      debug_log "Sent via HTTP"
+      debug_log "Sent via ESP32 HTTP"
     else
-      debug_log "HTTP failed"
+      debug_log "ESP32 HTTP failed"
     fi
   fi
 }
