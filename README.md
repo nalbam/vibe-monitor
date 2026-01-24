@@ -130,10 +130,10 @@ export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
 
 ### Hook Priority
 
-The hook sends status updates in order:
-1. **Desktop App** (`http://127.0.0.1:19280`) - always attempted first
-2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is configured
-3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is configured
+The hook sends status updates in order (only if configured):
+1. **Desktop App** (`http://127.0.0.1:19280`) - if `CLAUDE_MONITOR_DESKTOP` is set
+2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
+3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
 
 ## State Display
 
