@@ -57,6 +57,7 @@ Run the Desktop app and use Claude Code to automatically update the status.
 | `working` | Blue | Work in progress |
 | `notification` | Yellow | Input requested |
 | `tool_done` | Green | Tool completed |
+| `sleep` | Navy | Sleep mode (10min inactivity) |
 
 ## API
 
