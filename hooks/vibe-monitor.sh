@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Vibe Monitor Hook
+# Supports: Claude Code, Kiro IDE, Kiro CLI
 # Desktop App + ESP32 (USB Serial / HTTP)
 # Note: Model and Memory are provided by statusline.sh (accurate data)
 
@@ -50,12 +51,39 @@ get_state() {
   local event_name="$1"
 
   case "$event_name" in
+    # Claude Code events
     "SessionStart") echo "session_start" ;;
-    "PreToolUse"|"PostToolUse") echo "working" ;;
-    "Stop") echo "tool_done" ;;
+    "PreToolUse") echo "working" ;;
+    "PostToolUse") echo "tool_done" ;;
+    "Stop") echo "idle" ;;
     "Notification") echo "notification" ;;
-    *) echo "unknown" ;;
+    # Kiro CLI events
+    "AgentSpawn"|"agent_spawn") echo "session_start" ;;
+    "UserPromptSubmit"|"user_prompt_submit") echo "working" ;;
+    "pre_tool_use") echo "working" ;;
+    "post_tool_use") echo "tool_done" ;;
+    "stop") echo "idle" ;;
+    # Kiro IDE events
+    "PromptSubmit") echo "working" ;;
+    "AgentStop") echo "idle" ;;
+    "FileCreate"|"fileCreated") echo "working" ;;
+    "FileEdited"|"fileEdited") echo "working" ;;
+    "FileDeleted"|"fileDeleted") echo "working" ;;
+    "Manual") echo "working" ;;
+    # Default
+    *) echo "working" ;;
   esac
+}
+
+get_character() {
+  # Detect character based on script location
+  local script_path="${BASH_SOURCE[0]}"
+
+  if [[ "$script_path" == *".kiro"* ]]; then
+    echo "kiro"
+  else
+    echo "clawd"
+  fi
 }
 
 build_payload() {
@@ -63,7 +91,7 @@ build_payload() {
   local event="$2"
   local tool="$3"
   local project="$4"
-  local character="${CLAUDE_MONITOR_CHARACTER:-clawd}"
+  local character="$5"
 
   jq -n \
     --arg state "$state" \
@@ -119,7 +147,7 @@ show_monitor_window() {
 }
 
 launch_desktop() {
-  local start_script="$CLAUDE_MONITOR_DESKTOP/start.sh"
+  local start_script="$VIBE_MONITOR_DESKTOP/start.sh"
 
   if [ -x "$start_script" ]; then
     debug_log "Launching Desktop App: $start_script"
@@ -146,34 +174,40 @@ main() {
   cwd=$(parse_json_field "$input" '.cwd' '')
   transcript_path=$(parse_json_field "$input" '.transcript_path' '')
 
-  # Get project name and state
-  local project_name state
+  # Get project name, state, and character
+  local project_name state character
   project_name=$(get_project_name "$cwd" "$transcript_path")
   state=$(get_state "$event_name")
+  character=$(get_character "$event_name")
 
-  debug_log "Event: $event_name, Tool: $tool_name, Project: $project_name"
+  debug_log "Event: $event_name, Tool: $tool_name, Project: $project_name, Character: $character"
 
   # Build payload (model and memory are provided by statusline.sh)
   local payload
-  payload=$(build_payload "$state" "$event_name" "$tool_name" "$project_name")
+  payload=$(build_payload "$state" "$event_name" "$tool_name" "$project_name" "$character")
 
   debug_log "Payload: $payload"
 
-  # Launch Desktop App if not running (on SessionStart)
-  if [ -n "${CLAUDE_MONITOR_DESKTOP}" ] && [ -n "${CLAUDE_MONITOR_URL}" ] && [ "$event_name" = "SessionStart" ]; then
-    if ! is_monitor_running "${CLAUDE_MONITOR_URL}"; then
+  # Launch Desktop App if not running (on session start events)
+  local is_session_start=false
+  case "$event_name" in
+    "SessionStart"|"AgentSpawn"|"agent_spawn") is_session_start=true ;;
+  esac
+
+  if [ -n "${VIBE_MONITOR_DESKTOP}" ] && [ -n "${VIBE_MONITOR_URL}" ] && [ "$is_session_start" = true ]; then
+    if ! is_monitor_running "${VIBE_MONITOR_URL}"; then
       debug_log "Desktop App not running, launching..."
       launch_desktop
     fi
   fi
 
   # Send to Desktop App via HTTP
-  if [ -n "${CLAUDE_MONITOR_URL}" ]; then
-    debug_log "Trying Desktop App: ${CLAUDE_MONITOR_URL}"
-    if [ "$event_name" = "SessionStart" ]; then
-      show_monitor_window "${CLAUDE_MONITOR_URL}"
+  if [ -n "${VIBE_MONITOR_URL}" ]; then
+    debug_log "Trying Desktop App: ${VIBE_MONITOR_URL}"
+    if [ "$is_session_start" = true ]; then
+      show_monitor_window "${VIBE_MONITOR_URL}"
     fi
-    if send_http "${CLAUDE_MONITOR_URL}" "$payload"; then
+    if send_http "${VIBE_MONITOR_URL}" "$payload"; then
       debug_log "Sent to Desktop App"
     else
       debug_log "Desktop App failed"

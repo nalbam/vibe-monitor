@@ -1,8 +1,8 @@
 # Vibe Monitor
 
-Real-time status and usage monitor for Claude Code with pixel art character.
+Real-time status and usage monitor for AI coding assistants with pixel art character.
 
-Monitor your Claude Code sessions at a glance - see what state it's in, which project and tool it's using, what model is active, and how much context memory is consumed.
+Monitor your **Claude Code** or **Kiro IDE** sessions at a glance - see what state it's in, which project and tool it's using, what model is active, and how much context memory is consumed.
 
 ## What It Monitors
 
@@ -74,46 +74,54 @@ open simulator/index.html
 
 See [ESP32 Setup](#esp32-setup) section below.
 
-## Claude Code Integration
+## IDE Integration
 
-Vibe Monitor integrates with Claude Code through hooks.
+Vibe Monitor integrates with AI coding assistants through hooks.
+
+### Supported IDEs
+
+| IDE | Hook System | Status |
+|-----|-------------|--------|
+| **Claude Code** | Shell hooks via `settings.json` | ✅ Fully supported |
+| **Kiro IDE/CLI** | Agent hooks via `.kiro/hooks/` | ✅ Fully supported |
 
 ### How It Works
 
 ```
-Claude Code → Hooks → Vibe Monitor
-     │                      │
-     └── Events ──────────→ Display
-         (state, tool,      (Desktop App,
-          project, etc.)     ESP32, or both)
+AI IDE → Hooks → Vibe Monitor
+   │                   │
+   └── Events ───────→ Display
+       (state, tool,   (Desktop App,
+        project, etc.)  ESP32, or both)
 ```
 
-### Hook Setup
+---
 
-**1. Copy hook script:**
+### Claude Code Setup
+
+Claude Code uses shell hooks defined in `settings.json`.
+
+#### 1. Copy hook script
 
 ```bash
 cp hooks/vibe-monitor.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/vibe-monitor.sh
 ```
 
-**2. Copy environment sample:**
+#### 2. Copy environment sample
 
 ```bash
 cp hooks/.env.sample ~/.claude/.env.local
 ```
 
-**3. Edit `~/.claude/.env.local`:**
+#### 3. Edit `~/.claude/.env.local`
 
 ```bash
 # Desktop App path (auto-launches on SessionStart if not running)
-export CLAUDE_MONITOR_DESKTOP="~/vibe-monitor/desktop"
+export VIBE_MONITOR_DESKTOP="~/vibe-monitor/desktop"
 
 # Desktop App URL (sends status updates)
-export CLAUDE_MONITOR_URL="http://127.0.0.1:19280"
-
-# Character selection (clawd or kiro)
-export CLAUDE_MONITOR_CHARACTER="clawd"
+export VIBE_MONITOR_URL="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
@@ -122,7 +130,9 @@ export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
 # export ESP32_HTTP_URL="http://192.168.1.100"
 ```
 
-**4. Register hook in `~/.claude/settings.json`:**
+> **Note:** Character is auto-detected (Claude Code → `clawd`)
+
+#### 4. Register hook in `~/.claude/settings.json`
 
 ```json
 {
@@ -136,21 +146,177 @@ export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
 }
 ```
 
+#### Claude Code Hook Events
+
+| Event | Vibe Monitor State | Description |
+|-------|-------------------|-------------|
+| `SessionStart` | `session_start` | Session begins |
+| `PreToolUse` | `working` | Tool execution starts |
+| `PostToolUse` | `tool_done` | Tool execution ends |
+| `Notification` | `notification` | User input needed |
+| `Stop` | `idle` | Agent turn ends |
+
+---
+
+### Kiro IDE/CLI Setup
+
+Kiro uses agent hooks stored in `.kiro/hooks/` folder. Both IDE and CLI are supported.
+
+#### 1. Copy hook script
+
+```bash
+cp hooks/vibe-monitor.sh ~/.kiro/hooks/
+chmod +x ~/.kiro/hooks/vibe-monitor.sh
+```
+
+#### 2. Copy environment sample
+
+```bash
+cp hooks/.env.sample ~/.kiro/.env.local
+```
+
+#### 3. Edit `~/.kiro/.env.local`
+
+```bash
+# Desktop App path (auto-launches on AgentSpawn if not running)
+export VIBE_MONITOR_DESKTOP="~/vibe-monitor/desktop"
+
+# Desktop App URL (sends status updates)
+export VIBE_MONITOR_URL="http://127.0.0.1:19280"
+
+# ESP32 USB Serial port (optional)
+export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
+```
+
+> **Note:** Character is auto-detected (Kiro → `kiro`)
+
+#### 4. Create Kiro hook files
+
+**Option A: CLI Configuration (kiro.json)**
+
+Create or edit `~/.kiro/kiro.json`:
+
+```json
+{
+  "hooks": {
+    "agent_spawn": [
+      { "command": "~/.kiro/hooks/vibe-monitor.sh" }
+    ],
+    "user_prompt_submit": [
+      { "command": "~/.kiro/hooks/vibe-monitor.sh" }
+    ],
+    "pre_tool_use": [
+      { "command": "~/.kiro/hooks/vibe-monitor.sh" }
+    ],
+    "post_tool_use": [
+      { "command": "~/.kiro/hooks/vibe-monitor.sh" }
+    ],
+    "stop": [
+      { "command": "~/.kiro/hooks/vibe-monitor.sh" }
+    ]
+  }
+}
+```
+
+**Option B: IDE Hook Files (.kiro/hooks/)**
+
+Create individual hook files in your project's `.kiro/hooks/` folder:
+
+**`.kiro/hooks/vibe-monitor-start.hook`**
+```json
+{
+  "enabled": true,
+  "name": "Vibe Monitor - Agent Start",
+  "version": "1.0",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "shellCommand",
+    "command": "~/.kiro/hooks/vibe-monitor.sh"
+  }
+}
+```
+
+**`.kiro/hooks/vibe-monitor-save.hook`**
+```json
+{
+  "enabled": true,
+  "name": "Vibe Monitor - File Save",
+  "version": "1.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["**/*"]
+  },
+  "then": {
+    "type": "shellCommand",
+    "command": "curl -s -X POST http://127.0.0.1:19280/status -H 'Content-Type: application/json' -d '{\"state\":\"working\",\"event\":\"FileSave\",\"tool\":\"Edit\"}'"
+  }
+}
+```
+
+#### Kiro Hook Events
+
+| Kiro Event | Vibe Monitor State | Description |
+|------------|-------------------|-------------|
+| `AgentSpawn` | `session_start` | Agent starts |
+| `UserPromptSubmit` | `working` | User submits prompt |
+| `PreToolUse` | `working` | Tool execution starts |
+| `PostToolUse` | `tool_done` | Tool execution ends |
+| `Stop` | `idle` | Agent turn ends |
+| `FileCreate` | `working` | File created (IDE only) |
+| `FileEdited` | `working` | File saved (IDE only) |
+| `FileDeleted` | `working` | File deleted (IDE only) |
+
+#### Kiro-specific Features
+
+Kiro IDE supports additional file-based triggers not available in Claude Code:
+
+```json
+{
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/**/*.ts", "src/**/*.tsx"]
+  }
+}
+```
+
+This enables monitoring of file save events for real-time status updates.
+
+---
+
 ### Hook Priority
 
 The hook sends status updates in order (only if configured):
-1. **Desktop App** - if `CLAUDE_MONITOR_URL` is set (auto-launches via `CLAUDE_MONITOR_DESKTOP` on SessionStart)
+1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `VIBE_MONITOR_DESKTOP`)
 2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
 3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
 
+---
+
+### Event Mapping Comparison
+
+| Action | Claude Code | Kiro CLI | Kiro IDE |
+|--------|-------------|----------|----------|
+| Session start | `SessionStart` | `AgentSpawn` | - |
+| User input | - | `UserPromptSubmit` | `PromptSubmit` |
+| Before tool | `PreToolUse` | `PreToolUse` | - |
+| After tool | `PostToolUse` | `PostToolUse` | - |
+| Agent done | `Stop` | `Stop` | `AgentStop` |
+| Notification | `Notification` | - | - |
+| File create | - | - | `FileCreate` |
+| File save | - | - | `FileEdited` |
+| File delete | - | - | `FileDeleted` |
+| Manual | - | - | `Manual` |
+
 ## Characters
 
-| Character | Color | Description |
-|-----------|-------|-------------|
-| `clawd` | Orange | Default character with arms and legs |
-| `kiro` | White | Ghost character with wavy tail |
+| Character | Color | Description | Auto-selected for |
+|-----------|-------|-------------|-------------------|
+| `clawd` | Orange | Default character with arms and legs | Claude Code |
+| `kiro` | White | Ghost character with wavy tail | Kiro IDE/CLI |
 
-Set character via `CLAUDE_MONITOR_CHARACTER` environment variable or tray menu.
+Character is **auto-detected** based on the IDE hook events. You can also manually change it via the system tray menu.
 
 ## State Display
 
@@ -386,8 +552,8 @@ vibe-monitor/
 ├── vibe-monitor.ino            # ESP32 main firmware
 ├── sprites.h                   # Character rendering (ESP32)
 ├── User_Setup.h                # TFT display configuration
-├── hooks/                      # Claude Code hooks
-│   ├── vibe-monitor.sh         # Hook script
+├── hooks/                      # IDE hooks (Claude Code / Kiro)
+│   ├── vibe-monitor.sh         # Hook script (supports both)
 │   └── .env.sample             # Environment sample
 ├── shared/                     # Shared code (Desktop/Simulator)
 │   ├── config.js               # State/character configuration

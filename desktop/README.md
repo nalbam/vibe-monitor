@@ -42,7 +42,7 @@ curl http://127.0.0.1:19280/status
 Desktop App support is integrated into `hooks/vibe-monitor.sh` in the [claude-config](https://github.com/nalbam/claude-config) repository.
 
 Order in which the hook sends status updates (only if configured):
-1. **Desktop App** - if `CLAUDE_MONITOR_URL` is set (auto-launches via `CLAUDE_MONITOR_DESKTOP` on SessionStart)
+1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `VIBE_MONITOR_DESKTOP` on session start)
 2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
 3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
 
