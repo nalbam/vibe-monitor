@@ -109,6 +109,98 @@ Show window and position to top-right corner
 }
 ```
 
+## WSL (Windows Subsystem for Linux)
+
+Running the Electron app on WSL requires WSLg (Windows 11) and additional dependencies.
+
+### Prerequisites
+
+1. **Windows 11** with WSLg support
+2. **Update WSL**:
+   ```bash
+   wsl --update
+   ```
+
+### Install Dependencies
+
+Electron requires several system libraries that are not installed by default on WSL:
+
+```bash
+# Ubuntu 24.04 (Noble) or later
+sudo apt-get update && sudo apt-get install -y \
+  libasound2t64 \
+  libatk1.0-0 \
+  libatk-bridge2.0-0 \
+  libcups2 \
+  libdrm2 \
+  libgbm1 \
+  libgtk-3-0 \
+  libnss3 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxfixes3 \
+  libxkbcommon0 \
+  libxrandr2 \
+  libxshmfence1 \
+  libglu1-mesa
+
+# Ubuntu 22.04 (Jammy) or earlier
+sudo apt-get update && sudo apt-get install -y \
+  libasound2 \
+  libatk1.0-0 \
+  libatk-bridge2.0-0 \
+  libcups2 \
+  libdrm2 \
+  libgbm1 \
+  libgtk-3-0 \
+  libnss3 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxfixes3 \
+  libxkbcommon0 \
+  libxrandr2
+```
+
+### Run
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+### Troubleshooting
+
+**Error: `libasound.so.2: cannot open shared object file`**
+
+Install the audio library:
+```bash
+# Ubuntu 24.04+
+sudo apt-get install -y libasound2t64
+
+# Ubuntu 22.04 or earlier
+sudo apt-get install -y libasound2
+```
+
+**GPU process errors (can be ignored)**
+
+WSL may show GPU-related warnings like:
+```
+Exiting GPU process due to errors during initialization
+```
+These warnings don't affect app functionality.
+
+**Window not appearing**
+
+Ensure WSLg is working:
+```bash
+# Test with a simple GUI app
+sudo apt-get install -y x11-apps
+xclock
+```
+
+If xclock doesn't appear, WSLg may need to be enabled or updated.
+
 ## Build
 
 Build for macOS:
