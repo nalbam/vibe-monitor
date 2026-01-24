@@ -74,7 +74,7 @@ See [ESP32 Setup](#esp32-setup) section below.
 
 ## Claude Code Integration
 
-Claude Monitor integrates with Claude Code through hooks. The [claude-config](https://github.com/nalbam/claude-config) repository provides ready-to-use hooks.
+Claude Monitor integrates with Claude Code through hooks.
 
 ### How It Works
 
@@ -86,24 +86,53 @@ Claude Code → Hooks → Claude Monitor
           project, etc.)     ESP32, or both)
 ```
 
+### Hook Setup
+
+**1. Copy hook script:**
+
+```bash
+cp hooks/claude-monitor.sh ~/.claude/hooks/
+chmod +x ~/.claude/hooks/claude-monitor.sh
+```
+
+**2. Copy environment sample:**
+
+```bash
+cp hooks/.env.sample ~/.claude/.env.local
+```
+
+**3. Edit `~/.claude/.env.local`:**
+
+```bash
+# Desktop App path (auto-launches on SessionStart)
+export CLAUDE_MONITOR_DESKTOP="~/claude-monitor/desktop"
+
+# ESP32 USB Serial port (optional)
+export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
+
+# ESP32 WiFi HTTP (optional)
+# export ESP32_HTTP_URL="http://192.168.1.100"
+```
+
+**4. Register hook in `~/.claude/settings.json`:**
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
+    "PostToolUse": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
+    "Notification": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
+    "Stop": [{ "command": "~/.claude/hooks/claude-monitor.sh" }]
+  }
+}
+```
+
 ### Hook Priority
 
 The hook sends status updates in order:
 1. **Desktop App** (`http://127.0.0.1:19280`) - always attempted first
 2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is configured
 3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is configured
-
-### Configuration
-
-Edit `~/.claude/.env.local`:
-
-```bash
-# ESP32 USB Serial port (optional)
-export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
-
-# ESP32 WiFi HTTP endpoint (optional)
-# export ESP32_HTTP_URL="http://192.168.1.100"
-```
 
 ## State Display
 
@@ -263,22 +292,19 @@ See [desktop/README.md](desktop/README.md) for WSL setup and troubleshooting.
 
 1. **Add ESP32 Board Manager**
    - File → Preferences → Additional Board Manager URLs:
-   ```
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-   ```
+   - `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
 
 2. **Install ESP32 Board**
    - Tools → Board → Boards Manager → Search "esp32" → Install
 
 3. **Install Libraries**
    - Tools → Manage Libraries:
-     - `TFT_eSPI` by Bodmer
-     - `ArduinoJson` by Benoit Blanchon
+   - `TFT_eSPI` by Bodmer
+   - `ArduinoJson` by Benoit Blanchon
 
 4. **Configure TFT_eSPI**
-   ```bash
-   cp User_Setup.h ~/Documents/Arduino/libraries/TFT_eSPI/User_Setup.h
-   ```
+   - Copy `User_Setup.h` to Arduino library folder:
+   - `cp User_Setup.h ~/Documents/Arduino/libraries/TFT_eSPI/User_Setup.h`
 
 5. **Upload**
    - Tools → Board → ESP32C6 Dev Module
@@ -319,33 +345,18 @@ echo '{"state":"idle","project":"test","model":"opus","memory":"45%"}' > /dev/cu
 
 ### Desktop App
 
-**Window not appearing**
-- Check system tray for the app icon
-- Use `curl -X POST http://127.0.0.1:19280/show` to show window
-
-**Port already in use**
-- Another instance may be running
-- Check with `lsof -i :19280`
+| Issue | Solution |
+|-------|----------|
+| Window not appearing | Check system tray for app icon, or run `curl -X POST http://127.0.0.1:19280/show` |
+| Port already in use | Another instance may be running. Check with `lsof -i :19280` |
 
 ### ESP32
 
-**Display not working**
-- Verify `User_Setup.h` is copied to TFT_eSPI library folder
-- Check pin configuration matches your board
-- Verify backlight pin (TFT_BL) is configured
-
-**Serial connection failed**
-```bash
-# Check port permissions (Linux)
-sudo chmod 666 /dev/ttyUSB0
-
-# Test with serial monitor
-screen /dev/cu.usbmodem1101 115200
-```
-
-**JSON parsing error**
-- Ensure JSON ends with LF (`\n`)
-- Check serial monitor for "JSON parse error" message
+| Issue | Solution |
+|-------|----------|
+| Display not working | Verify `User_Setup.h` is copied to TFT_eSPI library folder |
+| Serial connection failed | Check port permissions: `sudo chmod 666 /dev/ttyUSB0` |
+| JSON parsing error | Ensure JSON ends with LF (`\n`) |
 
 ## File Structure
 
@@ -356,6 +367,9 @@ claude-monitor/
 ├── claude-monitor.ino          # ESP32 main firmware
 ├── sprites.h                   # Character rendering
 ├── User_Setup.h                # TFT display configuration
+├── hooks/                      # Claude Code hooks
+│   ├── claude-monitor.sh       # Hook script
+│   └── .env.sample             # Environment sample
 ├── desktop/                    # Desktop app
 │   ├── main.js                 # Electron main process
 │   ├── index.html              # Renderer
