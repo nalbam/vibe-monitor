@@ -1,13 +1,13 @@
 # Vibe Monitor Desktop App
 
-A frameless desktop app for real-time monitoring of Claude Code status.
+Electron-based desktop app for real-time monitoring of AI coding assistants (Claude Code, Kiro IDE/CLI) with pixel art character.
 
 ## Features
 
 - **Frameless Window**: Clean floating design
 - **Always on Top**: Always displayed above other windows
 - **System Tray**: Quick control from the menu bar
-- **HTTP API**: Easy integration with Claude Code hooks
+- **HTTP API**: Easy integration with IDE hooks (Claude Code, Kiro)
 - **Draggable**: Move the window to any position
 
 ## Installation
@@ -37,36 +37,72 @@ curl -X POST http://127.0.0.1:19280/status \
 curl http://127.0.0.1:19280/status
 ```
 
-### Claude Code Hooks Integration
+### IDE Hooks Integration
 
-Desktop App support is integrated into `hooks/vibe-monitor.sh` in the [vibe-config](https://github.com/nalbam/vibe-config) repository.
+Desktop App support is integrated into `hooks/vibe-monitor.sh` in the [vibe-monitor](https://github.com/nalbam/vibe-monitor) repository. Works with both Claude Code and Kiro IDE/CLI.
 
-Order in which the hook sends status updates (only if configured):
-1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `VIBE_MONITOR_DESKTOP` on session start)
+**Hook priority** (only if configured):
+1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `VIBE_MONITOR_DESKTOP`)
 2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
 3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
 
-Run the Desktop app and use Claude Code to automatically update the status.
+See [main README](../README.md#ide-integration) for detailed setup instructions.
+
+## Supported IDEs
+
+| IDE | Hook System | Status |
+|-----|-------------|--------|
+| **Claude Code** | Shell hooks via `settings.json` | ✅ Supported |
+| **Kiro IDE/CLI** | Agent hooks via `.kiro/hooks/` | ✅ Supported |
 
 ## States
 
-| State | Background | Description |
-|-------|------------|-------------|
-| `session_start` | Cyan | Session started |
-| `idle` | Green | Ready/Standby |
-| `working` | Blue | Work in progress |
-| `notification` | Yellow | Input requested |
-| `tool_done` | Green | Tool completed |
-| `sleep` | Navy | Sleep mode (10min inactivity) |
+| State | Background | Eyes | Text | Trigger |
+|-------|------------|------|------|---------|
+| `session_start` | Cyan | ■ ■ + ✦ | Hello! | Session begins |
+| `idle` | Green | ■ ■ | Ready | Waiting for input |
+| `working` | Blue | ▬ ▬ | (tool-based) | Tool executing |
+| `notification` | Yellow | ● ● + ? | Input? | User input needed |
+| `tool_done` | Green | ∨ ∨ | Done! | Tool completed |
+| `sleep` | Navy | ─ ─ + Z | Zzz... | 10min inactivity |
+
+### Working State Text
+
+The `working` state displays context-aware text based on the active tool:
+
+| Tool | Possible Text |
+|------|---------------|
+| Bash | Running, Executing, Processing |
+| Read | Reading, Scanning, Checking |
+| Edit | Editing, Modifying, Fixing |
+| Write | Writing, Creating, Saving |
+| Grep | Searching, Finding, Looking |
+| Glob | Scanning, Browsing, Finding |
+| Task | Thinking, Working, Planning |
+| WebFetch | Fetching, Loading, Getting |
+| WebSearch | Searching, Googling, Looking |
+| Default | Working, Busy, Coding |
+
+### Animations
+
+- **Floating**: Gentle floating motion (±3px horizontal, ±5px vertical, ~3.2s cycle)
+- **Blink**: Idle state blinks every 3 seconds
+- **Loading dots**: Working state shows animated progress dots
+- **Sparkle**: Session start shows rotating sparkle effect
+- **Zzz**: Sleep state shows blinking Z animation
+
+### Sleep Mode
+
+Automatically transitions to `sleep` after 10 minutes of inactivity from `idle` or `tool_done`. Any new status update wakes the display.
 
 ## Characters
 
-| Character | Color | Description |
-|-----------|-------|-------------|
-| `clawd` | Orange | Default character with arms and legs |
-| `kiro` | White | Ghost character with wavy tail |
+| Character | Color | Description | Auto-selected for |
+|-----------|-------|-------------|-------------------|
+| `clawd` | Orange | Default character with arms and legs | Claude Code |
+| `kiro` | White | Ghost character with wavy tail | Kiro IDE/CLI |
 
-Change character via tray menu or POST `/status` with `character` field.
+Character is **auto-detected** based on the IDE hook events. You can also change it via tray menu or POST `/status` with `character` field.
 
 ## API
 

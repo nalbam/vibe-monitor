@@ -208,9 +208,6 @@ Create or edit `~/.kiro/kiro.json`:
     "pre_tool_use": [
       { "command": "~/.kiro/hooks/vibe-monitor.sh" }
     ],
-    "post_tool_use": [
-      { "command": "~/.kiro/hooks/vibe-monitor.sh" }
-    ],
     "stop": [
       { "command": "~/.kiro/hooks/vibe-monitor.sh" }
     ]
