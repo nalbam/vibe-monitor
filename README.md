@@ -119,6 +119,7 @@ export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
 ```json
 {
   "hooks": {
+    "SessionStart": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
     "PreToolUse": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
     "PostToolUse": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
     "Notification": [{ "command": "~/.claude/hooks/claude-monitor.sh" }],
