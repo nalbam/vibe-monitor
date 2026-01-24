@@ -39,7 +39,7 @@ curl http://127.0.0.1:19280/status
 
 ### Claude Code Hooks Integration
 
-Desktop App support is integrated into `hooks/vibe-monitor.sh` in the [claude-config](https://github.com/nalbam/claude-config) repository.
+Desktop App support is integrated into `hooks/vibe-monitor.sh` in the [vibe-config](https://github.com/nalbam/vibe-config) repository.
 
 Order in which the hook sends status updates (only if configured):
 1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `VIBE_MONITOR_DESKTOP` on session start)
