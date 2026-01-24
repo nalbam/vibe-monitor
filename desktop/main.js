@@ -18,10 +18,10 @@ const HTTP_PORT = 19280;
 
 // State colors (matching index.html)
 const STATE_COLORS = {
+  session_start: '#00CCCC',
   idle: '#00AA00',
   working: '#0066CC',
   notification: '#FFCC00',
-  session_start: '#00CCCC',
   tool_done: '#00AA00'
 };
 

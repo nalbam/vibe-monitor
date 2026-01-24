@@ -216,6 +216,13 @@
 
     // State configuration
     const states = {
+      session_start: {
+        bgColor: '#00CCCC',
+        text: 'Hello!',
+        eyeType: 'sparkle',
+        showLoading: false,
+        textColor: '#000000'
+      },
       idle: {
         bgColor: '#00AA00',
         text: 'Ready',
@@ -234,13 +241,6 @@
         bgColor: '#FFCC00',
         text: 'Input?',
         eyeType: 'alert',
-        showLoading: false,
-        textColor: '#000000'
-      },
-      session_start: {
-        bgColor: '#00CCCC',
-        text: 'Hello!',
-        eyeType: 'sparkle',
         showLoading: false,
         textColor: '#000000'
       },
@@ -482,12 +482,12 @@
         // Floating animation (all states)
         updateFloatingPosition();
 
-        if (currentState === 'working') {
-          updateLoadingDots();
-        }
-
         if (currentState === 'session_start') {
           drawCharacter('sparkle');
+        }
+
+        if (currentState === 'working') {
+          updateLoadingDots();
         }
 
         if (currentState === 'idle') {

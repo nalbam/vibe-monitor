@@ -52,10 +52,10 @@ Run the Desktop app and use Claude Code to automatically update the status.
 
 | State | Background | Description |
 |-------|------------|-------------|
+| `session_start` | Cyan | Session started |
 | `idle` | Green | Ready/Standby |
 | `working` | Blue | Work in progress |
 | `notification` | Yellow | Input requested |
-| `session_start` | Cyan | Session started |
 | `tool_done` | Green | Tool completed |
 
 ## API
