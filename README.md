@@ -1,11 +1,26 @@
 # Claude Monitor
 
-Real-time status monitor for Claude Code with pixel art character.
+Real-time status and usage monitor for Claude Code with pixel art character.
 
-**Supported Platforms:**
-- 🖥️ **Desktop App** - Electron app for macOS, Windows, Linux
-- 🔌 **ESP32 Hardware** - Dedicated LCD display (ESP32-C6-LCD-1.47)
-- 🌐 **Web Simulator** - Browser-based preview (no installation)
+Monitor your Claude Code sessions at a glance - see what state it's in, which project and tool it's using, what model is active, and how much context memory is consumed.
+
+## What It Monitors
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| **State** | Current Claude Code activity state | `working`, `idle`, `notification` |
+| **Project** | Active project directory name | `claude-monitor` |
+| **Tool** | Currently executing tool | `Bash`, `Read`, `Edit` |
+| **Model** | Active Claude model | `Opus 4.5`, `Sonnet` |
+| **Memory** | Context window usage percentage | `45%` |
+
+## Platforms
+
+| Platform | Description | Best For |
+|----------|-------------|----------|
+| **Desktop App** | Electron app with system tray | Daily use, always-visible monitoring |
+| **ESP32 Hardware** | Dedicated LCD display device | Desk companion, hardware enthusiasts |
+| **Web Simulator** | Browser-based preview | Testing, development, no installation |
 
 ## Preview
 
@@ -22,35 +37,88 @@ Real-time status monitor for Claude Code with pixel art character.
 │     Working        │  ← Status text
 │     ● ● ● ○        │  ← Loading animation
 ├────────────────────┤
-│ 📂 dotfiles        │
-│ 🛠️ Bash            │
-│ 🤖 Opus 4.5        │
-│ 🧠 45%             │
+│ 📂 my-project      │  ← Project name
+│ 🛠️ Bash            │  ← Current tool
+│ 🤖 Opus 4.5        │  ← Model
+│ 🧠 45%             │  ← Memory usage
 │ ████████░░░░░░░░░░ │  ← Memory bar (gradient)
 └────────────────────┘
 ```
 
-## Hardware
+## Quick Start
 
-- **Board**: ESP32-C6-LCD-1.47 (172x320, ST7789V2)
-- **Connection**: USB-C (Serial communication)
+### Desktop App (Recommended)
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+The app runs in the system tray and listens on `http://127.0.0.1:19280`.
+
+### Web Simulator
+
+No installation required - just open in browser:
+
+**Online**: https://nalbam.github.io/claude-monitor/simulator/
+
+**Local**:
+```bash
+open simulator/index.html
+```
+
+### ESP32 Hardware
+
+See [ESP32 Setup](#esp32-setup) section below.
+
+## Claude Code Integration
+
+Claude Monitor integrates with Claude Code through hooks. The [claude-config](https://github.com/nalbam/claude-config) repository provides ready-to-use hooks.
+
+### How It Works
+
+```
+Claude Code → Hooks → Claude Monitor
+     │                      │
+     └── Events ──────────→ Display
+         (state, tool,      (Desktop App,
+          project, etc.)     ESP32, or both)
+```
+
+### Hook Priority
+
+The hook sends status updates in order:
+1. **Desktop App** (`http://127.0.0.1:19280`) - always attempted first
+2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is configured
+3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is configured
+
+### Configuration
+
+Edit `~/.claude/.env.local`:
+
+```bash
+# ESP32 USB Serial port (optional)
+export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
+
+# ESP32 WiFi HTTP endpoint (optional)
+# export ESP32_HTTP_URL="http://192.168.1.100"
+```
 
 ## State Display
 
-| State | Background | Eyes | Animation |
-|-------|------------|------|-----------|
-| `session_start` | Cyan | ■ ■ + ✦ | Rotating sparkle |
-| `idle` | Green | ■ ■ Square | Blink every 3s |
-| `working` | Blue | ▬ ▬ Focused | Loading dots |
-| `notification` | Yellow | ● ● Round + ? | Question mark |
-| `tool_done` | Green | ∨ ∨ Happy | - |
-| `sleep` | Navy | ─ ─ Closed + Z | Blinking Zzz |
+| State | Background | Eyes | Text | Trigger |
+|-------|------------|------|------|---------|
+| `session_start` | Cyan | ■ ■ + ✦ | Hello! | Session begins |
+| `idle` | Green | ■ ■ | Ready | Waiting for input |
+| `working` | Blue | ▬ ▬ | (tool-based) | Tool executing |
+| `notification` | Yellow | ● ● + ? | Input? | User input needed |
+| `tool_done` | Green | ∨ ∨ | Done! | Tool completed |
+| `sleep` | Navy | ─ ─ + Z | Zzz... | 10min inactivity |
 
-**Sleep Mode**: Automatically transitions to `sleep` state after 10 minutes of inactivity (from `idle` or `tool_done`). Any new state message wakes up the display.
+### Working State Text
 
-**Common Animation**: All states have a gentle floating animation (±3px horizontal, ±5px vertical movement, ~3.2s cycle).
-
-**Working State Text**: The `working` state displays tool-specific text randomly selected from:
+The `working` state displays context-aware text based on the active tool:
 
 | Tool | Possible Text |
 |------|---------------|
@@ -65,9 +133,133 @@ Real-time status monitor for Claude Code with pixel art character.
 | WebSearch | Searching, Googling, Looking |
 | Default | Working, Busy, Coding |
 
-## Installation
+### Animations
 
-### 1. Arduino IDE Setup
+- **Floating**: All states have gentle floating motion (±3px horizontal, ±5px vertical, ~3.2s cycle)
+- **Blink**: Idle state blinks every 3 seconds
+- **Loading dots**: Working state shows animated progress dots
+- **Sparkle**: Session start shows rotating sparkle effect
+- **Zzz**: Sleep state shows blinking Z animation
+
+### Sleep Mode
+
+Automatically transitions to `sleep` after 10 minutes of inactivity from `idle` or `tool_done`. Any new status update wakes the display.
+
+## HTTP API
+
+Both Desktop App (port 19280) and ESP32 WiFi mode (port 80) support the same API.
+
+### POST /status
+
+Update monitor status.
+
+```bash
+curl -X POST http://127.0.0.1:19280/status \
+  -H "Content-Type: application/json" \
+  -d '{"state":"working","tool":"Bash","project":"my-project","model":"opus","memory":"45%"}'
+```
+
+**Request Body:**
+```json
+{
+  "state": "working",
+  "event": "PreToolUse",
+  "tool": "Bash",
+  "project": "my-project",
+  "model": "opus",
+  "memory": "45%"
+}
+```
+
+### GET /status
+
+Get current status.
+
+```bash
+curl http://127.0.0.1:19280/status
+```
+
+**Response:**
+```json
+{
+  "state": "working",
+  "project": "my-project",
+  "tool": "Bash",
+  "model": "opus",
+  "memory": "45%"
+}
+```
+
+### GET /health
+
+Health check endpoint.
+
+```bash
+curl http://127.0.0.1:19280/health
+```
+
+### POST /show (Desktop only)
+
+Show window and position to top-right corner.
+
+```bash
+curl -X POST http://127.0.0.1:19280/show
+```
+
+### GET /debug (Desktop only)
+
+Get display and window debug information.
+
+```bash
+curl http://127.0.0.1:19280/debug
+```
+
+## Desktop App
+
+### Features
+
+- **Frameless window**: Clean floating design
+- **Always on Top**: Stays visible above other windows
+- **System Tray**: Quick access from menubar/taskbar
+- **Platform icons**: Emoji on macOS, pixel art on Windows/Linux
+- **Draggable**: Move window anywhere on screen
+
+### System Tray Menu
+
+- View current state
+- Manually change state
+- Toggle Always on Top
+- Show/Hide window
+- Quit application
+
+### Build
+
+```bash
+cd desktop
+
+# macOS
+npm run build:mac
+
+# Windows
+npm run build:win
+
+# Linux
+npm run build:linux
+
+# All platforms
+npm run build:all
+```
+
+See [desktop/README.md](desktop/README.md) for WSL setup and troubleshooting.
+
+## ESP32 Setup
+
+### Hardware
+
+- **Board**: ESP32-C6-LCD-1.47 (172x320, ST7789V2)
+- **Connection**: USB-C (Serial) or WiFi
+
+### Arduino IDE Setup
 
 1. **Add ESP32 Board Manager**
    - File → Preferences → Additional Board Manager URLs:
@@ -83,35 +275,27 @@ Real-time status monitor for Claude Code with pixel art character.
      - `TFT_eSPI` by Bodmer
      - `ArduinoJson` by Benoit Blanchon
 
-### 2. TFT_eSPI Configuration
+4. **Configure TFT_eSPI**
+   ```bash
+   cp User_Setup.h ~/Documents/Arduino/libraries/TFT_eSPI/User_Setup.h
+   ```
 
-Copy `User_Setup.h` to Arduino library folder:
+5. **Upload**
+   - Tools → Board → ESP32C6 Dev Module
+   - Tools → Port → /dev/cu.usbmodem* (or appropriate port)
+   - Click Upload
 
-```bash
-cp User_Setup.h ~/Documents/Arduino/libraries/TFT_eSPI/User_Setup.h
+### WiFi Mode (Optional)
+
+Edit `claude-monitor.ino`:
+
+```cpp
+#define USE_WIFI
+const char* ssid = "YOUR_SSID";
+const char* password = "YOUR_PASSWORD";
 ```
 
-### 3. Upload
-
-1. **Select Board**: Tools → Board → ESP32C6 Dev Module
-2. **Select Port**: Tools → Port → /dev/cu.usbmodem* (or appropriate port)
-3. **Upload**: Click Upload button
-
-## Claude Monitor Configuration
-
-### 1. Environment Variables
-
-Edit `~/.claude/.env.local`:
-
-```bash
-# USB Serial port (auto-detection also available)
-export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
-
-# HTTP fallback (optional, for WiFi mode)
-# export ESP32_HTTP_URL="http://192.168.1.100"
-```
-
-### 2. Check Serial Port
+### Serial Port Check
 
 ```bash
 # macOS
@@ -121,159 +305,36 @@ ls /dev/cu.*
 ls /dev/ttyUSB* /dev/ttyACM*
 ```
 
-## File Structure
-
-```
-claude-monitor/
-├── claude-monitor.ino          # Main firmware
-├── sprites.h                   # Character drawing functions
-├── User_Setup.h                # TFT display configuration
-├── CLAUDE.md                   # AI development guidelines
-├── simulator/                  # Web simulator
-│   └── index.html              # Browser testing
-├── desktop/                    # Electron desktop app
-│   ├── main.js                 # Main process (window, tray, HTTP server)
-│   ├── preload.js              # IPC bridge
-│   ├── index.html              # Renderer (character display)
-│   ├── package.json            # Dependencies (electron, canvas)
-│   ├── README.md               # Desktop app documentation
-│   └── assets/                 # Application icons
-│       ├── icon.png            # Linux icon (512x512)
-│       ├── icon.icns           # macOS icon
-│       └── icon.ico            # Windows icon
-└── README.md                   # This document
-```
-
-## Simulator
-
-Preview the display in browser without hardware.
-
-**Web Simulator**: https://nalbam.github.io/claude-monitor/simulator/
+### Testing
 
 ```bash
-# Run locally
-open simulator/index.html
-```
+# Test working state
+echo '{"state":"working","tool":"Bash","project":"test","model":"opus","memory":"50%"}' > /dev/cu.usbmodem1101
 
-Simulator features:
-- Switch between 5 states with buttons
-- Input Project/Tool/Model/Memory values
-- JSON payload preview
-- Real-time animations (floating, blink, loading dots, sparkle)
-
-## Desktop App
-
-Frameless desktop app for monitoring Claude Code status.
-
-### Quick Start
-
-```bash
-cd desktop
-npm install
-npm start
-```
-
-### Features
-
-- **Frameless window**: Clean floating design
-- **Always on Top**: Stays above other windows
-- **System Tray**: Quick control from menubar
-- **HTTP API**: Easy integration with Claude Code hooks (port 19280)
-- **Draggable**: Move window anywhere
-
-### Claude Code Hooks Integration
-
-Desktop app support is integrated into [claude-config](https://github.com/nalbam/claude-config) repository's `hooks/claude-monitor.sh`.
-
-The hook sends status updates to:
-1. **Desktop App** (`http://127.0.0.1:19280`) - always attempted first
-2. **ESP32 USB Serial** - if configured
-3. **ESP32 HTTP** - if configured
-
-Just run the desktop app and use Claude Code with the configured hooks.
-
-### HTTP API
-
-```bash
-# Update status
-curl -X POST http://127.0.0.1:19280/status \
-  -H "Content-Type: application/json" \
-  -d '{"state":"working","tool":"Bash","project":"my-project","model":"opus","memory":"45%"}'
-
-# Get current status
-curl http://127.0.0.1:19280/status
-# Response: {"state":"working","project":"my-project","tool":"Bash","model":"opus","memory":"45%"}
-
-# Health check
-curl http://127.0.0.1:19280/health
-
-# Show and position window
-curl -X POST http://127.0.0.1:19280/show
-```
-
-## WiFi Mode (Optional)
-
-To use WiFi instead of USB:
-
-1. Uncomment `#define USE_WIFI` in code
-2. Set WiFi SSID/Password
-3. Set `ESP32_HTTP_URL` environment variable
-
-```cpp
-#define USE_WIFI
-const char* ssid = "YOUR_SSID";
-const char* password = "YOUR_PASSWORD";
-```
-
-### HTTP API
-
-```bash
-# POST /status - Update status
-curl -X POST http://192.168.1.100/status \
-  -H "Content-Type: application/json" \
-  -d '{"state":"working","event":"PreToolUse","tool":"Bash","project":"claude-monitor","model":"opus","memory":"45%"}'
-
-# Response
-{"ok":true}
-
-# Error (no body)
-{"error":"no body"}
-```
-
-## Testing
-
-### USB Serial test
-
-```bash
-# session_start (cyan, sparkle)
-echo '{"state":"session_start","event":"SessionStart","tool":"","project":"claude-monitor","model":"opus","memory":"10%"}' > /dev/cu.usbmodem1101
-
-# idle (green, square eyes)
-echo '{"state":"idle","event":"Stop","tool":"","project":"claude-monitor","model":"opus","memory":"45%"}' > /dev/cu.usbmodem1101
-
-# working (blue, focused eyes)
-echo '{"state":"working","event":"PreToolUse","tool":"Bash","project":"claude-monitor","model":"opus","memory":"50%"}' > /dev/cu.usbmodem1101
-
-# notification (yellow, round eyes)
-echo '{"state":"notification","event":"Notification","tool":"","project":"claude-monitor","model":"opus","memory":"60%"}' > /dev/cu.usbmodem1101
-
-# tool_done (green, happy eyes)
-echo '{"state":"tool_done","event":"PostToolUse","tool":"Bash","project":"claude-monitor","model":"opus","memory":"55%"}' > /dev/cu.usbmodem1101
-
-# sleep (navy, closed eyes + Zzz)
-echo '{"state":"sleep","event":"Sleep","tool":"","project":"claude-monitor","model":"opus","memory":"55%"}' > /dev/cu.usbmodem1101
+# Test idle state
+echo '{"state":"idle","project":"test","model":"opus","memory":"45%"}' > /dev/cu.usbmodem1101
 ```
 
 ## Troubleshooting
 
-### Display not working
+### Desktop App
 
-- Verify `User_Setup.h` is in correct location
-- Check pin configuration matches board
-- Check backlight pin (TFT_BL)
+**Window not appearing**
+- Check system tray for the app icon
+- Use `curl -X POST http://127.0.0.1:19280/show` to show window
 
-### Serial connection failed
+**Port already in use**
+- Another instance may be running
+- Check with `lsof -i :19280`
 
+### ESP32
+
+**Display not working**
+- Verify `User_Setup.h` is copied to TFT_eSPI library folder
+- Check pin configuration matches your board
+- Verify backlight pin (TFT_BL) is configured
+
+**Serial connection failed**
 ```bash
 # Check port permissions (Linux)
 sudo chmod 666 /dev/ttyUSB0
@@ -282,12 +343,32 @@ sudo chmod 666 /dev/ttyUSB0
 screen /dev/cu.usbmodem1101 115200
 ```
 
-### JSON parsing error
+**JSON parsing error**
+- Ensure JSON ends with LF (`\n`)
+- Check serial monitor for "JSON parse error" message
 
-Check serial monitor for "JSON parse error" message
-→ Verify line ending (use LF only)
+## File Structure
+
+```
+claude-monitor/
+├── README.md                   # This document
+├── CLAUDE.md                   # AI development guidelines
+├── claude-monitor.ino          # ESP32 main firmware
+├── sprites.h                   # Character rendering
+├── User_Setup.h                # TFT display configuration
+├── desktop/                    # Desktop app
+│   ├── main.js                 # Electron main process
+│   ├── index.html              # Renderer
+│   ├── preload.js              # IPC bridge
+│   ├── package.json            # Dependencies
+│   ├── README.md               # Desktop-specific docs
+│   └── assets/                 # App icons
+└── simulator/                  # Web simulator
+    └── index.html              # Browser testing
+```
 
 ## Version History
 
-- **v2.0**: Pixel art character version (Claude mascot, 128x128, web simulator)
-- **v1.0**: Circular status display version
+- **v2.1**: Desktop app with system tray, memory bar gradient
+- **v2.0**: Pixel art character (128x128), web simulator
+- **v1.0**: Circular status display

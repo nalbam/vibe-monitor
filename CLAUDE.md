@@ -4,26 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ESP32 firmware that displays Claude Code's status in real-time using a pixel art character on a 172×320 LCD. Supports 6 states: session_start, idle, working, notification, tool_done, and sleep.
+Real-time status and usage monitor for Claude Code with pixel art character. Displays state, project, tool, model, and memory usage. Supports 6 states: session_start, idle, working, notification, tool_done, and sleep.
+
+**Platforms:**
+- Desktop App (Electron) - Primary, recommended for daily use
+- ESP32 Hardware (172×320 LCD) - Dedicated display device
+- Web Simulator - Browser-based testing
 
 ## Development Environment
 
-### Prerequisites
+### Desktop App
+```bash
+cd desktop
+npm install
+npm start
+```
+
+### ESP32 Firmware
 1. Install Arduino IDE
 2. Add ESP32 board manager: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
 3. Install libraries: `TFT_eSPI` (Bodmer), `ArduinoJson` (Benoit Blanchon)
-4. **Important**: Copy `User_Setup.h` to library folder:
+4. Copy `User_Setup.h` to library folder:
    ```bash
    cp User_Setup.h ~/Documents/Arduino/libraries/TFT_eSPI/User_Setup.h
    ```
-
-### Build & Upload
-```bash
-# In Arduino IDE:
-# 1. Tools → Board → ESP32C6 Dev Module
-# 2. Tools → Port → /dev/cu.usbmodem* (or appropriate port)
-# 3. Click Upload button
-```
+5. Upload via Arduino IDE (ESP32C6 Dev Module)
 
 ## Architecture
 
