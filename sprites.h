@@ -115,7 +115,7 @@ typedef struct {
   int partW[4];
   int partH[4];
   // Eyes
-  int eyeLeftX, eyeRightX, eyeY, eyeSize;
+  int eyeLeftX, eyeRightX, eyeY, eyeW, eyeH;
 } CharacterGeometry;
 
 // Character definitions
@@ -134,8 +134,8 @@ const CharacterGeometry CHAR_CLAWD = {
   {44, 44, 44, 44},  // partY
   {6, 6, 6, 6},      // partW
   {12, 12, 12, 12},  // partH
-  // Eyes
-  14, 44, 22, 6      // leftX, rightX, y, size
+  // Eyes (w, h for width and height)
+  14, 44, 22, 6, 6      // leftX, rightX, y, w, h
 };
 
 const CharacterGeometry CHAR_KIRO = {
@@ -153,8 +153,8 @@ const CharacterGeometry CHAR_KIRO = {
   {0, 0, 0, 0},
   {0, 0, 0, 0},
   {0, 0, 0, 0},
-  // Eyes (matches 64x64 sprite positions)
-  30, 40, 17, 5      // leftX, rightX, y, size
+  // Eyes (matches 64x64 sprite, tall vertical eyes)
+  29, 39, 21, 5, 8      // leftX, rightX, y, w, h
 };
 
 // Character array for dynamic lookup
@@ -321,45 +321,45 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
   int leftEyeX = x + (character->eyeLeftX * SCALE);
   int rightEyeX = x + (character->eyeRightX * SCALE);
   int eyeY = y + (character->eyeY * SCALE);
-  int eyeSize = character->eyeSize;
-  int es = eyeSize * SCALE;  // Scaled eye size
+  int ew = character->eyeW * SCALE;  // Scaled eye width
+  int eh = character->eyeH * SCALE;  // Scaled eye height
 
   // Effect color (yellow for white characters, white for others)
   uint16_t effectColor = (character->color == COLOR_KIRO) ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
 
   // Effect position (relative to right eye)
-  int effectX = rightEyeX + es + (2 * SCALE);
+  int effectX = rightEyeX + ew + (2 * SCALE);
   int effectY = eyeY - (4 * SCALE);
 
   switch (eyeType) {
     case EYE_NORMAL:
-      tft.fillRect(leftEyeX, eyeY, es, es, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY, es, es, COLOR_EYE);
+      tft.fillRect(leftEyeX, eyeY, ew, eh, COLOR_EYE);
+      tft.fillRect(rightEyeX, eyeY, ew, eh, COLOR_EYE);
       break;
 
     case EYE_FOCUSED:
-      tft.fillRect(leftEyeX, eyeY + es/3, es, es/2, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY + es/3, es, es/2, COLOR_EYE);
+      tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/2, COLOR_EYE);
+      tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/2, COLOR_EYE);
       break;
 
     case EYE_ALERT:
       // Round eyes
-      tft.fillRect(leftEyeX + SCALE, eyeY, es - 2*SCALE, es, COLOR_EYE);
-      tft.fillRect(leftEyeX, eyeY + SCALE, es, es - 2*SCALE, COLOR_EYE);
-      tft.fillRect(rightEyeX + SCALE, eyeY, es - 2*SCALE, es, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY + SCALE, es, es - 2*SCALE, COLOR_EYE);
+      tft.fillRect(leftEyeX + SCALE, eyeY, ew - 2*SCALE, eh, COLOR_EYE);
+      tft.fillRect(leftEyeX, eyeY + SCALE, ew, eh - 2*SCALE, COLOR_EYE);
+      tft.fillRect(rightEyeX + SCALE, eyeY, ew - 2*SCALE, eh, COLOR_EYE);
+      tft.fillRect(rightEyeX, eyeY + SCALE, ew, eh - 2*SCALE, COLOR_EYE);
       drawQuestionMark(tft, effectX, effectY);
       break;
 
     case EYE_SPARKLE:
-      tft.fillRect(leftEyeX, eyeY, es, es, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY, es, es, COLOR_EYE);
+      tft.fillRect(leftEyeX, eyeY, ew, eh, COLOR_EYE);
+      tft.fillRect(rightEyeX, eyeY, ew, eh, COLOR_EYE);
       drawSparkle(tft, effectX, effectY + (2 * SCALE), effectColor);
       break;
 
     case EYE_HAPPY: {
       // Simplified happy eyes (^ ^)
-      int unit = max(1, eyeSize / 3) * SCALE;
+      int unit = max(1, min(character->eyeW, character->eyeH) / 3) * SCALE;
       tft.fillRect(leftEyeX + unit, eyeY, unit, unit, COLOR_EYE);
       tft.fillRect(leftEyeX, eyeY + unit, unit, unit, COLOR_EYE);
       tft.fillRect(leftEyeX + unit * 2, eyeY + unit, unit, unit, COLOR_EYE);
@@ -370,8 +370,8 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
     }
 
     case EYE_SLEEP:
-      tft.fillRect(leftEyeX, eyeY + es/3, es, es/3, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY + es/3, es, es/3, COLOR_EYE);
+      tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
+      tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
       drawZzz(tft, effectX, effectY, animFrame, effectColor);
       break;
   }
@@ -537,16 +537,17 @@ void drawBlinkEyes(TFT_eSPI &tft, int x, int y, int frame, const CharacterGeomet
   int leftEyeX = x + (character->eyeLeftX * SCALE);
   int rightEyeX = x + (character->eyeRightX * SCALE);
   int eyeY = y + (character->eyeY * SCALE);
-  int eyeSize = character->eyeSize;
+  int ew = character->eyeW * SCALE;
+  int eh = character->eyeH * SCALE;
 
   if (frame == 0) {
     // Eyes closed (thin line)
-    tft.fillRect(leftEyeX, eyeY + (2 * SCALE), eyeSize * SCALE, 2 * SCALE, COLOR_EYE);
-    tft.fillRect(rightEyeX, eyeY + (2 * SCALE), eyeSize * SCALE, 2 * SCALE, COLOR_EYE);
+    tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
+    tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
   } else {
     // Eyes open (normal)
-    tft.fillRect(leftEyeX, eyeY, eyeSize * SCALE, eyeSize * SCALE, COLOR_EYE);
-    tft.fillRect(rightEyeX, eyeY, eyeSize * SCALE, eyeSize * SCALE, COLOR_EYE);
+    tft.fillRect(leftEyeX, eyeY, ew, eh, COLOR_EYE);
+    tft.fillRect(rightEyeX, eyeY, ew, eh, COLOR_EYE);
   }
 }
 

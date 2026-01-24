@@ -80,7 +80,7 @@ export const CHARACTER_CONFIG = {
     legs: [],
     tail: [],
     // Eyes positioned in sprite (drawn by drawEyes, not in sprite)
-    eyes: { left: { x: 29, y: 21 }, right: { x: 39, y: 21 }, size: 8 },
+    eyes: { left: { x: 29, y: 21 }, right: { x: 39, y: 21 }, w: 5, h: 8 },
     isGhost: true
   }
 };
