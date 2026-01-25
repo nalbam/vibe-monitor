@@ -531,7 +531,8 @@ vibe-monitor/
 │   ├── sprites.js              # Sprite definitions
 │   ├── effects.js              # Visual effects
 │   ├── icons.js                # Icon rendering
-│   └── utils.js                # Utility functions
+│   ├── utils.js                # Utility functions
+│   └── styles.css              # Shared styles
 ├── desktop/                    # Desktop app
 │   ├── main.js                 # Electron main process
 │   ├── index.html              # Renderer
@@ -541,7 +542,8 @@ vibe-monitor/
 │   └── assets/                 # App icons
 └── simulator/                  # Web simulator
     ├── index.html              # Browser UI
-    └── app.js                  # Simulator logic
+    ├── app.js                  # Simulator logic
+    └── styles.css              # Simulator styles
 ```
 
 ## Version History
