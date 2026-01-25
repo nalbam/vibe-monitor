@@ -166,24 +166,33 @@ const CharacterGeometry* ALL_CHARACTERS[] = {
 const int CHARACTER_COUNT = sizeof(ALL_CHARACTERS) / sizeof(ALL_CHARACTERS[0]);
 const CharacterGeometry* DEFAULT_CHARACTER = &CHAR_CLAWD;
 
-// Get character geometry by name (loop-based for extensibility)
-const CharacterGeometry* getCharacter(String name) {
+// Get character geometry by name (const char* version - no String allocation)
+const CharacterGeometry* getCharacterByName(const char* name) {
   for (int i = 0; i < CHARACTER_COUNT; i++) {
-    if (name == ALL_CHARACTERS[i]->name) {
+    if (strcmp(name, ALL_CHARACTERS[i]->name) == 0) {
       return ALL_CHARACTERS[i];
     }
   }
   return DEFAULT_CHARACTER;
 }
 
-// Check if character name is valid
-bool isValidCharacter(String name) {
+// Check if character name is valid (const char* version)
+bool isValidCharacter(const char* name) {
   for (int i = 0; i < CHARACTER_COUNT; i++) {
-    if (name == ALL_CHARACTERS[i]->name) {
+    if (strcmp(name, ALL_CHARACTERS[i]->name) == 0) {
       return true;
     }
   }
   return false;
+}
+
+// Legacy String versions for compatibility
+const CharacterGeometry* getCharacter(String name) {
+  return getCharacterByName(name.c_str());
+}
+
+bool isValidCharacter(String name) {
+  return isValidCharacter(name.c_str());
 }
 
 // Background colors by state (RGB565)
@@ -683,7 +692,118 @@ void drawBlinkEyes(TFT_eSPI &tft, int x, int y, int frame, const CharacterGeomet
   }
 }
 
-// Get background color for state
+// Forward declaration of AppState enum (defined in main .ino)
+enum AppState {
+  STATE_START,
+  STATE_IDLE,
+  STATE_THINKING,
+  STATE_WORKING,
+  STATE_NOTIFICATION,
+  STATE_DONE,
+  STATE_SLEEP
+};
+
+// Get background color for state (enum version - efficient)
+uint16_t getBackgroundColorEnum(AppState state) {
+  switch (state) {
+    case STATE_START: return COLOR_BG_SESSION;
+    case STATE_IDLE: return COLOR_BG_IDLE;
+    case STATE_THINKING: return COLOR_BG_THINKING;
+    case STATE_WORKING: return COLOR_BG_WORKING;
+    case STATE_NOTIFICATION: return COLOR_BG_NOTIFY;
+    case STATE_DONE: return COLOR_BG_DONE;
+    case STATE_SLEEP: return COLOR_BG_SLEEP;
+    default: return COLOR_BG_IDLE;
+  }
+}
+
+// Get eye type for state (enum version - efficient)
+EyeType getEyeTypeEnum(AppState state) {
+  switch (state) {
+    case STATE_START: return EYE_SPARKLE;
+    case STATE_IDLE: return EYE_NORMAL;
+    case STATE_THINKING: return EYE_THINKING;
+    case STATE_WORKING: return EYE_FOCUSED;
+    case STATE_NOTIFICATION: return EYE_ALERT;
+    case STATE_DONE: return EYE_HAPPY;
+    case STATE_SLEEP: return EYE_SLEEP;
+    default: return EYE_NORMAL;
+  }
+}
+
+// Get text color for state (enum version - efficient)
+uint16_t getTextColorEnum(AppState state) {
+  switch (state) {
+    case STATE_START: return TFT_BLACK;
+    case STATE_NOTIFICATION: return TFT_BLACK;
+    default: return COLOR_TEXT_WHITE;
+  }
+}
+
+// Helper to lowercase a string in place
+void toLowerStr(char* str) {
+  for (int i = 0; str[i]; i++) {
+    if (str[i] >= 'A' && str[i] <= 'Z') {
+      str[i] = str[i] + 32;
+    }
+  }
+}
+
+// Get working text based on tool (writes to buffer, no String allocation)
+void getWorkingTextBuf(const char* tool, char* buf, size_t bufSize) {
+  int idx = random(3);
+  char toolLower[32];
+  strncpy(toolLower, tool, sizeof(toolLower) - 1);
+  toolLower[sizeof(toolLower) - 1] = '\0';
+  toLowerStr(toolLower);
+
+  const char* result = DEFAULT_TEXTS[idx];
+  if (strcmp(toolLower, "bash") == 0) result = BASH_TEXTS[idx];
+  else if (strcmp(toolLower, "read") == 0) result = READ_TEXTS[idx];
+  else if (strcmp(toolLower, "edit") == 0) result = EDIT_TEXTS[idx];
+  else if (strcmp(toolLower, "write") == 0) result = WRITE_TEXTS[idx];
+  else if (strcmp(toolLower, "grep") == 0) result = GREP_TEXTS[idx];
+  else if (strcmp(toolLower, "glob") == 0) result = GLOB_TEXTS[idx];
+  else if (strcmp(toolLower, "task") == 0) result = TASK_TEXTS[idx];
+  else if (strcmp(toolLower, "webfetch") == 0) result = WEBFETCH_TEXTS[idx];
+  else if (strcmp(toolLower, "websearch") == 0) result = WEBSEARCH_TEXTS[idx];
+
+  strncpy(buf, result, bufSize - 1);
+  buf[bufSize - 1] = '\0';
+}
+
+// Get status text for state (enum version, writes to buffer)
+void getStatusTextEnum(AppState state, const char* tool, char* buf, size_t bufSize) {
+  switch (state) {
+    case STATE_START:
+      strncpy(buf, "Hello!", bufSize - 1);
+      break;
+    case STATE_IDLE:
+      strncpy(buf, "Ready", bufSize - 1);
+      break;
+    case STATE_THINKING:
+      strncpy(buf, THINKING_TEXTS[random(3)], bufSize - 1);
+      break;
+    case STATE_WORKING:
+      getWorkingTextBuf(tool, buf, bufSize);
+      return;  // Already null-terminated
+    case STATE_NOTIFICATION:
+      strncpy(buf, "Input?", bufSize - 1);
+      break;
+    case STATE_DONE:
+      strncpy(buf, "Done!", bufSize - 1);
+      break;
+    case STATE_SLEEP:
+      strncpy(buf, "Zzz...", bufSize - 1);
+      break;
+    default:
+      strncpy(buf, "Ready", bufSize - 1);
+      break;
+  }
+  buf[bufSize - 1] = '\0';
+}
+
+// Legacy String versions for compatibility
 uint16_t getBackgroundColor(String state) {
   if (state == "start") return COLOR_BG_SESSION;
   if (state == "idle") return COLOR_BG_IDLE;
@@ -692,10 +812,9 @@ uint16_t getBackgroundColor(String state) {
   if (state == "notification") return COLOR_BG_NOTIFY;
   if (state == "done") return COLOR_BG_DONE;
   if (state == "sleep") return COLOR_BG_SLEEP;
-  return COLOR_BG_IDLE;  // default
+  return COLOR_BG_IDLE;
 }
 
-// Get eye type for state
 EyeType getEyeType(String state) {
   if (state == "start") return EYE_SPARKLE;
   if (state == "idle") return EYE_NORMAL;
@@ -704,33 +823,19 @@ EyeType getEyeType(String state) {
   if (state == "notification") return EYE_ALERT;
   if (state == "done") return EYE_HAPPY;
   if (state == "sleep") return EYE_SLEEP;
-  return EYE_NORMAL;  // default
+  return EYE_NORMAL;
 }
 
-// Get working text based on tool (random selection, case-insensitive)
 String getWorkingText(String tool) {
-  int idx = random(3);
-  String t = tool;
-  t.toLowerCase();
-  if (t == "bash") return BASH_TEXTS[idx];
-  if (t == "read") return READ_TEXTS[idx];
-  if (t == "edit") return EDIT_TEXTS[idx];
-  if (t == "write") return WRITE_TEXTS[idx];
-  if (t == "grep") return GREP_TEXTS[idx];
-  if (t == "glob") return GLOB_TEXTS[idx];
-  if (t == "task") return TASK_TEXTS[idx];
-  if (t == "webfetch") return WEBFETCH_TEXTS[idx];
-  if (t == "websearch") return WEBSEARCH_TEXTS[idx];
-  return DEFAULT_TEXTS[idx];
+  char buf[32];
+  getWorkingTextBuf(tool.c_str(), buf, sizeof(buf));
+  return String(buf);
 }
 
-// Get thinking text (random selection)
 String getThinkingText() {
-  int idx = random(3);
-  return THINKING_TEXTS[idx];
+  return THINKING_TEXTS[random(3)];
 }
 
-// Get status text for state
 String getStatusText(String state, String tool = "") {
   if (state == "start") return "Hello!";
   if (state == "idle") return "Ready";
@@ -742,11 +847,10 @@ String getStatusText(String state, String tool = "") {
   return state;
 }
 
-// Get text color for state (dark text on bright backgrounds)
 uint16_t getTextColor(String state) {
-  if (state == "start") return TFT_BLACK;  // Dark on cyan
-  if (state == "notification") return TFT_BLACK;   // Dark on yellow
-  return COLOR_TEXT_WHITE;  // White on dark backgrounds
+  if (state == "start") return TFT_BLACK;
+  if (state == "notification") return TFT_BLACK;
+  return COLOR_TEXT_WHITE;
 }
 
 // Draw folder icon (📂) - 8x7 pixels

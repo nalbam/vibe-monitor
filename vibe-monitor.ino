@@ -40,15 +40,17 @@ TFT_eSPI tft = TFT_eSPI();
 #define MEMORY_BAR_Y  285
 #define MEMORY_BAR_W  152
 #define MEMORY_BAR_H  8
+#define BRAND_Y       300
 
-// State
-String currentState = "start";
-String previousState = "";
-String currentCharacter = "clawd";  // "clawd" or "kiro"
-String currentProject = "";
-String currentTool = "";
-String currentModel = "";
-String currentMemory = "";
+// State variables (char arrays instead of String for memory efficiency)
+// Note: AppState enum is defined in sprites.h
+AppState currentState = STATE_START;
+AppState previousState = STATE_START;
+char currentCharacter[16] = "clawd";  // "clawd" or "kiro"
+char currentProject[32] = "";
+char currentTool[32] = "";
+char currentModel[32] = "";
+char currentMemory[16] = "";
 unsigned long lastUpdate = 0;
 unsigned long lastBlink = 0;
 int animFrame = 0;
@@ -56,11 +58,31 @@ bool needsRedraw = true;
 int lastCharX = CHAR_X_BASE;  // Track last character X for efficient redraw
 int lastCharY = CHAR_Y_BASE;  // Track last character Y for efficient redraw
 
+// Dirty rect tracking for efficient redraws
+bool dirtyCharacter = true;
+bool dirtyStatus = true;
+bool dirtyInfo = true;
+
 // State timeouts
 #define DONE_TO_IDLE_TIMEOUT 60000   // 1 minute
 #define SLEEP_TIMEOUT 600000          // 10 minutes
 unsigned long lastActivityTime = 0;
 unsigned long lastDoneTime = 0;
+
+// JSON buffer size for StaticJsonDocument
+#define JSON_BUFFER_SIZE 256
+
+// Helper: Parse state string to enum
+AppState parseState(const char* stateStr) {
+  if (strcmp(stateStr, "start") == 0) return STATE_START;
+  if (strcmp(stateStr, "idle") == 0) return STATE_IDLE;
+  if (strcmp(stateStr, "thinking") == 0) return STATE_THINKING;
+  if (strcmp(stateStr, "working") == 0) return STATE_WORKING;
+  if (strcmp(stateStr, "notification") == 0) return STATE_NOTIFICATION;
+  if (strcmp(stateStr, "done") == 0) return STATE_DONE;
+  if (strcmp(stateStr, "sleep") == 0) return STATE_SLEEP;
+  return STATE_IDLE;  // default
+}
 
 void setup() {
   Serial.begin(115200);
@@ -81,11 +103,23 @@ void setup() {
 #endif
 }
 
+// Serial input buffer (avoid String allocation)
+char serialBuffer[512];
+int serialBufferPos = 0;
+
 void loop() {
-  // USB Serial check
-  if (Serial.available()) {
-    String input = Serial.readStringUntil('\n');
-    processInput(input);
+  // USB Serial check (using char buffer instead of String)
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n') {
+      serialBuffer[serialBufferPos] = '\0';
+      if (serialBufferPos > 0) {
+        processInput(serialBuffer);
+      }
+      serialBufferPos = 0;
+    } else if (serialBufferPos < (int)sizeof(serialBuffer) - 1) {
+      serialBuffer[serialBufferPos++] = c;
+    }
   }
 
 #ifdef USE_WIFI
@@ -100,7 +134,7 @@ void loop() {
   }
 
   // Idle blink (every 3 seconds)
-  if (currentState == "idle" && millis() - lastBlink > 3000) {
+  if (currentState == STATE_IDLE && millis() - lastBlink > 3000) {
     lastBlink = millis();
     drawBlinkAnimation();
   }
@@ -114,31 +148,35 @@ void checkSleepTimer() {
   unsigned long now = millis();
 
   // done -> idle after 1 minute
-  if (currentState == "done" && lastDoneTime > 0) {
+  if (currentState == STATE_DONE && lastDoneTime > 0) {
     if (now - lastDoneTime >= DONE_TO_IDLE_TIMEOUT) {
       previousState = currentState;
-      currentState = "idle";
+      currentState = STATE_IDLE;
       lastDoneTime = 0;
       lastActivityTime = now;
       needsRedraw = true;
+      dirtyCharacter = true;
+      dirtyStatus = true;
       drawStatus();
       return;
     }
   }
 
   // idle/start -> sleep after 10 minutes
-  if (currentState == "start" || currentState == "idle") {
+  if (currentState == STATE_START || currentState == STATE_IDLE) {
     if (now - lastActivityTime >= SLEEP_TIMEOUT) {
       previousState = currentState;
-      currentState = "sleep";
+      currentState = STATE_SLEEP;
       needsRedraw = true;
+      dirtyCharacter = true;
+      dirtyStatus = true;
       drawStatus();
     }
   }
 }
 
-void processInput(String input) {
-  JsonDocument doc;
+void processInput(const char* input) {
+  StaticJsonDocument<JSON_BUFFER_SIZE> doc;
   DeserializationError error = deserializeJson(doc, input);
 
   if (error) {
@@ -147,37 +185,57 @@ void processInput(String input) {
   }
 
   previousState = currentState;
-  currentState = doc["state"].as<String>();
+
+  // Parse state
+  const char* stateStr = doc["state"] | "";
+  if (strlen(stateStr) > 0) {
+    currentState = parseState(stateStr);
+  }
 
   // Clear model and memory when project changes
-  String newProject = doc["project"].as<String>();
-  if (newProject.length() > 0 && newProject != currentProject) {
-    currentModel = "";
-    currentMemory = "";
+  const char* newProject = doc["project"] | "";
+  if (strlen(newProject) > 0 && strcmp(newProject, currentProject) != 0) {
+    currentModel[0] = '\0';
+    currentMemory[0] = '\0';
   }
-  currentProject = newProject;
+  if (strlen(newProject) > 0) {
+    strncpy(currentProject, newProject, sizeof(currentProject) - 1);
+    currentProject[sizeof(currentProject) - 1] = '\0';
+  }
 
-  currentTool = doc["tool"].as<String>();
-  if (doc["model"].as<String>().length() > 0) {
-    currentModel = doc["model"].as<String>();
+  // Parse tool
+  const char* toolStr = doc["tool"] | "";
+  if (strlen(toolStr) > 0) {
+    strncpy(currentTool, toolStr, sizeof(currentTool) - 1);
+    currentTool[sizeof(currentTool) - 1] = '\0';
   }
-  if (doc["memory"].as<String>().length() > 0) {
-    currentMemory = doc["memory"].as<String>();
+
+  // Parse model
+  const char* modelStr = doc["model"] | "";
+  if (strlen(modelStr) > 0) {
+    strncpy(currentModel, modelStr, sizeof(currentModel) - 1);
+    currentModel[sizeof(currentModel) - 1] = '\0';
+  }
+
+  // Parse memory
+  const char* memoryStr = doc["memory"] | "";
+  if (strlen(memoryStr) > 0) {
+    strncpy(currentMemory, memoryStr, sizeof(currentMemory) - 1);
+    currentMemory[sizeof(currentMemory) - 1] = '\0';
   }
 
   // Parse character (use isValidCharacter() for dynamic validation)
-  String charInput = doc["character"].as<String>();
-  if (isValidCharacter(charInput)) {
-    currentCharacter = charInput;
-  } else {
-    currentCharacter = DEFAULT_CHARACTER->name;
+  const char* charInput = doc["character"] | "";
+  if (strlen(charInput) > 0 && isValidCharacter(charInput)) {
+    strncpy(currentCharacter, charInput, sizeof(currentCharacter) - 1);
+    currentCharacter[sizeof(currentCharacter) - 1] = '\0';
   }
 
   // Reset activity timer on any input
   lastActivityTime = millis();
 
   // Track done state time for auto-transition to idle
-  if (currentState == "done") {
+  if (currentState == STATE_DONE) {
     lastDoneTime = millis();
   } else {
     lastDoneTime = 0;
@@ -186,6 +244,9 @@ void processInput(String input) {
   // Redraw if state changed
   if (currentState != previousState) {
     needsRedraw = true;
+    dirtyCharacter = true;
+    dirtyStatus = true;
+    dirtyInfo = true;
     drawStatus();
   }
 }
@@ -234,14 +295,15 @@ void drawStartScreen() {
 }
 
 void drawStatus() {
-  uint16_t bgColor = getBackgroundColor(currentState);
-  uint16_t textColor = getTextColor(currentState);
-  EyeType eyeType = getEyeType(currentState);
-  String statusText = getStatusText(currentState, currentTool);
-  const CharacterGeometry* character = getCharacter(currentCharacter);
+  uint16_t bgColor = getBackgroundColorEnum(currentState);
+  uint16_t textColor = getTextColorEnum(currentState);
+  EyeType eyeType = getEyeTypeEnum(currentState);
+  const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
-  // Fill background
-  tft.fillScreen(bgColor);
+  // Fill background (only if dirty)
+  if (needsRedraw) {
+    tft.fillScreen(bgColor);
+  }
 
   // Calculate floating position
   int charX = CHAR_X_BASE + getFloatOffsetX();
@@ -250,87 +312,108 @@ void drawStatus() {
   lastCharY = charY;
 
   // Draw character (128x128)
-  drawCharacter(tft, charX, charY, eyeType, bgColor, character);
+  if (dirtyCharacter || needsRedraw) {
+    drawCharacter(tft, charX, charY, eyeType, bgColor, character);
+  }
 
   // Status text (color based on background)
-  tft.setTextColor(textColor);
-  tft.setTextSize(3);
-  int textWidth = statusText.length() * 18;
-  int textX = (SCREEN_WIDTH - textWidth) / 2;
-  tft.setCursor(textX, STATUS_TEXT_Y);
-  tft.println(statusText);
+  if (dirtyStatus || needsRedraw) {
+    char statusText[32];
+    getStatusTextEnum(currentState, currentTool, statusText, sizeof(statusText));
+
+    tft.setTextColor(textColor);
+    tft.setTextSize(3);
+    int textWidth = strlen(statusText) * 18;
+    int textX = (SCREEN_WIDTH - textWidth) / 2;
+    tft.setCursor(textX, STATUS_TEXT_Y);
+    tft.println(statusText);
+  }
 
   // Loading dots (thinking and working states)
-  if (currentState == "thinking") {
+  if (currentState == STATE_THINKING) {
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);  // Slow
-  } else if (currentState == "working") {
+  } else if (currentState == STATE_WORKING) {
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);  // Normal
   }
 
   // Project name
-  if (currentProject.length() > 0) {
-    tft.setTextColor(textColor);
-    tft.setTextSize(1);
-    drawFolderIcon(tft, 10, PROJECT_Y, textColor);
-    tft.setCursor(20, PROJECT_Y);
+  if (dirtyInfo || needsRedraw) {
+    if (strlen(currentProject) > 0) {
+      tft.setTextColor(textColor);
+      tft.setTextSize(1);
+      drawFolderIcon(tft, 10, PROJECT_Y, textColor);
+      tft.setCursor(20, PROJECT_Y);
 
-    String displayProject = currentProject;
-    if (displayProject.length() > 16) {
-      displayProject = displayProject.substring(0, 13) + "...";
+      char displayProject[20];
+      if (strlen(currentProject) > 16) {
+        strncpy(displayProject, currentProject, 13);
+        displayProject[13] = '\0';
+        strcat(displayProject, "...");
+      } else {
+        strcpy(displayProject, currentProject);
+      }
+      tft.println(displayProject);
     }
-    tft.println(displayProject);
-  }
 
-  // Tool name (working state only)
-  if (currentTool.length() > 0 && currentState == "working") {
-    tft.setTextColor(textColor);
-    tft.setTextSize(1);
-    drawToolIcon(tft, 10, TOOL_Y, textColor);
-    tft.setCursor(20, TOOL_Y);
-    tft.println(currentTool);
-  }
-
-  // Model name
-  if (currentModel.length() > 0) {
-    tft.setTextColor(textColor);
-    tft.setTextSize(1);
-    drawRobotIcon(tft, 10, MODEL_Y, textColor);
-    tft.setCursor(20, MODEL_Y);
-
-    String displayModel = currentModel;
-    if (displayModel.length() > 14) {
-      displayModel = displayModel.substring(0, 11) + "...";
+    // Tool name (working state only)
+    if (strlen(currentTool) > 0 && currentState == STATE_WORKING) {
+      tft.setTextColor(textColor);
+      tft.setTextSize(1);
+      drawToolIcon(tft, 10, TOOL_Y, textColor);
+      tft.setCursor(20, TOOL_Y);
+      tft.println(currentTool);
     }
-    tft.println(displayModel);
-  }
 
-  // Memory usage (hide on start state)
-  if (currentMemory.length() > 0 && currentState != "start") {
-    tft.setTextColor(textColor);
-    tft.setTextSize(1);
-    drawBrainIcon(tft, 10, MEMORY_Y, textColor);
-    tft.setCursor(20, MEMORY_Y);
-    tft.println(currentMemory);
+    // Model name
+    if (strlen(currentModel) > 0) {
+      tft.setTextColor(textColor);
+      tft.setTextSize(1);
+      drawRobotIcon(tft, 10, MODEL_Y, textColor);
+      tft.setCursor(20, MODEL_Y);
 
-    // Memory bar (below percentage)
-    int memoryPercent = currentMemory.toInt();
-    drawMemoryBar(tft, MEMORY_BAR_X, MEMORY_BAR_Y, MEMORY_BAR_W, MEMORY_BAR_H, memoryPercent, bgColor);
+      char displayModel[20];
+      if (strlen(currentModel) > 14) {
+        strncpy(displayModel, currentModel, 11);
+        displayModel[11] = '\0';
+        strcat(displayModel, "...");
+      } else {
+        strcpy(displayModel, currentModel);
+      }
+      tft.println(displayModel);
+    }
+
+    // Memory usage (hide on start state)
+    if (strlen(currentMemory) > 0 && currentState != STATE_START) {
+      tft.setTextColor(textColor);
+      tft.setTextSize(1);
+      drawBrainIcon(tft, 10, MEMORY_Y, textColor);
+      tft.setCursor(20, MEMORY_Y);
+      tft.println(currentMemory);
+
+      // Memory bar (below percentage)
+      int memoryPercent = atoi(currentMemory);
+      drawMemoryBar(tft, MEMORY_BAR_X, MEMORY_BAR_Y, MEMORY_BAR_W, MEMORY_BAR_H, memoryPercent, bgColor);
+    }
   }
 
   needsRedraw = false;
+  dirtyCharacter = false;
+  dirtyStatus = false;
+  dirtyInfo = false;
 }
 
 void updateAnimation() {
-  uint16_t bgColor = getBackgroundColor(currentState);
-  EyeType eyeType = getEyeType(currentState);
-  const CharacterGeometry* character = getCharacter(currentCharacter);
+  uint16_t bgColor = getBackgroundColorEnum(currentState);
+  EyeType eyeType = getEyeTypeEnum(currentState);
+  const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
   // Calculate new floating position
   int newCharX = CHAR_X_BASE + getFloatOffsetX();
   int newCharY = CHAR_Y_BASE + getFloatOffsetY();
 
-  // Only redraw character if position changed
-  if (newCharX != lastCharX || newCharY != lastCharY) {
+  // Only redraw character if position changed (dirty rect optimization)
+  bool positionChanged = (newCharX != lastCharX || newCharY != lastCharY);
+  if (positionChanged) {
     // Clear previous character area
     tft.fillRect(lastCharX, lastCharY, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
     // Draw character at new position
@@ -339,29 +422,38 @@ void updateAnimation() {
     lastCharY = newCharY;
   }
 
-  // State-specific animations
-  if (currentState == "thinking") {
+  // State-specific animations (only redraw if needed)
+  if (currentState == STATE_THINKING) {
     // Update loading dots (slow) and thinking animation
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);
-    drawCharacter(tft, newCharX, newCharY, EYE_THINKING, bgColor, character);
-  } else if (currentState == "working") {
+    if (!positionChanged) {
+      // Only redraw character for animation if position didn't change
+      drawCharacter(tft, newCharX, newCharY, EYE_THINKING, bgColor, character);
+    }
+  } else if (currentState == STATE_WORKING) {
     // Update loading dots and matrix effect
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);
-    drawCharacter(tft, newCharX, newCharY, EYE_FOCUSED, bgColor, character);
-  } else if (currentState == "start") {
+    if (!positionChanged) {
+      drawCharacter(tft, newCharX, newCharY, EYE_FOCUSED, bgColor, character);
+    }
+  } else if (currentState == STATE_START) {
     // Update sparkle animation (redraw for sparkle effect)
-    drawCharacter(tft, newCharX, newCharY, EYE_SPARKLE, bgColor, character);
-  } else if (currentState == "sleep") {
+    if (!positionChanged) {
+      drawCharacter(tft, newCharX, newCharY, EYE_SPARKLE, bgColor, character);
+    }
+  } else if (currentState == STATE_SLEEP) {
     // Update Zzz animation (redraw for blink effect)
-    drawCharacter(tft, newCharX, newCharY, EYE_SLEEP, bgColor, character);
+    if (!positionChanged) {
+      drawCharacter(tft, newCharX, newCharY, EYE_SLEEP, bgColor, character);
+    }
   }
 }
 
 void drawBlinkAnimation() {
-  if (currentState != "idle") return;
+  if (currentState != STATE_IDLE) return;
 
-  uint16_t bgColor = getBackgroundColor(currentState);
-  const CharacterGeometry* character = getCharacter(currentCharacter);
+  uint16_t bgColor = getBackgroundColorEnum(currentState);
+  const CharacterGeometry* character = getCharacterByName(currentCharacter);
   int charX = lastCharX;  // Use current floating position
   int charY = lastCharY;
 
@@ -410,7 +502,8 @@ void setupWiFi() {
 
 void handleStatus() {
   if (server.hasArg("plain")) {
-    processInput(server.arg("plain"));
+    String body = server.arg("plain");
+    processInput(body.c_str());
     server.send(200, "application/json", "{\"ok\":true}");
   } else {
     server.send(400, "application/json", "{\"error\":\"no body\"}");
