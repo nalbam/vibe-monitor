@@ -24,7 +24,7 @@ Monitor your **Claude Code** or **Kiro IDE** sessions at a glance - see what sta
 
 ## Preview
 
-![Working State on macOS](screenshots/working.png)
+<video src="screenshots/demo.mp4" width="240" autoplay loop muted playsinline></video>
 
 ```
 ┌────────────────────┐
