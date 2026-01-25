@@ -16,7 +16,7 @@ Vibe Monitor는 AI 코딩 어시스턴트(Claude Code, Kiro IDE)의 실시간 �
 - **Web Simulator**: 브라우저 기반 테스트 환경
 
 ### 핵심 기능
-- 6가지 상태 표시: `session_start`, `idle`, `working`, `notification`, `tool_done`, `sleep`
+- 6가지 상태 표시: `start`, `idle`, `working`, `notification`, `done`, `sleep`
 - 2개 캐릭터: `clawd` (오렌지), `kiro` (흰색 고스트)
 - 실시간 애니메이션: 부유 효과, 깜빡임, 로딩 도트
 - IDE 통합: 훅 시스템을 통한 자동 상태 업데이트
@@ -29,7 +29,7 @@ Vibe Monitor는 AI 코딩 어시스턴트(Claude Code, Kiro IDE)의 실시간 �
 ```javascript
 // shared/config.js - 단일 진실 소스
 export const states = {
-  session_start: { bgColor: '#00CCCC', eyeType: 'sparkle', textColor: '#000000' },
+  start: { bgColor: '#00CCCC', eyeType: 'sparkle', textColor: '#000000' },
   idle: { bgColor: '#00AA00', eyeType: 'normal', textColor: '#FFFFFF' },
   working: { bgColor: '#0066CC', eyeType: 'focused', textColor: '#FFFFFF' },
   // ...
@@ -76,7 +76,7 @@ vibe-monitor/
 ```
 
 ### 2. 네이밍 컨벤션
-- **상태**: snake_case (`session_start`, `tool_done`)
+- **상태**: snake_case (`start`, `done`)
 - **캐릭터**: 소문자 (`clawd`, `kiro`)
 - **색상**: RGB565 (ESP32), HEX (Web/Desktop)
 - **함수**: camelCase (JS), snake_case (C++)

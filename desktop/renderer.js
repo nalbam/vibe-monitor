@@ -152,7 +152,7 @@ function updateLoadingDots() {
 
 // Check sleep timer
 function checkSleepTimer() {
-  if (currentState === 'session_start' || currentState === 'idle' || currentState === 'tool_done') {
+  if (currentState === 'start' || currentState === 'idle' || currentState === 'done') {
     const elapsed = Date.now() - lastActivityTime;
     if (elapsed >= SLEEP_TIMEOUT) {
       currentState = 'sleep';
@@ -168,7 +168,7 @@ function startAnimation() {
 
     updateFloatingPosition();
 
-    if (currentState === 'session_start') {
+    if (currentState === 'start') {
       drawCharacter('sparkle', currentState, currentCharacter, animFrame);
     }
 

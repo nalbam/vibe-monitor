@@ -206,7 +206,7 @@ bool isValidCharacter(String name) {
 
 // Eye types
 enum EyeType {
-  EYE_SPARKLE,     // session_start: normal + sparkle
+  EYE_SPARKLE,     // start: normal + sparkle
   EYE_NORMAL,      // idle: square eyes
   EYE_THINKING,    // thinking: looking up eyes + thought bubble
   EYE_FOCUSED,     // working: horizontal flat eyes
@@ -588,24 +588,24 @@ void drawBlinkEyes(TFT_eSPI &tft, int x, int y, int frame, const CharacterGeomet
 
 // Get background color for state
 uint16_t getBackgroundColor(String state) {
-  if (state == "session_start") return COLOR_BG_SESSION;
+  if (state == "start") return COLOR_BG_SESSION;
   if (state == "idle") return COLOR_BG_IDLE;
   if (state == "thinking") return COLOR_BG_THINKING;
   if (state == "working") return COLOR_BG_WORKING;
   if (state == "notification") return COLOR_BG_NOTIFY;
-  if (state == "tool_done") return COLOR_BG_DONE;
+  if (state == "done") return COLOR_BG_DONE;
   if (state == "sleep") return COLOR_BG_SLEEP;
   return COLOR_BG_IDLE;  // default
 }
 
 // Get eye type for state
 EyeType getEyeType(String state) {
-  if (state == "session_start") return EYE_SPARKLE;
+  if (state == "start") return EYE_SPARKLE;
   if (state == "idle") return EYE_NORMAL;
   if (state == "thinking") return EYE_THINKING;
   if (state == "working") return EYE_FOCUSED;
   if (state == "notification") return EYE_ALERT;
-  if (state == "tool_done") return EYE_HAPPY;
+  if (state == "done") return EYE_HAPPY;
   if (state == "sleep") return EYE_SLEEP;
   return EYE_NORMAL;  // default
 }
@@ -635,19 +635,19 @@ String getThinkingText() {
 
 // Get status text for state
 String getStatusText(String state, String tool = "") {
-  if (state == "session_start") return "Hello!";
+  if (state == "start") return "Hello!";
   if (state == "idle") return "Ready";
   if (state == "thinking") return getThinkingText();
   if (state == "working") return getWorkingText(tool);
   if (state == "notification") return "Input?";
-  if (state == "tool_done") return "Done!";
+  if (state == "done") return "Done!";
   if (state == "sleep") return "Zzz...";
   return state;
 }
 
 // Get text color for state (dark text on bright backgrounds)
 uint16_t getTextColor(String state) {
-  if (state == "session_start") return TFT_BLACK;  // Dark on cyan
+  if (state == "start") return TFT_BLACK;  // Dark on cyan
   if (state == "notification") return TFT_BLACK;   // Dark on yellow
   return COLOR_TEXT_WHITE;  // White on dark backgrounds
 }

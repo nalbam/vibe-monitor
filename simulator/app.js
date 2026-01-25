@@ -183,12 +183,12 @@ window.updateDisplay = function() {
 // Get event name for state
 function getEventName(state) {
   const events = {
-    session_start: 'SessionStart',
+    start: 'SessionStart',
     idle: 'Stop',
     thinking: 'UserPromptSubmit',
     working: 'PreToolUse',
     notification: 'Notification',
-    tool_done: 'PostToolUse',
+    done: 'PostToolUse',
     sleep: 'Sleep'
   };
   return events[state] || 'Unknown';
@@ -205,7 +205,7 @@ function updateLoadingDots() {
 
 // Check sleep timer
 function checkSleepTimer() {
-  if (currentState === 'session_start' || currentState === 'idle' || currentState === 'tool_done') {
+  if (currentState === 'start' || currentState === 'idle' || currentState === 'done') {
     const elapsed = Date.now() - lastActivityTime;
     if (elapsed >= SLEEP_TIMEOUT) {
       currentState = 'sleep';
@@ -221,7 +221,7 @@ function startAnimation() {
 
     updateFloatingPosition();
 
-    if (currentState === 'session_start') {
+    if (currentState === 'start') {
       drawCharacter('sparkle', currentState, currentCharacter, animFrame);
     }
 

@@ -79,7 +79,7 @@ void setupWiFi() {
 ```cpp
 // ✅ 슬립 모드 구현
 void checkSleepTimer() {
-  if (currentState == "idle" || currentState == "tool_done") {
+  if (currentState == "idle" || currentState == "done") {
     if (millis() - lastActivityTime >= SLEEP_TIMEOUT) {
       // 디스플레이 밝기 감소 또는 슬립 모드
       tft.writecommand(ST7789_SLPIN);

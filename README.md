@@ -204,7 +204,7 @@ chmod +x ~/.claude/statusline.sh
 
 | Event | Vibe Monitor State | Description |
 |-------|-------------------|-------------|
-| `SessionStart` | `session_start` | Session begins |
+| `SessionStart` | `start` | Session begins |
 | `UserPromptSubmit` | `thinking` | User submits prompt, AI starts thinking |
 | `PreToolUse` | `working` | Tool execution starts |
 | `PostToolUse` | - | *(Currently disabled)* |
@@ -230,10 +230,10 @@ cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
 
 | Hook File | Event | State | Description |
 |-----------|-------|-------|-------------|
-| `vibe-monitor-session-start.kiro.hook` | `agentSpawn` | `session_start` | Agent activated |
-| `vibe-monitor-working.kiro.hook` | `promptSubmit` | `working` | User submits prompt |
-| `vibe-monitor-tool-use.kiro.hook` | `preToolUse` | `working` | Tool execution starts |
-| `vibe-monitor-idle.kiro.hook` | `agentStop` | `idle` | Agent turn ends |
+| `vibe-monitor-agent-spawn.kiro.hook` | `agentSpawn` | `start` | Agent activated |
+| `vibe-monitor-prompt-submit.kiro.hook` | `promptSubmit` | `working` | User submits prompt |
+| `vibe-monitor-pre-tool-use.kiro.hook` | `preToolUse` | `working` | Tool execution starts |
+| `vibe-monitor-agent-stop.kiro.hook` | `agentStop` | `idle` | Agent turn ends |
 
 #### Available Kiro Event Types
 
@@ -274,12 +274,12 @@ Character is **auto-detected** based on the IDE hook events. You can also manual
 
 | State | Background | Eyes | Text | Trigger |
 |-------|------------|------|------|---------|
-| `session_start` | Cyan | ■ ■ + ✦ | Hello! | Session begins |
+| `start` | Cyan | ■ ■ + ✦ | Hello! | Session begins |
 | `idle` | Green | ■ ■ | Ready | Waiting for input |
 | `thinking` | Purple | ▀ ▀ + 💭 | Thinking | User submits prompt |
 | `working` | Blue | ▬ ▬ | (tool-based) | Tool executing |
 | `notification` | Yellow | ● ● + ? | Input? | User input needed |
-| `tool_done` | Green | ∨ ∨ | Done! | Tool completed |
+| `done` | Green | ∨ ∨ | Done! | Tool completed |
 | `sleep` | Navy | ─ ─ + Z | Zzz... | 10min inactivity |
 
 ### Working State Text
@@ -309,7 +309,7 @@ The `working` state displays context-aware text based on the active tool:
 
 ### Sleep Mode
 
-Automatically transitions to `sleep` after 10 minutes of inactivity from `session_start`, `idle` or `tool_done`. Any new status update wakes the display.
+Automatically transitions to `sleep` after 10 minutes of inactivity from `start`, `idle` or `done`. Any new status update wakes the display.
 
 ## HTTP API
 
@@ -514,10 +514,10 @@ vibe-monitor/
 │   │       └── vibe-monitor.sh # Main hook script
 │   └── kiro/                   # Kiro IDE settings
 │       └── hooks/              # Hook files
-│           ├── vibe-monitor-session-start.kiro.hook
-│           ├── vibe-monitor-working.kiro.hook
-│           ├── vibe-monitor-tool-use.kiro.hook
-│           └── vibe-monitor-idle.kiro.hook
+│           ├── vibe-monitor-agent-spawn.kiro.hook
+│           ├── vibe-monitor-prompt-submit.kiro.hook
+│           ├── vibe-monitor-pre-tool-use.kiro.hook
+│           └── vibe-monitor-agent-stop.kiro.hook
 ├── shared/                     # Shared code (Desktop/Simulator)
 │   ├── config.js               # State/character configuration
 │   ├── character.js            # Character rendering logic

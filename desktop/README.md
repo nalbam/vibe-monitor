@@ -52,10 +52,10 @@ cp -r .kiro/hooks/*.kiro.hook your-project/.kiro/hooks/
 ```
 
 **Hook files:**
-- `vibe-monitor-session-start.kiro.hook` - Sends `session_start` on `agentSpawn`
-- `vibe-monitor-working.kiro.hook` - Sends `working` on `promptSubmit`
-- `vibe-monitor-tool-use.kiro.hook` - Sends `working` on `preToolUse`
-- `vibe-monitor-idle.kiro.hook` - Sends `idle` on `agentStop`
+- `vibe-monitor-agent-spawn.kiro.hook` - Sends `start` on `agentSpawn`
+- `vibe-monitor-prompt-submit.kiro.hook` - Sends `working` on `promptSubmit`
+- `vibe-monitor-pre-tool-use.kiro.hook` - Sends `working` on `preToolUse`
+- `vibe-monitor-agent-stop.kiro.hook` - Sends `idle` on `agentStop`
 
 ## Supported IDEs
 

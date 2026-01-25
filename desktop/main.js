@@ -19,12 +19,12 @@ const HTTP_PORT = 19280;
 
 // State colors (matching index.html)
 const STATE_COLORS = {
-  session_start: '#00CCCC',
+  start: '#00CCCC',
   idle: '#00AA00',
   thinking: '#6633CC',
   working: '#0066CC',
   notification: '#FFCC00',
-  tool_done: '#00AA00',
+  done: '#00AA00',
   sleep: '#1a1a4e'
 };
 
@@ -200,11 +200,11 @@ function updateTrayMenu() {
     {
       label: 'Set State',
       submenu: [
-        { label: 'Session Start', click: () => updateState({ state: 'session_start' }) },
+        { label: 'Start', click: () => updateState({ state: 'start' }) },
         { label: 'Idle', click: () => updateState({ state: 'idle' }) },
         { label: 'Working', click: () => updateState({ state: 'working' }) },
         { label: 'Notification', click: () => updateState({ state: 'notification' }) },
-        { label: 'Tool Done', click: () => updateState({ state: 'tool_done' }) },
+        { label: 'Done', click: () => updateState({ state: 'done' }) },
         { label: 'Sleep', click: () => updateState({ state: 'sleep' }) }
       ]
     },

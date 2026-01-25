@@ -61,10 +61,10 @@ get_state() {
   local event_name="$1"
 
   case "$event_name" in
-    "SessionStart") echo "session_start" ;;
+    "SessionStart") echo "start" ;;
     "UserPromptSubmit") echo "thinking" ;;
     "PreToolUse") echo "working" ;;
-    # "PostToolUse") echo "tool_done" ;;
+    # "PostToolUse") echo "done" ;;
     "Stop") echo "idle" ;;
     "Notification") echo "notification" ;;
     *) echo "working" ;;
@@ -170,14 +170,14 @@ main() {
 
   debug_log "Payload: $payload"
 
-  # Check if session start event
-  local is_session_start=false
+  # Check if start event
+  local is_start=false
   if [ "$event_name" = "SessionStart" ]; then
-    is_session_start=true
+    is_start=true
   fi
 
-  # Launch Desktop App if not running (on session start)
-  if [ -n "${VIBE_MONITOR_DESKTOP}" ] && [ -n "${VIBE_MONITOR_URL}" ] && [ "$is_session_start" = true ]; then
+  # Launch Desktop App if not running (on start)
+  if [ -n "${VIBE_MONITOR_DESKTOP}" ] && [ -n "${VIBE_MONITOR_URL}" ] && [ "$is_start" = true ]; then
     if ! is_monitor_running "${VIBE_MONITOR_URL}"; then
       debug_log "Desktop App not running, launching..."
       launch_desktop
@@ -187,7 +187,7 @@ main() {
   # Send to Desktop App via HTTP
   if [ -n "${VIBE_MONITOR_URL}" ]; then
     debug_log "Trying Desktop App: ${VIBE_MONITOR_URL}"
-    if [ "$is_session_start" = true ]; then
+    if [ "$is_start" = true ]; then
       show_monitor_window "${VIBE_MONITOR_URL}"
     fi
     if send_http "${VIBE_MONITOR_URL}" "$payload"; then

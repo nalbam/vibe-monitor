@@ -58,12 +58,12 @@ open simulator/index.html
 
 | State | Color | Description |
 |-------|-------|-------------|
-| `session_start` | Cyan | Session begins |
+| `start` | Cyan | Session begins |
 | `idle` | Green | Waiting for input |
 | `thinking` | Purple | Processing prompt |
 | `working` | Blue | Tool executing |
 | `notification` | Yellow | User input needed |
-| `tool_done` | Green | Tool completed |
+| `done` | Green | Tool completed |
 | `sleep` | Navy | 10min inactivity |
 
 ## Testing

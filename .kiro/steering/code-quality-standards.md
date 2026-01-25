@@ -122,7 +122,7 @@ int getFloatOffsetX() {
 
 // ✅ 상태 매핑 함수
 uint16_t getBackgroundColor(String state) {
-  if (state == "session_start") return COLOR_BG_SESSION;
+  if (state == "start") return COLOR_BG_SESSION;
   if (state == "idle") return COLOR_BG_IDLE;
   // ...
   return COLOR_BG_IDLE;  // 기본값
@@ -314,9 +314,9 @@ function getWorkingText(tool) {
 // ✅ 상태 변환 함수
 function mapEventToState(eventName) {
   const eventMap = {
-    'SessionStart': 'session_start',
+    'SessionStart': 'start',
     'PreToolUse': 'working',
-    'PostToolUse': 'tool_done',
+    'PostToolUse': 'done',
     // ...
   };
 

@@ -8,7 +8,7 @@ export const COLOR_WHITE = '#FFFFFF';
 
 // State configuration
 export const states = {
-  session_start: {
+  start: {
     bgColor: '#00CCCC',
     text: 'Hello!',
     eyeType: 'sparkle',
@@ -43,7 +43,7 @@ export const states = {
     showLoading: false,
     textColor: '#000000'
   },
-  tool_done: {
+  done: {
     bgColor: '#00AA00',
     text: 'Done!',
     eyeType: 'happy',

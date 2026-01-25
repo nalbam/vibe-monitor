@@ -103,13 +103,13 @@ void loop() {
     drawBlinkAnimation();
   }
 
-  // Check sleep timer (only from session_start, idle or tool_done)
+  // Check sleep timer (only from start, idle or done)
   checkSleepTimer();
 }
 
 // Check if should transition to sleep state
 void checkSleepTimer() {
-  if (currentState == "session_start" || currentState == "idle" || currentState == "tool_done") {
+  if (currentState == "start" || currentState == "idle" || currentState == "done") {
     if (millis() - lastActivityTime >= SLEEP_TIMEOUT) {
       previousState = currentState;
       currentState = "sleep";
@@ -304,7 +304,7 @@ void updateAnimation() {
   if (currentState == "working") {
     // Update loading dots
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame);
-  } else if (currentState == "session_start") {
+  } else if (currentState == "start") {
     // Update sparkle animation (redraw for sparkle effect)
     drawCharacter(tft, newCharX, newCharY, EYE_SPARKLE, bgColor, character);
   } else if (currentState == "sleep") {
