@@ -148,10 +148,22 @@ void processInput(String input) {
 
   previousState = currentState;
   currentState = doc["state"].as<String>();
-  currentProject = doc["project"].as<String>();
+
+  // Clear model and memory when project changes
+  String newProject = doc["project"].as<String>();
+  if (newProject.length() > 0 && newProject != currentProject) {
+    currentModel = "";
+    currentMemory = "";
+  }
+  currentProject = newProject;
+
   currentTool = doc["tool"].as<String>();
-  currentModel = doc["model"].as<String>();
-  currentMemory = doc["memory"].as<String>();
+  if (doc["model"].as<String>().length() > 0) {
+    currentModel = doc["model"].as<String>();
+  }
+  if (doc["memory"].as<String>().length() > 0) {
+    currentMemory = doc["memory"].as<String>();
+  }
 
   // Parse character (use isValidCharacter() for dynamic validation)
   String charInput = doc["character"].as<String>();

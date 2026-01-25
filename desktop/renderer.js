@@ -61,8 +61,8 @@ function init() {
       if (data.character) currentCharacter = CHARACTER_CONFIG[data.character] ? data.character : DEFAULT_CHARACTER;
       if (data.project) currentProject = data.project;
       if (data.tool) currentTool = data.tool;
-      if (data.model) currentModel = data.model;
-      if (data.memory) currentMemory = data.memory;
+      if (data.model !== undefined) currentModel = data.model || '-';
+      if (data.memory !== undefined) currentMemory = data.memory || '-';
       lastActivityTime = Date.now();
       updateDisplay();
     });

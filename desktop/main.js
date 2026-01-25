@@ -295,6 +295,13 @@ function updateState(data) {
     if (data.character !== undefined) {
       currentCharacter = CHARACTER_CONFIG[data.character] ? data.character : DEFAULT_CHARACTER;
     }
+    // Clear model and memory when project changes
+    if (data.project !== undefined && data.project !== currentProject) {
+      currentModel = '';
+      currentMemory = '';
+      data.model = '';
+      data.memory = '';
+    }
     if (data.project !== undefined) currentProject = data.project;
     if (data.tool !== undefined) currentTool = data.tool;
     if (data.model !== undefined) currentModel = data.model;
