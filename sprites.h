@@ -256,6 +256,12 @@ void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, uint16_t bgColo
   // Clear background area
   tft.fillRect(x, y, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
 
+  // Draw matrix background for working state (EYE_FOCUSED) - around character body
+  if (eyeType == EYE_FOCUSED) {
+    drawMatrixBackground(tft, x, y, animFrame, CHAR_WIDTH / SCALE,
+                         character->bodyX, character->bodyY, character->bodyW, character->bodyH);
+  }
+
   uint16_t charColor = character->color;
 
   // Draw body
@@ -345,7 +351,7 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
     case EYE_FOCUSED:
       tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/2, COLOR_EYE);
       tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/2, COLOR_EYE);
-      drawMatrix(tft, effectX, effectY, animFrame);
+      // Matrix effect is drawn in background by drawMatrixBackground
       break;
 
     case EYE_ALERT:
@@ -480,38 +486,62 @@ void drawThoughtBubble(TFT_eSPI &tft, int x, int y, int frame, uint16_t color = 
 #define COLOR_MATRIX_MID    0x0540  // #00AA00
 #define COLOR_MATRIX_DIM    0x0320  // #006600
 
-// Draw matrix rain effect for working state (scaled 2x, falling green squares)
-void drawMatrix(TFT_eSPI &tft, int x, int y, int frame) {
-  int height = 24;
-
-  // Stream 1 - left column
-  int pos1 = (frame * 3) % height;
-  tft.fillRect(x, y + (pos1 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
-  if (pos1 >= 3) tft.fillRect(x, y + ((pos1 - 3) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
-  if (pos1 >= 6) tft.fillRect(x, y + ((pos1 - 6) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
-
-  // Stream 2 - center column (different phase)
-  int pos2 = (frame * 3 + 8) % height;
-  tft.fillRect(x + (4 * SCALE), y + (pos2 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
-  if (pos2 >= 3) tft.fillRect(x + (4 * SCALE), y + ((pos2 - 3) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
-  if (pos2 >= 6) tft.fillRect(x + (4 * SCALE), y + ((pos2 - 6) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
-
-  // Stream 3 - right column (different phase)
-  int pos3 = (frame * 3 + 16) % height;
-  tft.fillRect(x + (8 * SCALE), y + (pos3 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
-  if (pos3 >= 3) tft.fillRect(x + (8 * SCALE), y + ((pos3 - 3) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
-  if (pos3 >= 6) tft.fillRect(x + (8 * SCALE), y + ((pos3 - 6) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
+// Draw single matrix stream
+void drawMatrixStream(TFT_eSPI &tft, int x, int y, int frame, int offset, int height) {
+  int pos = (frame * 2 + offset) % height;
+  tft.fillRect(x, y + (pos * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
+  if (pos >= 3) tft.fillRect(x, y + ((pos - 3) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
+  if (pos >= 6) tft.fillRect(x, y + ((pos - 6) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
 }
 
-// Draw loading dots animation
-void drawLoadingDots(TFT_eSPI &tft, int centerX, int y, int frame) {
+// Draw matrix rain effect for working state (small, next to eyes)
+void drawMatrix(TFT_eSPI &tft, int x, int y, int frame) {
+  int height = 24;
+  drawMatrixStream(tft, x, y, frame, 0, height);
+  drawMatrixStream(tft, x + (4 * SCALE), y, frame, 8, height);
+  drawMatrixStream(tft, x + (8 * SCALE), y, frame, 16, height);
+}
+
+// Pseudo-random number generator for consistent randomness
+float pseudoRandom(int seed) {
+  float x = sin(seed * 9999.0) * 10000.0;
+  return x - floor(x);
+}
+
+// Draw matrix stream with variable speed and longer tail
+void drawMatrixStreamVar(TFT_eSPI &tft, int x, int y, int frame, int offset, int height, int speed) {
+  if (height < 4) return;
+  int pos = (frame * speed + offset) % height;
+  tft.fillRect(x, y + (pos * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
+  if (pos >= 2) tft.fillRect(x, y + ((pos - 2) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
+  if (pos >= 4) tft.fillRect(x, y + ((pos - 4) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
+  if (pos >= 6) tft.fillRect(x, y + ((pos - 6) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
+}
+
+// Draw matrix background effect (full area, behind character)
+void drawMatrixBackground(TFT_eSPI &tft, int x, int y, int frame, int size, int bodyX, int bodyY, int bodyW, int bodyH) {
+  // Draw streams across entire area (character will be drawn on top)
+  for (int i = 0; i < size / 4; i++) {
+    int seed = i * 23 + 7;
+    // Show ~50% of streams for natural look
+    if (pseudoRandom(seed + 100) > 0.5) continue;
+    int colX = x + (i * 4 * SCALE);
+    int offset = (int)(pseudoRandom(seed) * size);
+    int speed = 3 + (int)(pseudoRandom(seed + 1) * 4);
+    drawMatrixStreamVar(tft, colX, y, frame, offset, size, speed);
+  }
+}
+
+// Draw loading dots animation (slow = true for thinking state)
+void drawLoadingDots(TFT_eSPI &tft, int centerX, int y, int frame, bool slow = false) {
   int dotRadius = 4;
   int dotSpacing = 16;
   int startX = centerX - (dotSpacing * 1.5);
+  int adjustedFrame = slow ? (frame / 3) : frame;
 
   for (int i = 0; i < 4; i++) {
     int dotX = startX + (i * dotSpacing);
-    uint16_t color = (i == (frame % 4)) ? COLOR_TEXT_WHITE : COLOR_TEXT_DIM;
+    uint16_t color = (i == (adjustedFrame % 4)) ? COLOR_TEXT_WHITE : COLOR_TEXT_DIM;
     tft.fillCircle(dotX, y, dotRadius, color);
   }
 }

@@ -32,7 +32,7 @@ export function drawEyes(eyeType, char, animFrame, drawRect) {
     case 'focused':
       drawRect(leftX, eyeY + Math.floor(eyeH/3), eyeW, Math.floor(eyeH/2), COLOR_EYE);
       drawRect(rightX, eyeY + Math.floor(eyeH/3), eyeW, Math.floor(eyeH/2), COLOR_EYE);
-      drawMatrix(effectX, effectY, animFrame, drawRect);
+      // Matrix effect is drawn in background by drawMatrixBackground
       break;
 
     case 'alert':
@@ -151,25 +151,48 @@ const COLOR_MATRIX_BRIGHT = '#00FF00';
 const COLOR_MATRIX_MID = '#00AA00';
 const COLOR_MATRIX_DIM = '#006600';
 
-// Draw matrix rain effect for working state (falling green squares)
+// Draw single matrix stream
+function drawMatrixStream(x, y, animFrame, drawRect, offset, height) {
+  const pos = (animFrame * 2 + offset) % height;
+  drawRect(x, y + pos, 2, 2, COLOR_MATRIX_BRIGHT);
+  if (pos >= 3) drawRect(x, y + pos - 3, 2, 2, COLOR_MATRIX_MID);
+  if (pos >= 6) drawRect(x, y + pos - 6, 2, 2, COLOR_MATRIX_DIM);
+}
+
+// Draw matrix rain effect for working state (small, next to eyes)
 export function drawMatrix(x, y, animFrame, drawRect) {
   const height = 24;
+  drawMatrixStream(x, y, animFrame, drawRect, 0, height);
+  drawMatrixStream(x + 4, y, animFrame, drawRect, 8, height);
+  drawMatrixStream(x + 8, y, animFrame, drawRect, 16, height);
+}
 
-  // Stream 1 - left column
-  const pos1 = (animFrame * 3) % height;
-  drawRect(x, y + pos1, 2, 2, COLOR_MATRIX_BRIGHT);
-  if (pos1 >= 3) drawRect(x, y + pos1 - 3, 2, 2, COLOR_MATRIX_MID);
-  if (pos1 >= 6) drawRect(x, y + pos1 - 6, 2, 2, COLOR_MATRIX_DIM);
+// Pseudo-random number generator for consistent randomness
+function pseudoRandom(seed) {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+}
 
-  // Stream 2 - center column (different phase)
-  const pos2 = (animFrame * 3 + 8) % height;
-  drawRect(x + 4, y + pos2, 2, 2, COLOR_MATRIX_BRIGHT);
-  if (pos2 >= 3) drawRect(x + 4, y + pos2 - 3, 2, 2, COLOR_MATRIX_MID);
-  if (pos2 >= 6) drawRect(x + 4, y + pos2 - 6, 2, 2, COLOR_MATRIX_DIM);
+// Draw matrix background effect (full area, behind character)
+export function drawMatrixBackground(animFrame, drawRect, size = 64, body = null) {
+  // Draw streams across entire area (character will be drawn on top)
+  for (let i = 0; i < Math.floor(size / 4); i++) {
+    const seed = i * 23 + 7;
+    // Show ~50% of streams for natural look
+    if (pseudoRandom(seed + 100) > 0.5) continue;
+    const x = i * 4;
+    const offset = Math.floor(pseudoRandom(seed) * size);
+    const speed = 3 + Math.floor(pseudoRandom(seed + 1) * 4);
+    drawMatrixStreamVar(x, 0, animFrame, drawRect, offset, size, speed);
+  }
+}
 
-  // Stream 3 - right column (different phase)
-  const pos3 = (animFrame * 3 + 16) % height;
-  drawRect(x + 8, y + pos3, 2, 2, COLOR_MATRIX_BRIGHT);
-  if (pos3 >= 3) drawRect(x + 8, y + pos3 - 3, 2, 2, COLOR_MATRIX_MID);
-  if (pos3 >= 6) drawRect(x + 8, y + pos3 - 6, 2, 2, COLOR_MATRIX_DIM);
+// Draw matrix stream with variable speed and longer tail
+function drawMatrixStreamVar(x, y, animFrame, drawRect, offset, height, speed) {
+  if (height < 4) return;
+  const pos = (animFrame * speed + offset) % height;
+  drawRect(x, y + pos, 2, 2, COLOR_MATRIX_BRIGHT);
+  if (pos >= 2) drawRect(x, y + pos - 2, 2, 2, COLOR_MATRIX_MID);
+  if (pos >= 4) drawRect(x, y + pos - 4, 2, 2, COLOR_MATRIX_DIM);
+  if (pos >= 6) drawRect(x, y + pos - 6, 2, 2, COLOR_MATRIX_DIM);
 }

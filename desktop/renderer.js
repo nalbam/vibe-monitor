@@ -142,10 +142,11 @@ function updateDisplay() {
   drawCharacter(state.eyeType, currentState, currentCharacter, animFrame);
 }
 
-// Update loading dots
-function updateLoadingDots() {
+// Update loading dots (slower for thinking state)
+function updateLoadingDots(slow = false) {
   const dots = document.querySelectorAll('.dot');
-  const activeIndex = animFrame % 4;
+  const frame = slow ? Math.floor(animFrame / 3) : animFrame;
+  const activeIndex = frame % 4;
   dots.forEach((dot, i) => {
     dot.classList.toggle('dim', i !== activeIndex);
   });
@@ -174,12 +175,12 @@ function startAnimation() {
     }
 
     if (currentState === 'thinking') {
-      updateLoadingDots();
+      updateLoadingDots(true);  // Slow for thinking
       drawCharacter('thinking', currentState, currentCharacter, animFrame);
     }
 
     if (currentState === 'working') {
-      updateLoadingDots();
+      updateLoadingDots(false);  // Normal speed for working
       drawCharacter('focused', currentState, currentCharacter, animFrame);
     }
 

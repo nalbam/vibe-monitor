@@ -260,9 +260,11 @@ void drawStatus() {
   tft.setCursor(textX, STATUS_TEXT_Y);
   tft.println(statusText);
 
-  // Loading dots (working state only)
-  if (currentState == "working") {
-    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame);
+  // Loading dots (thinking and working states)
+  if (currentState == "thinking") {
+    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);  // Slow
+  } else if (currentState == "working") {
+    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);  // Normal
   }
 
   // Project name
@@ -338,9 +340,13 @@ void updateAnimation() {
   }
 
   // State-specific animations
-  if (currentState == "working") {
+  if (currentState == "thinking") {
+    // Update loading dots (slow) and thinking animation
+    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);
+    drawCharacter(tft, newCharX, newCharY, EYE_THINKING, bgColor, character);
+  } else if (currentState == "working") {
     // Update loading dots and matrix effect
-    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame);
+    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);
     drawCharacter(tft, newCharX, newCharY, EYE_FOCUSED, bgColor, character);
   } else if (currentState == "start") {
     // Update sparkle animation (redraw for sparkle effect)

@@ -1,5 +1,5 @@
 import { CHAR_SIZE, SCALE, CHARACTER_CONFIG, DEFAULT_CHARACTER, states } from './config.js';
-import { drawEyes } from './effects.js';
+import { drawEyes, drawMatrixBackground } from './effects.js';
 import { hasSprite, getSprite, drawSprite } from './sprites.js';
 
 let ctx = null;
@@ -23,6 +23,11 @@ export function drawCharacter(eyeType, currentState, currentCharacter, animFrame
   // Clear with background color
   ctx.fillStyle = state.bgColor;
   ctx.fillRect(0, 0, CHAR_SIZE, CHAR_SIZE);
+
+  // Draw matrix background for working state (around character body)
+  if (currentState === 'working') {
+    drawMatrixBackground(animFrame, drawRect, CHAR_SIZE / SCALE, char.body);
+  }
 
   // Check if character has sprite-based rendering
   if (hasSprite(currentCharacter)) {
