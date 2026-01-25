@@ -21,7 +21,7 @@ export function drawEyes(eyeType, char, animFrame, drawRect) {
 
   // Effect position (relative to character, above eyes)
   const effectX = rightX + eyeW + 2;
-  const effectY = eyeY - 12;
+  const effectY = eyeY - 18;
 
   switch (eyeType) {
     case 'normal':
@@ -32,6 +32,7 @@ export function drawEyes(eyeType, char, animFrame, drawRect) {
     case 'focused':
       drawRect(leftX, eyeY + Math.floor(eyeH/3), eyeW, Math.floor(eyeH/2), COLOR_EYE);
       drawRect(rightX, eyeY + Math.floor(eyeH/3), eyeW, Math.floor(eyeH/2), COLOR_EYE);
+      drawMatrix(effectX, effectY, animFrame, drawRect);
       break;
 
     case 'alert':
@@ -143,4 +144,31 @@ export function drawThoughtBubble(x, y, animFrame, drawRect, color = COLOR_WHITE
     drawRect(x + 4, y - 1, 4, 2, color);
     drawRect(x + 3, y + 1, 6, 2, color);
   }
+}
+
+// Matrix rain colors (green shades)
+const COLOR_MATRIX_BRIGHT = '#00FF00';
+const COLOR_MATRIX_MID = '#00CC00';
+const COLOR_MATRIX_DIM = '#009900';
+
+// Draw matrix rain effect for working state (very fast falling)
+export function drawMatrix(x, y, animFrame, drawRect) {
+  const frame = animFrame % 4;
+
+  // Three falling streams at different speeds
+  // Stream 1 (fastest)
+  const y1 = (frame * 7) % 20;
+  drawRect(x, y + y1, 2, 2, COLOR_MATRIX_BRIGHT);
+  if (y1 > 4) drawRect(x, y + y1 - 5, 2, 2, COLOR_MATRIX_MID);
+  if (y1 > 9) drawRect(x, y + y1 - 10, 2, 2, COLOR_MATRIX_DIM);
+
+  // Stream 2 (fast)
+  const y2 = ((frame + 1) * 6) % 18;
+  drawRect(x + 4, y + y2, 2, 2, COLOR_MATRIX_BRIGHT);
+  if (y2 > 4) drawRect(x + 4, y + y2 - 5, 2, 2, COLOR_MATRIX_MID);
+
+  // Stream 3 (fast)
+  const y3 = ((frame + 2) * 5) % 16;
+  drawRect(x + 8, y + y3, 2, 2, COLOR_MATRIX_BRIGHT);
+  if (y3 > 4) drawRect(x + 8, y + y3 - 5, 2, 2, COLOR_MATRIX_DIM);
 }

@@ -277,7 +277,7 @@ Character is **auto-detected** based on the IDE hook events. You can also manual
 | `start` | Cyan | ■ ■ + ✦ | Hello! | Session begins |
 | `idle` | Green | ■ ■ | Ready | Waiting for input |
 | `thinking` | Purple | ▀ ▀ + 💭 | Thinking | User submits prompt |
-| `working` | Blue | ▬ ▬ | (tool-based) | Tool executing |
+| `working` | Blue | ▬ ▬ + ▌▌▌ | (tool-based) | Tool executing |
 | `notification` | Yellow | ● ● + ? | Input? | User input needed |
 | `done` | Green | ∨ ∨ | Done! | Tool completed |
 | `sleep` | Navy | ─ ─ + Z | Zzz... | 10min inactivity |
@@ -304,7 +304,9 @@ The `working` state displays context-aware text based on the active tool:
 - **Floating**: All states have gentle floating motion (±3px horizontal, ±5px vertical, ~3.2s cycle)
 - **Blink**: Idle state blinks every 3 seconds
 - **Loading dots**: Working state shows animated progress dots
+- **Matrix rain**: Working state shows falling green code effect
 - **Sparkle**: Session start shows rotating sparkle effect
+- **Thought bubble**: Thinking state shows animated thought bubble
 - **Zzz**: Sleep state shows blinking Z animation
 
 ### State Timeout

@@ -334,7 +334,7 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
 
   // Effect position (relative to right eye, above eyes)
   int effectX = rightEyeX + ew + (2 * SCALE);
-  int effectY = eyeY - (12 * SCALE);
+  int effectY = eyeY - (18 * SCALE);
 
   switch (eyeType) {
     case EYE_NORMAL:
@@ -345,6 +345,7 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
     case EYE_FOCUSED:
       tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/2, COLOR_EYE);
       tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/2, COLOR_EYE);
+      drawMatrix(tft, effectX, effectY, animFrame);
       break;
 
     case EYE_ALERT:
@@ -472,6 +473,33 @@ void drawThoughtBubble(TFT_eSPI &tft, int x, int y, int frame, uint16_t color = 
     tft.fillRect(x + (4 * SCALE), y - (1 * SCALE), 4 * SCALE, 2 * SCALE, color);
     tft.fillRect(x + (3 * SCALE), y + (1 * SCALE), 6 * SCALE, 2 * SCALE, color);
   }
+}
+
+// Matrix rain colors (green shades)
+#define COLOR_MATRIX_BRIGHT 0x07E0  // #00FF00
+#define COLOR_MATRIX_MID    0x0660  // #00CC00
+#define COLOR_MATRIX_DIM    0x04C0  // #009900
+
+// Draw matrix rain effect for working state (scaled 2x, very fast falling)
+void drawMatrix(TFT_eSPI &tft, int x, int y, int frame) {
+  int f = frame % 4;
+
+  // Three falling streams at different speeds
+  // Stream 1 (fastest)
+  int y1 = (f * 7) % 20;
+  tft.fillRect(x, y + (y1 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
+  if (y1 > 4) tft.fillRect(x, y + ((y1 - 5) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
+  if (y1 > 9) tft.fillRect(x, y + ((y1 - 10) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
+
+  // Stream 2 (fast)
+  int y2 = ((f + 1) * 6) % 18;
+  tft.fillRect(x + (4 * SCALE), y + (y2 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
+  if (y2 > 4) tft.fillRect(x + (4 * SCALE), y + ((y2 - 5) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_MID);
+
+  // Stream 3 (fast)
+  int y3 = ((f + 2) * 5) % 16;
+  tft.fillRect(x + (8 * SCALE), y + (y3 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_BRIGHT);
+  if (y3 > 4) tft.fillRect(x + (8 * SCALE), y + ((y3 - 5) * SCALE), 2 * SCALE, 2 * SCALE, COLOR_MATRIX_DIM);
 }
 
 // Draw loading dots animation
