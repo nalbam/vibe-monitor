@@ -163,7 +163,6 @@ export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
     "SessionStart": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
     "UserPromptSubmit": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
     "PreToolUse": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
-    "PostToolUse": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
     "Notification": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
     "Stop": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }]
   }
@@ -207,9 +206,10 @@ chmod +x ~/.claude/statusline.sh
 | `SessionStart` | `start` | Session begins |
 | `UserPromptSubmit` | `thinking` | User submits prompt, AI starts thinking |
 | `PreToolUse` | `working` | Tool execution starts |
-| `PostToolUse` | `done` | *(Currently disabled)* |
 | `Notification` | `notification` | User input needed |
-| `Stop` | `idle` | Agent turn ends |
+| `Stop` | `done` | Agent turn ends |
+
+> **Note:** `PostToolUse` event is not processed.
 
 ---
 
@@ -307,9 +307,16 @@ The `working` state displays context-aware text based on the active tool:
 - **Sparkle**: Session start shows rotating sparkle effect
 - **Zzz**: Sleep state shows blinking Z animation
 
-### Sleep Mode
+### State Timeout
 
-Automatically transitions to `sleep` after 10 minutes of inactivity from `start`, `idle` or `done`. Any new status update wakes the display.
+All platforms (Desktop, Simulator, ESP32) automatically transition between states:
+
+| From State | Timeout | To State |
+|------------|---------|----------|
+| `done` | 1 minute | `idle` |
+| `idle`, `start` | 10 minutes | `sleep` |
+
+Any new status update resets the timeout timer and wakes the display from sleep.
 
 ## HTTP API
 

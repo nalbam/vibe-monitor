@@ -64,8 +64,7 @@ get_state() {
     "SessionStart") echo "start" ;;
     "UserPromptSubmit") echo "thinking" ;;
     "PreToolUse") echo "working" ;;
-    # "PostToolUse") echo "done" ;;
-    "Stop") echo "idle" ;;
+    "Stop") echo "done" ;;
     "Notification") echo "notification" ;;
     *) echo "working" ;;
   esac

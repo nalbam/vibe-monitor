@@ -6,12 +6,17 @@ const { createCanvas } = require('canvas');
 let mainWindow;
 let tray;
 let isAlwaysOnTop = true;
-let currentState = 'idle';
+let currentState = 'start';
 let currentCharacter = 'clawd';  // 'clawd' or 'kiro'
 let currentProject = '';
 let currentTool = '';
 let currentModel = '';
 let currentMemory = '';
+
+// State timeout management
+let stateTimeoutTimer = null;
+const DONE_TO_IDLE_TIMEOUT = 60 * 1000;      // 1 minute
+const IDLE_TO_SLEEP_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
 // HTTP server for receiving status updates
 let httpServer;
@@ -258,6 +263,31 @@ function updateTrayMenu() {
   tray.setContextMenu(contextMenu);
 }
 
+// Clear any existing state timeout timer
+function clearStateTimeout() {
+  if (stateTimeoutTimer) {
+    clearTimeout(stateTimeoutTimer);
+    stateTimeoutTimer = null;
+  }
+}
+
+// Set up state timeout based on current state
+function setupStateTimeout() {
+  clearStateTimeout();
+
+  if (currentState === 'done') {
+    // done -> idle after 1 minute
+    stateTimeoutTimer = setTimeout(() => {
+      updateState({ state: 'idle' });
+    }, DONE_TO_IDLE_TIMEOUT);
+  } else if (currentState === 'idle' || currentState === 'start') {
+    // idle/start -> sleep after 10 minutes
+    stateTimeoutTimer = setTimeout(() => {
+      updateState({ state: 'sleep' });
+    }, IDLE_TO_SLEEP_TIMEOUT);
+  }
+}
+
 function updateState(data) {
   // If state is provided (from vibe-monitor.sh), update all fields
   if (data.state !== undefined) {
@@ -269,6 +299,9 @@ function updateState(data) {
     if (data.tool !== undefined) currentTool = data.tool;
     if (data.model !== undefined) currentModel = data.model;
     if (data.memory !== undefined) currentMemory = data.memory;
+
+    // Set up state timeout for auto-transitions
+    setupStateTimeout();
   } else {
     // If no state (from statusline.sh), only update model/memory if project matches
     if (data.project !== undefined && data.project === currentProject) {
@@ -389,6 +422,7 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   startHttpServer();
+  setupStateTimeout();  // Start timeout timer for initial state
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -405,6 +439,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  clearStateTimeout();
   if (httpServer) {
     httpServer.close();
   }

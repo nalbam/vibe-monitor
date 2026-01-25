@@ -1,19 +1,20 @@
 import {
   states, CHARACTER_CONFIG, CHARACTER_NAMES, DEFAULT_CHARACTER,
   FLOAT_AMPLITUDE_X, FLOAT_AMPLITUDE_Y, CHAR_X_BASE, CHAR_Y_BASE,
-  SLEEP_TIMEOUT
+  DONE_TO_IDLE_TIMEOUT, SLEEP_TIMEOUT
 } from '../shared/config.js';
 import { getThinkingText, getWorkingText, updateMemoryBar } from '../shared/utils.js';
 import { initRenderer, drawCharacter } from '../shared/character.js';
 import { drawInfoIcons } from '../shared/icons.js';
 
 // Current state
-let currentState = 'idle';
+let currentState = 'start';
 let currentCharacter = 'clawd';
 let animFrame = 0;
 let blinkFrame = 0;
 let iconType = 'emoji';
 let lastActivityTime = Date.now();
+let lastDoneTime = null;
 
 // Canvas
 let canvas, ctx;
@@ -77,6 +78,7 @@ function init() {
 window.setState = function(state) {
   currentState = state;
   lastActivityTime = Date.now();
+  lastDoneTime = (state === 'done') ? Date.now() : null;
   updateDisplay();
 };
 
@@ -203,11 +205,24 @@ function updateLoadingDots() {
   });
 }
 
-// Check sleep timer
-function checkSleepTimer() {
-  if (currentState === 'start' || currentState === 'idle' || currentState === 'done') {
-    const elapsed = Date.now() - lastActivityTime;
-    if (elapsed >= SLEEP_TIMEOUT) {
+// Check state timeouts
+function checkStateTimeouts() {
+  const now = Date.now();
+
+  // done -> idle after 1 minute
+  if (currentState === 'done' && lastDoneTime) {
+    if (now - lastDoneTime >= DONE_TO_IDLE_TIMEOUT) {
+      currentState = 'idle';
+      lastDoneTime = null;
+      lastActivityTime = now;
+      updateDisplay();
+      return;
+    }
+  }
+
+  // idle/start -> sleep after 10 minutes
+  if (currentState === 'start' || currentState === 'idle') {
+    if (now - lastActivityTime >= SLEEP_TIMEOUT) {
       currentState = 'sleep';
       updateDisplay();
     }
@@ -248,7 +263,7 @@ function startAnimation() {
       drawCharacter('sleep', currentState, currentCharacter, animFrame);
     }
 
-    checkSleepTimer();
+    checkStateTimeouts();
   }, 100);
 }
 

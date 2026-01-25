@@ -118,5 +118,6 @@ export const FLOAT_AMPLITUDE_Y = 5;
 export const CHAR_X_BASE = 22;
 export const CHAR_Y_BASE = 20;
 
-// Sleep timeout (10 minutes)
-export const SLEEP_TIMEOUT = 600 * 1000;
+// State timeouts
+export const DONE_TO_IDLE_TIMEOUT = 60 * 1000;    // 1 minute
+export const SLEEP_TIMEOUT = 600 * 1000;          // 10 minutes

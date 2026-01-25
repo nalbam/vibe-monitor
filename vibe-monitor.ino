@@ -42,7 +42,7 @@ TFT_eSPI tft = TFT_eSPI();
 #define MEMORY_BAR_H  8
 
 // State
-String currentState = "idle";
+String currentState = "start";
 String previousState = "";
 String currentCharacter = "clawd";  // "clawd" or "kiro"
 String currentProject = "";
@@ -56,9 +56,11 @@ bool needsRedraw = true;
 int lastCharX = CHAR_X_BASE;  // Track last character X for efficient redraw
 int lastCharY = CHAR_Y_BASE;  // Track last character Y for efficient redraw
 
-// Sleep timer (10 minutes = 600000 ms)
-#define SLEEP_TIMEOUT 600000
+// State timeouts
+#define DONE_TO_IDLE_TIMEOUT 60000   // 1 minute
+#define SLEEP_TIMEOUT 600000          // 10 minutes
 unsigned long lastActivityTime = 0;
+unsigned long lastDoneTime = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -107,10 +109,26 @@ void loop() {
   checkSleepTimer();
 }
 
-// Check if should transition to sleep state
+// Check state timeouts for auto-transitions
 void checkSleepTimer() {
-  if (currentState == "start" || currentState == "idle" || currentState == "done") {
-    if (millis() - lastActivityTime >= SLEEP_TIMEOUT) {
+  unsigned long now = millis();
+
+  // done -> idle after 1 minute
+  if (currentState == "done" && lastDoneTime > 0) {
+    if (now - lastDoneTime >= DONE_TO_IDLE_TIMEOUT) {
+      previousState = currentState;
+      currentState = "idle";
+      lastDoneTime = 0;
+      lastActivityTime = now;
+      needsRedraw = true;
+      drawStatus();
+      return;
+    }
+  }
+
+  // idle/start -> sleep after 10 minutes
+  if (currentState == "start" || currentState == "idle") {
+    if (now - lastActivityTime >= SLEEP_TIMEOUT) {
       previousState = currentState;
       currentState = "sleep";
       needsRedraw = true;
@@ -143,8 +161,15 @@ void processInput(String input) {
     currentCharacter = DEFAULT_CHARACTER->name;
   }
 
-  // Reset sleep timer on any input
+  // Reset activity timer on any input
   lastActivityTime = millis();
+
+  // Track done state time for auto-transition to idle
+  if (currentState == "done") {
+    lastDoneTime = millis();
+  } else {
+    lastDoneTime = 0;
+  }
 
   // Redraw if state changed
   if (currentState != previousState) {
