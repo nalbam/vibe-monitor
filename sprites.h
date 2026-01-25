@@ -256,7 +256,7 @@ void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, uint16_t bgColo
   // Clear background area
   tft.fillRect(x, y, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
 
-  // Draw matrix background for working state (EYE_FOCUSED) - around character body
+  // Draw matrix background for working state (behind character)
   if (eyeType == EYE_FOCUSED) {
     drawMatrixBackground(tft, x, y, animFrame, CHAR_WIDTH / SCALE,
                          character->bodyX, character->bodyY, character->bodyW, character->bodyH);

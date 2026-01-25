@@ -24,7 +24,7 @@ export function drawCharacter(eyeType, currentState, currentCharacter, animFrame
   ctx.fillStyle = state.bgColor;
   ctx.fillRect(0, 0, CHAR_SIZE, CHAR_SIZE);
 
-  // Draw matrix background for working state (around character body)
+  // Draw matrix background for working state (behind character)
   if (currentState === 'working') {
     drawMatrixBackground(animFrame, drawRect, CHAR_SIZE / SCALE, char.body);
   }
