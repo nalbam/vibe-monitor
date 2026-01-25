@@ -215,12 +215,13 @@ chmod +x ~/.claude/statusline.sh
 
 ### Kiro IDE Setup
 
-Kiro IDE uses `.kiro.hook` files in the `config/kiro/hooks/` folder.
+Kiro IDE uses `.kiro.hook` files for agent event hooks.
 
-#### 1. Copy hook files to your project
+#### 1. Copy hook files
 
 ```bash
-cp -r config/kiro/hooks/*.kiro.hook your-project/.kiro/hooks/
+mkdir -p ~/.kiro/hooks
+cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
 ```
 
 > **Note:** Character is auto-set to `kiro` in the hook files.
