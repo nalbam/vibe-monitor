@@ -9,6 +9,10 @@
 
 #include <Arduino.h>
 
+// Character image data (RGB565 format)
+#include "img_clawd.h"
+#include "img_kiro.h"
+
 // Character colors (RGB565)
 #define COLOR_CLAUDE      0xEB66  // #E07B39 Claude orange
 #define COLOR_KIRO        0xFFFF  // #FFFFFF White ghost
@@ -16,86 +20,17 @@
 #define COLOR_TRANSPARENT 0x0000  // Transparent (same as background)
 #define COLOR_EFFECT_ALT  0xFD20  // #FFA500 Orange for white character effects
 
-// Kiro sprite (64x64) - string-based pixel art
-// '0' = transparent, '1' = white body
-const char* KIRO_SPRITE[64] = {
-  "0000000000000000000000000000000000000000000000000000000000000000",
-  "0000000000000000000000000000000000000000000000000000000000000000",
-  "0000000000000000000000000001111111111111000000000000000000000000",
-  "0000000000000000000000000111111111111111111000000000000000000000",
-  "0000000000000000000000011111111111111111111110000000000000000000",
-  "0000000000000000000000011111111111111111111111000000000000000000",
-  "0000000000000000000001111111111111111111111111110000000000000000",
-  "0000000000000000000001111111111111111111111111110000000000000000",
-  "0000000000000000000111111111111111111111111111111000000000000000",
-  "0000000000000000000111111111111111111111111111111000000000000000",
-  "0000000000000000001111111111111111111111111111111100000000000000",
-  "0000000000000000001111111111111111111111111111111100000000000000",
-  "0000000000000000011111111111111111111111111111111110000000000000",
-  "0000000000000000011111111111111111111111111111111110000000000000",
-  "0000000000000000111111111111111111111111111111111110000000000000",
-  "0000000000000000111111111111111111111111111111111110000000000000",
-  "0000000000000001111111111111111111111111111111111111000000000000",
-  "0000000000000001111111111111111111111111111111111111000000000000",
-  "0000000000000001111111111111111111111111111111111111100000000000",
-  "0000000000000001111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111100000000000",
-  "0000000000000011111111111111111111111111111111111111110000000000",
-  "0000000000000011111111111111111111111111111111111111110000000000",
-  "0000000000000011111111111111111111111111111111111111110000000000",
-  "0000000000000011111111111111111111111111111111111111110000000000",
-  "0000000000000111111111111111111111111111111111111111110000000000",
-  "0000000000000111111111111111111111111111111111111111110000000000",
-  "0000000000000111111111111111111111111111111111111111110000000000",
-  "0000000000000111111111111111111111111111111111111111110000000000",
-  "0000000000000111111111111111111111111111111111111111100000000000",
-  "0000000000000111111111111111111111111111111111111111100000000000",
-  "0000000000001111111111111111111111111111111111111111100000000000",
-  "0000000000001111111111111111111111111111111111111111100000000000",
-  "0000000000011111111111111111111111111111111111111111100000000000",
-  "0000000000011111111111111111111111111111111111111111100000000000",
-  "0000000000111111111111111111111111111111111111111111100000000000",
-  "0000000000111111111111111111111111111111111111111111100000000000",
-  "0000000000111111111111111111111111111111111111111111000000000000",
-  "0000000001111111111111111111111111111111111111111111000000000000",
-  "0000000001111111111111111111111111111111111111111110000000000000",
-  "0000000001111111111111111111111111111111111111111110000000000000",
-  "0000000001111111111111111111111111111111111111111110000000000000",
-  "0000000001111111111111111111111111111111111111111110000000000000",
-  "0000000000111111111111111111111111111111111111111100000000000000",
-  "0000000000011111111111111111111111111111111111111100000000000000",
-  "0000000000000000111111111111111111111111111111111100000000000000",
-  "0000000000000000111111111111111111111111111111111100000000000000",
-  "0000000000000000111111111111111111111111111111111000000000000000",
-  "0000000000000000111111111111111111111111111111111000000000000000",
-  "0000000000000000111111111111111111111111111111110000000000000000",
-  "0000000000000000111111111111111111111111111111110000000000000000",
-  "0000000000000000111111111111111111111111111111100000000000000000",
-  "0000000000000000111111111111111111111111111111100000000000000000",
-  "0000000000000000011111111111111101111111111110000000000000000000",
-  "0000000000000000001111111111110000111111111100000000000000000000",
-  "0000000000000000000011111110000000011111110000000000000000000000",
-  "0000000000000000000000000000000000001111000000000000000000000000",
-  "0000000000000000000000000000000000000000000000000000000000000000",
-  "0000000000000000000000000000000000000000000000000000000000000000"
-};
+// Transparent color marker for pushImage
+#define COLOR_TRANSPARENT_MARKER 0xFFFF
 
-// Draw Kiro sprite (64x64 base, scaled 2x to 128x128)
-void drawKiroSprite(TFT_eSPI &tft, int x, int y, uint16_t bgColor) {
-  for (int row = 0; row < 64; row++) {
-    for (int col = 0; col < 64; col++) {
-      char c = KIRO_SPRITE[row][col];
-      if (c == '1') {
-        tft.fillRect(x + col * SCALE, y + row * SCALE, SCALE, SCALE, COLOR_KIRO);
-      }
-      // '0' = transparent, background already drawn
-    }
-  }
+// Draw character image from RGB565 array (128x128) using pushImage
+// Uses hardware-accelerated block transfer with transparent color support
+void drawClawdImage(TFT_eSPI &tft, int x, int y) {
+  tft.pushImage(x, y, IMG_CLAWD_WIDTH, IMG_CLAWD_HEIGHT, IMG_CLAWD, COLOR_TRANSPARENT_MARKER);
+}
+
+void drawKiroImage(TFT_eSPI &tft, int x, int y) {
+  tft.pushImage(x, y, IMG_KIRO_WIDTH, IMG_KIRO_HEIGHT, IMG_KIRO, COLOR_TRANSPARENT_MARKER);
 }
 
 // Character geometry structure
@@ -273,10 +208,13 @@ void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, uint16_t bgColo
 
   uint16_t charColor = character->color;
 
-  // Draw body
-  if (character == &CHAR_KIRO) {
-    // Use sprite-based rendering for Kiro
-    drawKiroSprite(tft, x, y, bgColor);
+  // Draw body using images
+  if (character == &CHAR_CLAWD) {
+    // Use image for Clawd
+    drawClawdImage(tft, x, y);
+  } else if (character == &CHAR_KIRO) {
+    // Use image for Kiro
+    drawKiroImage(tft, x, y);
   } else if (character->isGhost) {
     // Generic ghost body (rounded egg/chick shape) - fallback
     int bx = x + (character->bodyX * SCALE);
@@ -341,12 +279,14 @@ void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, uint16_t bgColo
 #define COLOR_SUNGLASSES_SHINE 0x0180  // #003300
 
 // Draw sunglasses (Matrix style)
-void drawSunglasses(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY, int ew, int eh) {
+void drawSunglasses(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY, int ew, int eh, bool isKiro = false) {
   int lensW = ew + (4 * SCALE);
   int lensH = eh + (2 * SCALE);
-  int lensY = eyeY - SCALE;
-  int leftLensX = leftEyeX - (2 * SCALE);
-  int rightLensX = rightEyeX - (2 * SCALE);
+  // Kiro: shift up 2px
+  int lensY = eyeY - SCALE - (isKiro ? (2 * SCALE) : 0);
+  // Kiro: left lens 2px right, right lens 6px right
+  int leftLensX = leftEyeX - (2 * SCALE) + (isKiro ? (2 * SCALE) : 0);
+  int rightLensX = rightEyeX - (2 * SCALE) + (isKiro ? (6 * SCALE) : 0);
 
   // Left lens (dark green tint)
   tft.fillRect(leftLensX, lensY, lensW, lensH, COLOR_SUNGLASSES_LENS);
@@ -378,6 +318,7 @@ void drawSunglasses(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY, int ew
 }
 
 // Draw eyes based on eye type (scaled 2x)
+// Note: Eyes are now part of character images, only draw effects and sunglasses
 void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeometry* character = &CHAR_CLAWD) {
   // Eye base positions (scaled 2x)
   int leftEyeX = x + (character->eyeLeftX * SCALE);
@@ -385,67 +326,44 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
   int eyeY = y + (character->eyeY * SCALE);
   int ew = character->eyeW * SCALE;  // Scaled eye width
   int eh = character->eyeH * SCALE;  // Scaled eye height
+  bool isKiro = (character == &CHAR_KIRO);
 
   // Effect color (yellow for white characters, white for others)
-  uint16_t effectColor = (character->color == COLOR_KIRO) ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
+  uint16_t effectColor = isKiro ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
 
   // Effect position (relative to right eye, above eyes)
   int effectX = rightEyeX + ew + (2 * SCALE);
   int effectY = eyeY - (18 * SCALE);
 
+  // Only draw effects and sunglasses (eyes are in the images)
   switch (eyeType) {
-    case EYE_NORMAL:
-      tft.fillRect(leftEyeX, eyeY, ew, eh, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY, ew, eh, COLOR_EYE);
-      break;
-
     case EYE_FOCUSED:
-      // Sunglasses for Matrix style
-      drawSunglasses(tft, leftEyeX, rightEyeX, eyeY, ew, eh);
+      // Sunglasses for Matrix style (working state)
+      drawSunglasses(tft, leftEyeX, rightEyeX, eyeY, ew, eh, isKiro);
       break;
 
     case EYE_ALERT:
-      // Round eyes
-      tft.fillRect(leftEyeX + SCALE, eyeY, ew - 2*SCALE, eh, COLOR_EYE);
-      tft.fillRect(leftEyeX, eyeY + SCALE, ew, eh - 2*SCALE, COLOR_EYE);
-      tft.fillRect(rightEyeX + SCALE, eyeY, ew - 2*SCALE, eh, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY + SCALE, ew, eh - 2*SCALE, COLOR_EYE);
+      // Question mark effect (notification state)
       drawQuestionMark(tft, effectX, effectY);
       break;
 
     case EYE_SPARKLE:
-      tft.fillRect(leftEyeX, eyeY, ew, eh, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY, ew, eh, COLOR_EYE);
+      // Sparkle effect (start state)
       drawSparkle(tft, effectX, effectY + (2 * SCALE), effectColor);
       break;
 
-    case EYE_HAPPY: {
-      // Happy eyes (^ ^) - use eye width for sizing
-      int unit = max(2, character->eyeW / 2) * SCALE;
-      tft.fillRect(leftEyeX + unit, eyeY, unit, unit, COLOR_EYE);
-      tft.fillRect(leftEyeX, eyeY + unit, unit, unit, COLOR_EYE);
-      tft.fillRect(leftEyeX + ew - unit, eyeY + unit, unit, unit, COLOR_EYE);
-      tft.fillRect(rightEyeX + unit, eyeY, unit, unit, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY + unit, unit, unit, COLOR_EYE);
-      tft.fillRect(rightEyeX + ew - unit, eyeY + unit, unit, unit, COLOR_EYE);
-      break;
-    }
-
-    case EYE_THINKING: {
-      // Thinking eyes - looking up (pupils at top)
-      int pupilH = max(2, eh / 3);
-      // Draw pupils at top of eyes
-      tft.fillRect(leftEyeX + SCALE, eyeY, ew - 2*SCALE, pupilH, COLOR_EYE);
-      tft.fillRect(rightEyeX + SCALE, eyeY, ew - 2*SCALE, pupilH, COLOR_EYE);
-      // Draw thought bubble effect
+    case EYE_THINKING:
+      // Thought bubble effect (thinking state)
       drawThoughtBubble(tft, effectX, effectY, animFrame, effectColor);
       break;
-    }
 
     case EYE_SLEEP:
-      tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
-      tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
+      // Zzz effect (sleep state)
       drawZzz(tft, effectX, effectY, animFrame, effectColor);
+      break;
+
+    default:
+      // EYE_NORMAL, EYE_HAPPY: no additional effects needed
       break;
   }
 }
@@ -674,22 +592,12 @@ void drawMemoryBar(TFT_eSPI &tft, int x, int y, int width, int height, int perce
 }
 
 // Draw blink animation (for idle state)
+// Note: With image-based rendering, blinking redraws character image (eyes are in image)
 void drawBlinkEyes(TFT_eSPI &tft, int x, int y, int frame, const CharacterGeometry* character = &CHAR_CLAWD) {
-  int leftEyeX = x + (character->eyeLeftX * SCALE);
-  int rightEyeX = x + (character->eyeRightX * SCALE);
-  int eyeY = y + (character->eyeY * SCALE);
-  int ew = character->eyeW * SCALE;
-  int eh = character->eyeH * SCALE;
-
-  if (frame == 0) {
-    // Eyes closed (thin line)
-    tft.fillRect(leftEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
-    tft.fillRect(rightEyeX, eyeY + eh/3, ew, eh/3, COLOR_EYE);
-  } else {
-    // Eyes open (normal)
-    tft.fillRect(leftEyeX, eyeY, ew, eh, COLOR_EYE);
-    tft.fillRect(rightEyeX, eyeY, ew, eh, COLOR_EYE);
-  }
+  // With images, blink is handled by redrawing the character
+  // This function is kept for compatibility but does nothing with image-based rendering
+  // The actual blink effect can be achieved by briefly not drawing the eyes area
+  // For now, we skip this as images have fixed eyes
 }
 
 // Forward declaration of AppState enum (defined in main .ino)
