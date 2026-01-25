@@ -1,15 +1,23 @@
-// Cached DOM elements
+// Cached DOM elements and canvas contexts
 let iconCache = null;
 
 // Initialize icon cache (called once on first drawInfoIcons call)
 function initIconCache() {
+  const iconProject = document.getElementById('icon-project');
+  const iconTool = document.getElementById('icon-tool');
+  const iconModel = document.getElementById('icon-model');
+  const iconMemory = document.getElementById('icon-memory');
+
   iconCache = {
     emojiIcons: document.querySelectorAll('.emoji-icon'),
     pixelIcons: document.querySelectorAll('.pixel-icon'),
-    iconProject: document.getElementById('icon-project'),
-    iconTool: document.getElementById('icon-tool'),
-    iconModel: document.getElementById('icon-model'),
-    iconMemory: document.getElementById('icon-memory')
+    // Cache both canvas elements and their contexts
+    canvases: [
+      { canvas: iconProject, ctx: iconProject?.getContext('2d') },
+      { canvas: iconTool, ctx: iconTool?.getContext('2d') },
+      { canvas: iconModel, ctx: iconModel?.getContext('2d') },
+      { canvas: iconMemory, ctx: iconMemory?.getContext('2d') }
+    ]
   };
 }
 
@@ -71,15 +79,14 @@ export function drawInfoIcons(color, bgColor, useEmoji) {
   c.pixelIcons.forEach(el => el.style.display = useEmoji ? 'none' : 'inline-block');
 
   if (!useEmoji) {
-    const canvases = [c.iconProject, c.iconTool, c.iconModel, c.iconMemory];
     const drawFuncs = [drawFolderIcon, drawToolIcon, drawRobotIcon, drawBrainIcon];
 
-    canvases.forEach((canvas, index) => {
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, 8, 8);
-        drawFuncs[index](ctx, color);
+    // Use cached contexts instead of calling getContext('2d') each time
+    c.canvases.forEach((item, index) => {
+      if (item.ctx) {
+        item.ctx.fillStyle = bgColor;
+        item.ctx.fillRect(0, 0, 8, 8);
+        drawFuncs[index](item.ctx, color);
       }
     });
   }

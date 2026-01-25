@@ -11,6 +11,10 @@ import { getFloatOffsetX, getFloatOffsetY, needsAnimationRedraw } from '../share
 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 const useEmoji = isMac;
 
+// Animation timing
+const FRAME_INTERVAL = 100; // Target 100ms per frame
+let lastFrameTime = 0;
+
 // Current state
 let currentState = 'idle';
 let currentCharacter = 'clawd';
@@ -159,18 +163,20 @@ function checkSleepTimer() {
   }
 }
 
-// Animation loop
-function startAnimation() {
-  setInterval(() => {
-    animFrame++;
+// Animation loop using requestAnimationFrame for smoother rendering
+function animationLoop(timestamp) {
+  // Throttle to ~100ms intervals
+  if (timestamp - lastFrameTime < FRAME_INTERVAL) {
+    requestAnimationFrame(animationLoop);
+    return;
+  }
+  lastFrameTime = timestamp;
+  animFrame++;
 
-    updateFloatingPosition();
+  updateFloatingPosition();
 
-    // Only redraw when necessary
-    if (!needsAnimationRedraw(currentState, animFrame, blinkFrame)) {
-      return;
-    }
-
+  // Only redraw when necessary
+  if (needsAnimationRedraw(currentState, animFrame, blinkFrame)) {
     if (currentState === 'start') {
       drawCharacter('sparkle', currentState, currentCharacter, animFrame);
     }
@@ -198,9 +204,15 @@ function startAnimation() {
     if (currentState === 'sleep') {
       drawCharacter('sleep', currentState, currentCharacter, animFrame);
     }
+  }
 
-    checkSleepTimer();
-  }, 100);
+  checkSleepTimer();
+  requestAnimationFrame(animationLoop);
+}
+
+// Start animation loop
+function startAnimation() {
+  requestAnimationFrame(animationLoop);
 }
 
 // Initialize on load

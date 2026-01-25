@@ -26,7 +26,8 @@ const MAX_PAYLOAD_SIZE = 10 * 1024; // 10KB limit for security
 // Valid states for validation
 const VALID_STATES = ['start', 'idle', 'thinking', 'working', 'notification', 'done', 'sleep'];
 
-// State colors (matching index.html)
+// State colors for tray icon (must match shared/config.js states.bgColor)
+// NOTE: Cannot import ESM from CommonJS, keep in sync manually
 const STATE_COLORS = {
   start: '#00CCCC',
   idle: '#00AA00',
@@ -37,8 +38,8 @@ const STATE_COLORS = {
   sleep: '#1a1a4e'
 };
 
-// Character configurations - Single source of truth for main process
-// To add a new character, add an entry here
+// Character configurations for tray icon (must match shared/config.js CHARACTER_CONFIG)
+// NOTE: Cannot import ESM from CommonJS, keep in sync manually
 const CHARACTER_CONFIG = {
   clawd: {
     name: 'clawd',

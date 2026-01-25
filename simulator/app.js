@@ -7,6 +7,10 @@ import { initRenderer, drawCharacter } from '../shared/character.js';
 import { drawInfoIcons } from '../shared/icons.js';
 import { getFloatOffsetX, getFloatOffsetY, needsAnimationRedraw } from '../shared/animation.js';
 
+// Animation timing
+const FRAME_INTERVAL = 100; // Target 100ms per frame
+let lastFrameTime = 0;
+
 // Current state
 let currentState = 'start';
 let currentCharacter = 'clawd';
@@ -232,19 +236,20 @@ function checkStateTimeouts() {
   }
 }
 
-// Animation loop
-function startAnimation() {
-  setInterval(() => {
-    animFrame++;
+// Animation loop using requestAnimationFrame for smoother rendering
+function animationLoop(timestamp) {
+  // Throttle to ~100ms intervals
+  if (timestamp - lastFrameTime < FRAME_INTERVAL) {
+    requestAnimationFrame(animationLoop);
+    return;
+  }
+  lastFrameTime = timestamp;
+  animFrame++;
 
-    updateFloatingPosition();
+  updateFloatingPosition();
 
-    // Only redraw when necessary
-    if (!needsAnimationRedraw(currentState, animFrame, blinkFrame)) {
-      checkStateTimeouts();
-      return;
-    }
-
+  // Only redraw when necessary
+  if (needsAnimationRedraw(currentState, animFrame, blinkFrame)) {
     if (currentState === 'start') {
       drawCharacter('sparkle', currentState, currentCharacter, animFrame);
     }
@@ -272,9 +277,15 @@ function startAnimation() {
     if (currentState === 'sleep') {
       drawCharacter('sleep', currentState, currentCharacter, animFrame);
     }
+  }
 
-    checkStateTimeouts();
-  }, 100);
+  checkStateTimeouts();
+  requestAnimationFrame(animationLoop);
+}
+
+// Start animation loop
+function startAnimation() {
+  requestAnimationFrame(animationLoop);
 }
 
 // Initialize on load
