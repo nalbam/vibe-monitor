@@ -497,7 +497,8 @@ vibe-monitor/
 │   ├── README.md               # Desktop-specific docs
 │   └── assets/                 # App icons
 └── simulator/                  # Web simulator
-    └── index.html              # Browser testing
+    ├── index.html              # Browser UI
+    └── app.js                  # Simulator logic
 ```
 
 ## Version History

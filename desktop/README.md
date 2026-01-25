@@ -52,8 +52,10 @@ cp -r .kiro/hooks/*.kiro.hook your-project/.kiro/hooks/
 ```
 
 **Hook files:**
-- `vibe-monitor-working.kiro.hook` - Sends `working` state on `promptSubmit`
-- `vibe-monitor-idle.kiro.hook` - Sends `idle` state on `agentStop`
+- `vibe-monitor-session-start.kiro.hook` - Sends `session_start` on `agentSpawn`
+- `vibe-monitor-working.kiro.hook` - Sends `working` on `promptSubmit`
+- `vibe-monitor-tool-use.kiro.hook` - Sends `working` on `preToolUse`
+- `vibe-monitor-idle.kiro.hook` - Sends `idle` on `agentStop`
 
 ## Supported IDEs
 
@@ -62,55 +64,9 @@ cp -r .kiro/hooks/*.kiro.hook your-project/.kiro/hooks/
 | **Claude Code** | Shell hooks via `settings.json` | ✅ Supported |
 | **Kiro IDE** | `.kiro.hook` files in `.kiro/hooks/` | ✅ Supported |
 
-## States
+## States & Characters
 
-| State | Background | Eyes | Text | Trigger |
-|-------|------------|------|------|---------|
-| `session_start` | Cyan | ■ ■ + ✦ | Hello! | Session begins |
-| `idle` | Green | ■ ■ | Ready | Waiting for input |
-| `thinking` | Purple | ▀ ▀ + 💭 | Thinking/Hmm/Let me see | User submits prompt |
-| `working` | Blue | ▬ ▬ | (tool-based) | Tool executing |
-| `notification` | Yellow | ● ● + ? | Input? | User input needed |
-| `tool_done` | Green | ∨ ∨ | Done! | Tool completed |
-| `sleep` | Navy | ─ ─ + Z | Zzz... | 10min inactivity |
-
-### Working State Text
-
-The `working` state displays context-aware text based on the active tool:
-
-| Tool | Possible Text |
-|------|---------------|
-| Bash | Running, Executing, Processing |
-| Read | Reading, Scanning, Checking |
-| Edit | Editing, Modifying, Fixing |
-| Write | Writing, Creating, Saving |
-| Grep | Searching, Finding, Looking |
-| Glob | Scanning, Browsing, Finding |
-| Task | Thinking, Working, Planning |
-| WebFetch | Fetching, Loading, Getting |
-| WebSearch | Searching, Googling, Looking |
-| Default | Working, Busy, Coding |
-
-### Animations
-
-- **Floating**: Gentle floating motion (±3px horizontal, ±5px vertical, ~3.2s cycle)
-- **Blink**: Idle state blinks every 3 seconds
-- **Loading dots**: Working state shows animated progress dots
-- **Sparkle**: Session start shows rotating sparkle effect
-- **Zzz**: Sleep state shows blinking Z animation
-
-### Sleep Mode
-
-Automatically transitions to `sleep` after 10 minutes of inactivity from `idle` or `tool_done`. Any new status update wakes the display.
-
-## Characters
-
-| Character | Color | Description | Auto-selected for |
-|-----------|-------|-------------|-------------------|
-| `clawd` | Orange | Default character with arms and legs | Claude Code |
-| `kiro` | White | Ghost character with wavy tail | Kiro IDE/CLI |
-
-Character is **auto-detected** based on the IDE hook events. You can also change it via tray menu or POST `/status` with `character` field.
+See [main README](../README.md#state-display) for details on states, animations, and characters.
 
 ## API
 
