@@ -256,6 +256,10 @@ function updateTrayMenu() {
       label: `HTTP Server: localhost:${HTTP_PORT}`,
       enabled: false
     },
+    {
+      label: `Version: ${app.getVersion()}`,
+      enabled: false
+    },
     { type: 'separator' },
     {
       label: 'Quit',
