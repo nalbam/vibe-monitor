@@ -6,6 +6,11 @@ const path = require('path');
 const electron = require('electron');
 const appPath = path.join(__dirname, '..');
 
-spawn(electron, [appPath], {
-  stdio: 'inherit'
+const child = spawn(electron, [appPath], {
+  detached: true,
+  stdio: 'ignore'
 });
+
+child.unref();
+
+console.log('Vibe Monitor started (http://127.0.0.1:19280)');
