@@ -307,6 +307,31 @@ void drawSleepEyes(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY, int ew,
   tft.fillRect(rightLensX + SCALE, closedEyeY, lensW - (2 * SCALE), closedEyeH, COLOR_EYE);
 }
 
+// Draw happy eyes (> < style for done state)
+void drawHappyEyes(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY, int ew, int eh, uint16_t bodyColor, bool isKiro = false) {
+  int lensW, lensH, lensY, leftLensX, rightLensX;
+  getEyeCoverPosition(leftEyeX, rightEyeX, eyeY, ew, eh, isKiro, lensW, lensH, lensY, leftLensX, rightLensX);
+
+  // Cover original eyes with body color
+  tft.fillRect(leftLensX, lensY, lensW, lensH, bodyColor);
+  tft.fillRect(rightLensX, lensY, lensW, lensH, bodyColor);
+
+  // Center position for drawing > <
+  int centerY = lensY + lensH / 2;
+  int leftCenterX = leftLensX + lensW / 2;
+  int rightCenterX = rightLensX + lensW / 2;
+
+  // Draw > for left eye (pointing right)
+  tft.fillRect(leftCenterX - (2 * SCALE), centerY - (2 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_EYE);
+  tft.fillRect(leftCenterX, centerY, 2 * SCALE, 2 * SCALE, COLOR_EYE);
+  tft.fillRect(leftCenterX - (2 * SCALE), centerY + (2 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_EYE);
+
+  // Draw < for right eye (pointing left)
+  tft.fillRect(rightCenterX + SCALE, centerY - (2 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_EYE);
+  tft.fillRect(rightCenterX - SCALE, centerY, 2 * SCALE, 2 * SCALE, COLOR_EYE);
+  tft.fillRect(rightCenterX + SCALE, centerY + (2 * SCALE), 2 * SCALE, 2 * SCALE, COLOR_EYE);
+}
+
 // Draw sunglasses (Matrix style)
 void drawSunglasses(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY, int ew, int eh, bool isKiro = false) {
   int lensW, lensH, lensY, leftLensX, rightLensX;
@@ -392,8 +417,13 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
       drawSleepEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
       break;
 
+    case EYE_HAPPY:
+      // Happy eyes (> <) for done state
+      drawHappyEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
+      break;
+
     default:
-      // EYE_NORMAL, EYE_HAPPY: no additional effects needed
+      // EYE_NORMAL: no additional effects needed
       break;
   }
 }

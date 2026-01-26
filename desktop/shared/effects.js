@@ -78,6 +78,30 @@ function drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, bodyColor, isK
   drawRect(rightLensX + 1, closedEyeY, lensW - 2, closedEyeH, COLOR_EYE);
 }
 
+// Draw happy eyes (> < style for done state)
+function drawHappyEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, bodyColor, isKiro = false) {
+  const { lensW, lensH, lensY, leftLensX, rightLensX } = getEyeCoverPosition(leftX, rightX, eyeY, eyeW, eyeH, isKiro);
+
+  // Cover original eyes with body color
+  drawRect(leftLensX, lensY, lensW, lensH, bodyColor);
+  drawRect(rightLensX, lensY, lensW, lensH, bodyColor);
+
+  // Center position for drawing > <
+  const centerY = lensY + Math.floor(lensH / 2);
+  const leftCenterX = leftLensX + Math.floor(lensW / 2);
+  const rightCenterX = rightLensX + Math.floor(lensW / 2);
+
+  // Draw > for left eye (pointing right)
+  drawRect(leftCenterX - 2, centerY - 2, 2, 2, COLOR_EYE);
+  drawRect(leftCenterX, centerY, 2, 2, COLOR_EYE);
+  drawRect(leftCenterX - 2, centerY + 2, 2, 2, COLOR_EYE);
+
+  // Draw < for right eye (pointing left)
+  drawRect(rightCenterX + 1, centerY - 2, 2, 2, COLOR_EYE);
+  drawRect(rightCenterX - 1, centerY, 2, 2, COLOR_EYE);
+  drawRect(rightCenterX + 1, centerY + 2, 2, 2, COLOR_EYE);
+}
+
 // Get effect color based on character color
 function getEffectColor(char) {
   return char.color === '#FFFFFF' ? COLOR_EFFECT_ALT : COLOR_WHITE;
@@ -130,6 +154,11 @@ export function drawEyes(eyeType, char, animFrame, drawRect) {
     case 'blink':
       // Blink eyes (closed eyes without Zzz)
       drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+      break;
+
+    case 'happy':
+      // Happy eyes (> <) for done state
+      drawHappyEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
       break;
   }
 }
