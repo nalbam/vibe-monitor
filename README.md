@@ -291,7 +291,7 @@ Character is **auto-detected** based on the IDE hook events. You can also manual
 | `working` | Blue | 🕶️ (sunglasses) | (tool-based) | Tool executing |
 | `notification` | Yellow | ● ● + ? | Input? | User input needed |
 | `done` | Green | ∨ ∨ | Done! | Tool completed |
-| `sleep` | Navy | ─ ─ + Z | Zzz... | 10min inactivity |
+| `sleep` | Navy | ─ ─ + Z | Zzz... | 5min inactivity |
 
 ### Working State Text
 
@@ -331,8 +331,8 @@ All platforms (Desktop, Simulator, ESP32) automatically transition between state
 
 | From State | Timeout | To State |
 |------------|---------|----------|
-| `done` | 1 minute | `idle` |
-| `idle`, `start` | 10 minutes | `sleep` |
+| `start`, `done` | 1 minute | `idle` |
+| `idle`, `notification` | 5 minutes | `sleep` |
 
 Any new status update resets the timeout timer and wakes the display from sleep.
 

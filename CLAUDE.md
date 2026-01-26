@@ -69,7 +69,7 @@ open simulator/index.html
 | `working` | Blue | Tool executing |
 | `notification` | Yellow | User input needed |
 | `done` | Green | Tool completed |
-| `sleep` | Navy | 10min inactivity |
+| `sleep` | Navy | 5min inactivity |
 
 ## Testing
 
