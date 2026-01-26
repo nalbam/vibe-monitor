@@ -100,7 +100,11 @@ The `working` state displays context-aware text based on the active tool:
 | Edit | Editing, Modifying, Fixing |
 | Write | Writing, Creating, Saving |
 | Grep | Searching, Finding, Looking |
+| Glob | Scanning, Browsing, Finding |
 | Task | Thinking, Working, Planning |
+| WebFetch | Fetching, Loading, Getting |
+| WebSearch | Searching, Googling, Looking |
+| Default | Working, Busy, Coding |
 
 ### Animations
 
