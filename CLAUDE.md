@@ -43,7 +43,7 @@ open simulator/index.html
 ### Key Files
 - **ESP32**: `vibe-monitor.ino` (main), `sprites.h` (rendering)
 - **Desktop**: `main.js` (server/tray), `index.html` (renderer)
-- **Shared**: `shared/` folder (config, character, sprites, effects)
+- **Shared**: `desktop/shared/` folder (config, character, animation, effects)
 
 ## Key Patterns
 

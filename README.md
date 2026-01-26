@@ -389,6 +389,14 @@ Show window and position to top-right corner.
 curl -X POST http://127.0.0.1:19280/show
 ```
 
+### POST /quit (Desktop only)
+
+Quit the application.
+
+```bash
+curl -X POST http://127.0.0.1:19280/quit
+```
+
 ### GET /debug (Desktop only)
 
 Get display and window debug information.
@@ -534,21 +542,24 @@ vibe-monitor/
 │           ├── vibe-monitor-prompt-submit.kiro.hook
 │           ├── vibe-monitor-pre-tool-use.kiro.hook
 │           └── vibe-monitor-agent-stop.kiro.hook
-├── shared/                     # Shared code (Desktop/Simulator)
-│   ├── config.js               # State/character configuration
-│   ├── character.js            # Character rendering logic
-│   ├── sprites.js              # Sprite definitions
-│   ├── effects.js              # Visual effects
-│   ├── icons.js                # Icon rendering
-│   ├── utils.js                # Utility functions
-│   └── styles.css              # Shared styles
 ├── desktop/                    # Desktop app
 │   ├── main.js                 # Electron main process
 │   ├── index.html              # Renderer
 │   ├── preload.js              # IPC bridge
+│   ├── renderer.js             # UI logic
+│   ├── styles.css              # Styles
 │   ├── package.json            # Dependencies
 │   ├── README.md               # Desktop-specific docs
-│   └── assets/                 # App icons
+│   ├── bin/cli.js              # CLI entry point (npx)
+│   ├── assets/                 # App icons
+│   └── shared/                 # Shared code (Desktop/Simulator)
+│       ├── config.js           # State/character configuration
+│       ├── character.js        # Character rendering logic
+│       ├── animation.js        # Animation utilities
+│       ├── effects.js          # Visual effects
+│       ├── icons.js            # Icon rendering
+│       ├── utils.js            # Utility functions
+│       └── styles.css          # Shared styles
 └── simulator/                  # Web simulator
     ├── index.html              # Browser UI
     ├── app.js                  # Simulator logic
