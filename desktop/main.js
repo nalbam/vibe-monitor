@@ -290,8 +290,8 @@ function setupStateTimeout() {
     stateTimeoutTimer = setTimeout(() => {
       updateState({ state: 'idle' });
     }, IDLE_TIMEOUT);
-  } else if (currentState === 'idle') {
-    // idle -> sleep after 5 minutes
+  } else if (currentState === 'idle' || currentState === 'notification') {
+    // idle/notification -> sleep after 5 minutes
     stateTimeoutTimer = setTimeout(() => {
       updateState({ state: 'sleep' });
     }, SLEEP_TIMEOUT);

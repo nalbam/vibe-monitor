@@ -160,8 +160,8 @@ void checkSleepTimer() {
     }
   }
 
-  // idle -> sleep after 5 minutes
-  if (currentState == STATE_IDLE) {
+  // idle/notification -> sleep after 5 minutes
+  if (currentState == STATE_IDLE || currentState == STATE_NOTIFICATION) {
     if (now - lastActivityTime >= SLEEP_TIMEOUT) {
       previousState = currentState;
       currentState = STATE_SLEEP;
