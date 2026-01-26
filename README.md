@@ -147,12 +147,12 @@ Claude Code uses **hooks** and **statusline** to send data to Vibe Monitor.
 mkdir -p ~/.claude/hooks
 
 # Copy hook script (provides state, tool, project)
-cp config/claude/hooks/vibe-monitor.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/vibe-monitor.sh
+cp config/claude/hooks/vibe-monitor.py ~/.claude/hooks/
+chmod +x ~/.claude/hooks/vibe-monitor.py
 
 # Copy statusline script (provides model, memory)
-cp config/claude/statusline.sh ~/.claude/statusline.sh
-chmod +x ~/.claude/statusline.sh
+cp config/claude/statusline.py ~/.claude/statusline.py
+chmod +x ~/.claude/statusline.py
 ```
 
 #### 2. Configure environment variables
@@ -213,15 +213,15 @@ Add both hooks and statusline configuration:
 ```json
 {
   "hooks": {
-    "SessionStart": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
-    "UserPromptSubmit": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
-    "PreToolUse": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
-    "Notification": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }],
-    "Stop": [{ "command": "~/.claude/hooks/vibe-monitor.sh" }]
+    "SessionStart": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
+    "UserPromptSubmit": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
+    "PreToolUse": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
+    "Notification": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
+    "Stop": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }]
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.sh"
+    "command": "python3 ~/.claude/statusline.py"
   }
 }
 ```
@@ -252,7 +252,7 @@ The statusline also sends model and memory data to Vibe Monitor in the backgroun
 
 ### Kiro IDE Setup
 
-Kiro IDE uses `.kiro.hook` files that call the `vibe-monitor.sh` script.
+Kiro IDE uses `.kiro.hook` files that call the `vibe-monitor.py` script.
 
 #### 1. Copy scripts
 
@@ -261,8 +261,8 @@ Kiro IDE uses `.kiro.hook` files that call the `vibe-monitor.sh` script.
 mkdir -p ~/.kiro/hooks
 
 # Copy hook script (main logic)
-cp config/kiro/hooks/vibe-monitor.sh ~/.kiro/hooks/
-chmod +x ~/.kiro/hooks/vibe-monitor.sh
+cp config/kiro/hooks/vibe-monitor.py ~/.kiro/hooks/
+chmod +x ~/.kiro/hooks/vibe-monitor.py
 
 # Copy hook files (event triggers)
 cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
@@ -711,16 +711,19 @@ vibe-monitor/
 │   ├── claude/                 # Claude Code settings
 │   │   ├── .env.sample         # Environment variables sample
 │   │   ├── settings.json       # Hook configuration example
-│   │   ├── statusline.sh       # Statusline script (model, memory)
+│   │   ├── statusline.py       # Statusline script (Python)
+│   │   ├── statusline.sh       # Statusline script (Bash, legacy)
 │   │   ├── hooks/              # Hook scripts
-│   │   │   └── vibe-monitor.sh # Main hook script
+│   │   │   ├── vibe-monitor.py # Main hook script (Python)
+│   │   │   └── vibe-monitor.sh # Main hook script (Bash, legacy)
 │   │   └── skills/             # Claude Code skills
 │   │       └── vibemon/        # Vibe monitor skill
 │   │           └── SKILL.md    # Skill documentation
 │   └── kiro/                   # Kiro IDE settings
 │       ├── .env.sample         # Environment variables sample
 │       └── hooks/              # Hook files
-│           ├── vibe-monitor.sh # Main hook script
+│           ├── vibe-monitor.py # Main hook script (Python)
+│           ├── vibe-monitor.sh # Main hook script (Bash, legacy)
 │           ├── vibe-monitor-agent-spawn.kiro.hook
 │           ├── vibe-monitor-prompt-submit.kiro.hook
 │           ├── vibe-monitor-pre-tool-use.kiro.hook
