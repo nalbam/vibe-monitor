@@ -1,6 +1,6 @@
-# Vibe Monitor Desktop App
+# Vibe Monitor
 
-Electron-based desktop app for real-time monitoring of AI coding assistants (Claude Code, Kiro IDE/CLI) with pixel art character.
+AI coding assistant status monitor with pixel art character.
 
 ![Demo](assets/demo.gif)
 
@@ -12,259 +12,127 @@ Electron-based desktop app for real-time monitoring of AI coding assistants (Cla
 - **HTTP API**: Easy integration with IDE hooks (Claude Code, Kiro)
 - **Draggable**: Move the window to any position
 
-## Installation
+## Quick Start
 
 ```bash
-cd desktop
-npm install
+npx vibe-monitor
 ```
 
-## Usage
+## Installation
 
-### Run the App
+### From npm
 
 ```bash
+npm install -g vibe-monitor
+vibe-monitor
+```
+
+### From Source
+
+```bash
+git clone https://github.com/nalbam/vibe-monitor.git
+cd vibe-monitor/desktop
+npm install
 npm start
 ```
 
-### Update Status via HTTP API
+## States
 
-```bash
-# Change to working state
-curl -X POST http://127.0.0.1:19280/status \
-  -H "Content-Type: application/json" \
-  -d '{"state":"working","tool":"Bash","project":"my-project","model":"opus","memory":"45%"}'
+| State | Color | Description |
+|-------|-------|-------------|
+| `start` | Cyan | Session begins |
+| `idle` | Green | Waiting for input |
+| `thinking` | Purple | Processing prompt |
+| `working` | Blue | Tool executing |
+| `notification` | Yellow | User input needed |
+| `done` | Green | Tool completed |
+| `sleep` | Navy | 10min inactivity |
 
-# Check current status
-curl http://127.0.0.1:19280/status
+## Characters
+
+- **clawd** (default): Orange pixel art character
+- **kiro**: White ghost character
+
+## IDE Integration
+
+### Claude Code
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -s -X POST http://127.0.0.1:19280/status -H 'Content-Type: application/json' -d \"$(jq -nc --arg state working --arg event PreToolUse --arg tool \"$CLAUDE_TOOL_NAME\" --arg project \"$(basename $PWD)\" '{state: $state, event: $event, tool: $tool, project: $project}')\" > /dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
 
-### IDE Hooks Integration
+See [GitHub repository](https://github.com/nalbam/vibe-monitor) for full hook configuration.
 
-#### Claude Code
+### Kiro IDE
 
-Uses `hooks/vibe-monitor.sh` - see [main README](../README.md#claude-code-setup) for setup.
-
-#### Kiro IDE
-
-Copy hook files to `~/.kiro/hooks/` (or your project's `.kiro/hooks/` folder):
+Copy hook files from the repository to `~/.kiro/hooks/`:
 
 ```bash
-# Global installation (recommended)
-mkdir -p ~/.kiro/hooks
-cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
-
-# Or project-level installation
-# cp config/kiro/hooks/*.kiro.hook your-project/.kiro/hooks/
+curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/kiro/hooks/vibe-monitor-pre-tool-use.kiro.hook -o ~/.kiro/hooks/vibe-monitor-pre-tool-use.kiro.hook
 ```
-
-**Hook files:**
-- `vibe-monitor-agent-spawn.kiro.hook` - Sends `start` on `agentSpawn`
-- `vibe-monitor-prompt-submit.kiro.hook` - Sends `working` on `promptSubmit`
-- `vibe-monitor-pre-tool-use.kiro.hook` - Sends `working` on `preToolUse`
-- `vibe-monitor-agent-stop.kiro.hook` - Sends `idle` on `agentStop`
-
-## Supported IDEs
-
-| IDE | Hook System | Status |
-|-----|-------------|--------|
-| **Claude Code** | Shell hooks via `settings.json` | ✅ Supported |
-| **Kiro IDE** | `.kiro.hook` files in `.kiro/hooks/` | ✅ Supported |
-
-## States & Characters
-
-See [main README](../README.md#state-display) for details on states, animations, and characters.
 
 ## API
 
 ### POST /status
 
-Update status
+Update status:
 
-```json
-{
-  "state": "working",
-  "event": "PreToolUse",
-  "tool": "Bash",
-  "project": "vibe-monitor",
-  "model": "opus",
-  "memory": "45%",
-  "character": "clawd"
-}
+```bash
+curl -X POST http://127.0.0.1:19280/status \
+  -H "Content-Type: application/json" \
+  -d '{"state":"working","tool":"Bash","project":"my-project"}'
 ```
+
+**Fields:**
+
+| Field | Description |
+|-------|-------------|
+| `state` | `start`, `idle`, `thinking`, `working`, `notification`, `done`, `sleep` |
+| `event` | `PreToolUse`, `PostToolUse`, etc. |
+| `tool` | Tool name (e.g., `Bash`, `Read`, `Edit`) |
+| `project` | Project name |
+| `model` | Model name (e.g., `opus`, `sonnet`) |
+| `memory` | Memory usage (e.g., `45%`) |
+| `character` | `clawd` or `kiro` |
 
 ### GET /status
 
-Get current status
+Get current status:
 
-```json
-{
-  "state": "working",
-  "project": "vibe-monitor",
-  "tool": "Bash",
-  "model": "opus",
-  "memory": "45%"
-}
+```bash
+curl http://127.0.0.1:19280/status
 ```
 
 ### GET /health
 
-Health check endpoint
+Health check:
 
-```json
-{
-  "status": "ok"
-}
+```bash
+curl http://127.0.0.1:19280/health
 ```
 
 ### POST /show
 
-Show window and position to top-right corner
-
-```json
-{
-  "success": true
-}
-```
-
-### GET /debug
-
-Get display and window debug information (useful for troubleshooting positioning issues)
-
-```json
-{
-  "primaryDisplay": {
-    "bounds": { "x": 0, "y": 0, "width": 1920, "height": 1080 },
-    "workArea": { "x": 0, "y": 0, "width": 1920, "height": 1040 },
-    "scaleFactor": 1
-  },
-  "window": { "x": 1748, "y": 0, "width": 172, "height": 348 },
-  "platform": "darwin"
-}
-```
-
-## WSL (Windows Subsystem for Linux)
-
-Running the Electron app on WSL requires WSLg (Windows 11) and additional dependencies.
-
-### Prerequisites
-
-1. **Windows 11** with WSLg support
-2. **Update WSL**:
-   ```bash
-   wsl --update
-   ```
-
-### Install Dependencies
-
-Electron requires several system libraries that are not installed by default on WSL:
+Show window:
 
 ```bash
-# Ubuntu 24.04 (Noble) or later
-sudo apt-get update && sudo apt-get install -y \
-  libasound2t64 \
-  libatk1.0-0 \
-  libatk-bridge2.0-0 \
-  libcups2 \
-  libdrm2 \
-  libgbm1 \
-  libgtk-3-0 \
-  libnss3 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxfixes3 \
-  libxkbcommon0 \
-  libxrandr2 \
-  libxshmfence1 \
-  libglu1-mesa
-
-# Ubuntu 22.04 (Jammy) or earlier
-sudo apt-get update && sudo apt-get install -y \
-  libasound2 \
-  libatk1.0-0 \
-  libatk-bridge2.0-0 \
-  libcups2 \
-  libdrm2 \
-  libgbm1 \
-  libgtk-3-0 \
-  libnss3 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxfixes3 \
-  libxkbcommon0 \
-  libxrandr2
-```
-
-### Run
-
-```bash
-cd desktop
-npm install
-npm start
-```
-
-### Troubleshooting
-
-**Error: `libasound.so.2: cannot open shared object file`**
-
-Install the audio library:
-```bash
-# Ubuntu 24.04+
-sudo apt-get install -y libasound2t64
-
-# Ubuntu 22.04 or earlier
-sudo apt-get install -y libasound2
-```
-
-**GPU process errors (can be ignored)**
-
-WSL may show GPU-related warnings like:
-```
-Exiting GPU process due to errors during initialization
-```
-These warnings don't affect app functionality.
-
-**Window not appearing**
-
-Ensure WSLg is working:
-```bash
-# Test with a simple GUI app
-sudo apt-get install -y x11-apps
-xclock
-```
-
-If xclock doesn't appear, WSLg may need to be enabled or updated.
-
-## Build
-
-Build for macOS:
-
-```bash
-npm run build:mac
-```
-
-Build DMG only:
-
-```bash
-npm run build:dmg
-```
-
-Build for Windows:
-
-```bash
-npm run build:win
-```
-
-Build for Linux:
-
-```bash
-npm run build:linux
-```
-
-Build for all platforms:
-
-```bash
-npm run build:all
+curl -X POST http://127.0.0.1:19280/show
 ```
 
 ## Tray Menu
@@ -280,4 +148,15 @@ Click the system tray icon to:
 
 Default HTTP server port: `19280`
 
-(Can be changed via `HTTP_PORT` constant in main.js)
+## Build
+
+```bash
+npm run build:mac     # macOS
+npm run build:win     # Windows
+npm run build:linux   # Linux
+npm run build:all     # All platforms
+```
+
+## License
+
+MIT
