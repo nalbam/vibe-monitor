@@ -130,15 +130,9 @@ show_monitor_window() {
 }
 
 launch_desktop() {
-  local start_script="$VIBE_MONITOR_DESKTOP/start.sh"
-
-  if [ -x "$start_script" ]; then
-    debug_log "Launching Desktop App: $start_script"
-    "$start_script" > /dev/null 2>&1 &
-    sleep 2
-  else
-    debug_log "Desktop App start script not found: $start_script"
-  fi
+  debug_log "Launching Desktop App via npx"
+  npx vibe-monitor > /dev/null 2>&1 &
+  sleep 2
 }
 
 # ============================================================================
@@ -176,7 +170,7 @@ main() {
   fi
 
   # Launch Desktop App if not running (on start)
-  if [ -n "${VIBE_MONITOR_DESKTOP}" ] && [ -n "${VIBE_MONITOR_URL}" ] && [ "$is_start" = true ]; then
+  if [ -n "${VIBE_MONITOR_URL}" ] && [ "$is_start" = true ]; then
     if ! is_monitor_running "${VIBE_MONITOR_URL}"; then
       debug_log "Desktop App not running, launching..."
       launch_desktop

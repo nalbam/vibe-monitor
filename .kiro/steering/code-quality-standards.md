@@ -180,7 +180,7 @@ httpServer = http.createServer((req, res) => {
 // ✅ 비동기 에러 처리
 async function launchDesktop() {
   try {
-    await exec(`${VIBE_MONITOR_DESKTOP}/start.sh`);
+    await exec('npx vibe-monitor');
   } catch (error) {
     console.warn('Failed to launch desktop app:', error.message);
   }

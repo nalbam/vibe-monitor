@@ -140,10 +140,7 @@ cp config/claude/.env.sample ~/.claude/.env.local
 #### 3. Edit `~/.claude/.env.local`
 
 ```bash
-# Desktop App path (auto-launches on SessionStart if not running)
-export VIBE_MONITOR_DESKTOP="~/vibe-monitor/desktop"
-
-# Desktop App URL (sends status updates)
+# Desktop App URL (auto-launches via npx if not running)
 export VIBE_MONITOR_URL="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
@@ -244,7 +241,7 @@ cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
 ### Hook Priority
 
 The hook sends status updates in order (only if configured):
-1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `VIBE_MONITOR_DESKTOP`)
+1. **Desktop App** - if `VIBE_MONITOR_URL` is set (auto-launches via `npx vibe-monitor`)
 2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
 3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
 
