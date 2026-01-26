@@ -22,7 +22,13 @@ def load_env():
         with open(env_file) as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
+                # Skip comments and empty lines
+                if not line or line.startswith("#"):
+                    continue
+                # Remove 'export ' prefix if present
+                if line.startswith("export "):
+                    line = line[7:]
+                if "=" in line:
                     key, _, value = line.partition("=")
                     # Remove quotes if present
                     value = value.strip().strip('"').strip("'")
