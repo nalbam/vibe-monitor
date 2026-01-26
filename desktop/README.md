@@ -75,7 +75,7 @@ npm start
 | `thinking` | Purple | ▀ ▀ + 💭 | Processing prompt |
 | `working` | Blue | 🕶️ | Tool executing |
 | `notification` | Yellow | ● ● + ? | User input needed |
-| `done` | Green | ∨ ∨ | Done! |
+| `done` | Green | > < | Done! |
 | `sleep` | Navy | ─ ─ + Z | 5min inactivity |
 
 ### State Timeout

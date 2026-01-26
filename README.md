@@ -330,7 +330,7 @@ Character is **auto-detected** based on the IDE hook events. You can also manual
 | `thinking` | Purple | ▀ ▀ + 💭 | Thinking | User submits prompt |
 | `working` | Blue | 🕶️ (sunglasses) | (tool-based) | Tool executing |
 | `notification` | Yellow | ● ● + ? | Input? | User input needed |
-| `done` | Green | ∨ ∨ | Done! | Tool completed |
+| `done` | Green | > < | Done! | Tool completed |
 | `sleep` | Navy | ─ ─ + Z | Zzz... | 5min inactivity |
 
 ### Working State Text
