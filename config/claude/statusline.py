@@ -7,7 +7,6 @@ Displays minimal status line: project, model, memory
 import json
 import os
 import sys
-import fcntl
 import time
 from pathlib import Path
 
