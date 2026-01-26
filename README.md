@@ -1,5 +1,9 @@
 # Vibe Monitor
 
+[![npm version](https://img.shields.io/npm/v/vibe-monitor.svg)](https://www.npmjs.com/package/vibe-monitor)
+[![npm downloads](https://img.shields.io/npm/dm/vibe-monitor.svg)](https://www.npmjs.com/package/vibe-monitor)
+[![license](https://img.shields.io/npm/l/vibe-monitor.svg)](https://github.com/nalbam/vibe-monitor/blob/main/LICENSE)
+
 Real-time status and usage monitor for AI coding assistants with pixel art character.
 
 Monitor your **Claude Code** or **Kiro IDE** sessions at a glance - see what state it's in, which project and tool it's using, what model is active, and how much context memory is consumed.
