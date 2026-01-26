@@ -2,6 +2,8 @@
 
 Electron-based desktop app for real-time monitoring of AI coding assistants (Claude Code, Kiro IDE/CLI) with pixel art character.
 
+![Demo](assets/demo.gif)
+
 ## Features
 
 - **Frameless Window**: Clean floating design
