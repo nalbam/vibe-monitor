@@ -118,14 +118,16 @@ See [GitHub repository](https://github.com/nalbam/vibe-monitor) for full configu
 
 ### Kiro IDE
 
-Copy all hook files to `~/.kiro/hooks/`:
+Copy hook script and hook files to `~/.kiro/hooks/`:
 
 ```bash
 # Create hooks directory
 mkdir -p ~/.kiro/hooks
 
-# Copy all hook files
+# Copy hook script and hook files
+cp config/kiro/hooks/vibe-monitor.sh ~/.kiro/hooks/
 cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
+chmod +x ~/.kiro/hooks/vibe-monitor.sh
 ```
 
 ## API

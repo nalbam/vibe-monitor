@@ -211,23 +211,37 @@ The statusline also sends model and memory data to Vibe Monitor in the backgroun
 
 ### Kiro IDE Setup
 
-Kiro IDE uses `.kiro.hook` files for agent event hooks.
+Kiro IDE uses `.kiro.hook` files that call the `vibe-monitor.sh` script.
 
-#### 1. Copy hook files
+#### 1. Copy scripts
 
 ```bash
+# Create hooks directory
 mkdir -p ~/.kiro/hooks
+
+# Copy hook script (main logic)
+cp config/kiro/hooks/vibe-monitor.sh ~/.kiro/hooks/
+chmod +x ~/.kiro/hooks/vibe-monitor.sh
+
+# Copy hook files (event triggers)
 cp config/kiro/hooks/*.kiro.hook ~/.kiro/hooks/
 ```
 
-> **Note:** Character is auto-set to `kiro` in the hook files.
+#### 2. Configure environment (Optional)
+
+```bash
+cp config/kiro/.env.sample ~/.kiro/.env.local
+# Edit and set VIBE_MONITOR_URL, ESP32_SERIAL_PORT, etc.
+```
+
+> **Note:** Character is auto-set to `kiro` in the hook script.
 
 #### Kiro Hook Events
 
 | Hook File | Event | State | Description |
 |-----------|-------|-------|-------------|
 | `vibe-monitor-agent-spawn.kiro.hook` | `agentSpawn` | `start` | Agent activated |
-| `vibe-monitor-prompt-submit.kiro.hook` | `promptSubmit` | `working` | User submits prompt |
+| `vibe-monitor-prompt-submit.kiro.hook` | `promptSubmit` | `thinking` | User submits prompt |
 | `vibe-monitor-pre-tool-use.kiro.hook` | `preToolUse` | `working` | Tool execution starts |
 | `vibe-monitor-agent-stop.kiro.hook` | `agentStop` | `idle` | Agent turn ends |
 
@@ -536,7 +550,9 @@ vibe-monitor/
 │   │   └── hooks/              # Hook scripts
 │   │       └── vibe-monitor.sh # Main hook script
 │   └── kiro/                   # Kiro IDE settings
+│       ├── .env.sample         # Environment variables sample
 │       └── hooks/              # Hook files
+│           ├── vibe-monitor.sh # Main hook script
 │           ├── vibe-monitor-agent-spawn.kiro.hook
 │           ├── vibe-monitor-prompt-submit.kiro.hook
 │           ├── vibe-monitor-pre-tool-use.kiro.hook

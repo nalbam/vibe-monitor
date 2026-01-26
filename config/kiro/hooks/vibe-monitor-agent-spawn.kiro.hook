@@ -7,6 +7,6 @@
   },
   "then": {
     "type": "runCommand",
-    "command": "curl -s -X POST http://127.0.0.1:19280/status -H 'Content-Type: application/json' -d '{\"state\":\"start\",\"event\":\"AgentSpawn\",\"character\":\"kiro\"}' --connect-timeout 1 --max-time 2 > /dev/null 2>&1 || true"
+    "command": "~/.kiro/hooks/vibe-monitor.sh agentSpawn"
   }
 }
