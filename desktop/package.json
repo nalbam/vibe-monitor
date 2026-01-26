@@ -1,8 +1,11 @@
 {
-  "name": "vibe-monitor-desktop",
-  "version": "1.0.0",
-  "description": "Claude Code Status Monitor - Frameless Desktop App",
+  "name": "vibe-monitor",
+  "version": "1.0.1",
+  "description": "AI coding assistant status monitor",
   "main": "main.js",
+  "bin": {
+    "vibe-monitor": "./bin/cli.js"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
@@ -14,11 +17,22 @@
   },
   "author": "nalbam",
   "license": "MIT",
+  "dependencies": {
+    "electron": "^33.0.0"
+  },
   "devDependencies": {
     "canvas": "^3.2.1",
-    "electron": "^33.0.0",
     "electron-builder": "^25.0.0"
   },
+  "files": [
+    "bin/",
+    "main.js",
+    "preload.js",
+    "index.html",
+    "renderer.js",
+    "styles.css",
+    "assets/"
+  ],
   "build": {
     "appId": "com.nalbam.vibe-monitor",
     "productName": "Vibe Monitor",
@@ -62,12 +76,6 @@
         "deb"
       ],
       "category": "Development"
-    },
-    "files": [
-      "main.js",
-      "preload.js",
-      "index.html",
-      "assets/**/*"
-    ]
+    }
   }
 }
