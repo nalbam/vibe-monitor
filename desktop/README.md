@@ -147,7 +147,7 @@ curl -X POST http://127.0.0.1:19280/status \
 | Field | Description |
 |-------|-------------|
 | `state` | `start`, `idle`, `thinking`, `working`, `notification`, `done`, `sleep` |
-| `event` | `PreToolUse`, `PostToolUse`, etc. |
+| `event` | `SessionStart`, `PreToolUse`, `Stop`, etc. |
 | `tool` | Tool name (e.g., `Bash`, `Read`, `Edit`) |
 | `project` | Project name |
 | `model` | Model name (e.g., `opus`, `sonnet`) |

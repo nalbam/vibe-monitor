@@ -315,9 +315,10 @@ function getWorkingText(tool) {
 function mapEventToState(eventName) {
   const eventMap = {
     'SessionStart': 'start',
+    'UserPromptSubmit': 'thinking',
     'PreToolUse': 'working',
-    'PostToolUse': 'done',
-    // ...
+    'Notification': 'notification',
+    'Stop': 'done',
   };
 
   return eventMap[eventName] || 'working';

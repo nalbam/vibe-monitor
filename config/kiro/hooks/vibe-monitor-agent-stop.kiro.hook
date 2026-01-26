@@ -1,7 +1,7 @@
 {
-  "name": "Vibe Monitor - Idle",
+  "name": "Vibe Monitor - Done",
   "version": "1.0.0",
-  "description": "에이전트 작업 완료 시 Vibe Monitor에 idle 상태 전송",
+  "description": "에이전트 작업 완료 시 Vibe Monitor에 done 상태 전송",
   "when": {
     "type": "agentStop"
   },

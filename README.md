@@ -243,7 +243,7 @@ cp config/kiro/.env.sample ~/.kiro/.env.local
 | `vibe-monitor-agent-spawn.kiro.hook` | `agentSpawn` | `start` | Agent activated |
 | `vibe-monitor-prompt-submit.kiro.hook` | `promptSubmit` | `thinking` | User submits prompt |
 | `vibe-monitor-pre-tool-use.kiro.hook` | `preToolUse` | `working` | Tool execution starts |
-| `vibe-monitor-agent-stop.kiro.hook` | `agentStop` | `idle` | Agent turn ends |
+| `vibe-monitor-agent-stop.kiro.hook` | `agentStop` | `done` | Agent turn ends |
 
 #### Available Kiro Event Types
 
@@ -262,14 +262,15 @@ The hook sends status updates in order (only if configured):
 
 ### Event Mapping Comparison
 
-| Action | Claude Code | Kiro IDE |
-|--------|-------------|----------|
-| Session start | `SessionStart` | `agentSpawn` |
-| User input | `UserPromptSubmit` | `promptSubmit` |
-| Before tool | `PreToolUse` | `preToolUse` |
-| After tool | `PostToolUse` | `postToolUse` |
-| Agent done | `Stop` | `agentStop` |
-| Notification | `Notification` | - |
+| Action | Claude Code | Kiro IDE | State |
+|--------|-------------|----------|-------|
+| Session start | `SessionStart` | `agentSpawn` | `start` |
+| User input | `UserPromptSubmit` | `promptSubmit` | `thinking` |
+| Before tool | `PreToolUse` | `preToolUse` | `working` |
+| Agent done | `Stop` | `agentStop` | `done` |
+| Notification | `Notification` | - | `notification` |
+
+> **Note:** `PostToolUse` / `postToolUse` events are not used. The `done` state auto-transitions to `idle` after 1 minute of inactivity.
 
 ## Characters
 
