@@ -164,7 +164,7 @@ enum EyeType {
 extern int animFrame;
 
 // Thinking state texts (random selection)
-const char* THINKING_TEXTS[] = {"Thinking", "Hmm", "Let me see"};
+const char* THINKING_TEXTS[] = {"Thinking", "Hmm...", "Let me see"};
 
 // Tool-based status texts for working state
 const char* BASH_TEXTS[] = {"Running", "Executing", "Processing"};

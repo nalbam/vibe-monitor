@@ -96,7 +96,7 @@ export const CHARACTER_NAMES = Object.keys(CHARACTER_CONFIG);
 export const DEFAULT_CHARACTER = 'clawd';
 
 // Thinking state texts (random selection)
-export const THINKING_TEXTS = ['Thinking', 'Hmm', 'Let me see'];
+export const THINKING_TEXTS = ['Thinking', 'Hmm...', 'Let me see'];
 
 // Tool-based status texts for working state (lowercase keys)
 export const TOOL_TEXTS = {
