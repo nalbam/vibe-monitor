@@ -215,7 +215,7 @@ function buildProjectLockSubmenu() {
     sortedProjects.forEach(project => {
       const isLocked = project === lockedProject;
       items.push({
-        label: isLocked ? `🔒 ${project}` : `○ ${project}`,
+        label: project,
         type: 'radio',
         checked: isLocked,
         click: () => lockProject(project)
@@ -236,9 +236,7 @@ function buildProjectLockSubmenu() {
 }
 
 function updateTrayMenu() {
-  const projectDisplay = currentProject
-    ? (lockedProject === currentProject ? `${currentProject} 🔒` : currentProject)
-    : '-';
+  const projectDisplay = currentProject || '-';
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -257,12 +255,12 @@ function updateTrayMenu() {
     {
       label: 'Set State',
       submenu: [
-        { label: 'Start', click: () => updateState({ state: 'start' }) },
-        { label: 'Idle', click: () => updateState({ state: 'idle' }) },
-        { label: 'Working', click: () => updateState({ state: 'working' }) },
-        { label: 'Notification', click: () => updateState({ state: 'notification' }) },
-        { label: 'Done', click: () => updateState({ state: 'done' }) },
-        { label: 'Sleep', click: () => updateState({ state: 'sleep' }) }
+        { label: 'Start', type: 'radio', checked: currentState === 'start', click: () => updateState({ state: 'start' }) },
+        { label: 'Idle', type: 'radio', checked: currentState === 'idle', click: () => updateState({ state: 'idle' }) },
+        { label: 'Working', type: 'radio', checked: currentState === 'working', click: () => updateState({ state: 'working' }) },
+        { label: 'Notification', type: 'radio', checked: currentState === 'notification', click: () => updateState({ state: 'notification' }) },
+        { label: 'Done', type: 'radio', checked: currentState === 'done', click: () => updateState({ state: 'done' }) },
+        { label: 'Sleep', type: 'radio', checked: currentState === 'sleep', click: () => updateState({ state: 'sleep' }) }
       ]
     },
     {

@@ -152,6 +152,7 @@ bool isValidCharacter(String name) {
 enum EyeType {
   EYE_SPARKLE,     // start: normal + sparkle
   EYE_NORMAL,      // idle: square eyes
+  EYE_BLINK,       // idle blink: closed eyes (no Zzz)
   EYE_THINKING,    // thinking: looking up eyes + thought bubble
   EYE_FOCUSED,     // working: horizontal flat eyes
   EYE_ALERT,       // notification: round eyes
@@ -386,6 +387,11 @@ void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeome
       drawZzz(tft, effectX, effectY, animFrame, effectColor);
       break;
 
+    case EYE_BLINK:
+      // Blink eyes (closed eyes without Zzz)
+      drawSleepEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
+      break;
+
     default:
       // EYE_NORMAL, EYE_HAPPY: no additional effects needed
       break;
@@ -618,10 +624,16 @@ void drawMemoryBar(TFT_eSPI &tft, int x, int y, int width, int height, int perce
 // Draw blink animation (for idle state)
 // Note: With image-based rendering, blinking redraws character image (eyes are in image)
 void drawBlinkEyes(TFT_eSPI &tft, int x, int y, int frame, const CharacterGeometry* character = &CHAR_CLAWD) {
-  // With images, blink is handled by redrawing the character
-  // This function is kept for compatibility but does nothing with image-based rendering
-  // The actual blink effect can be achieved by briefly not drawing the eyes area
-  // For now, we skip this as images have fixed eyes
+  // Calculate eye positions from character position
+  int leftEyeX = x + (character->eyeLeftX * SCALE);
+  int rightEyeX = x + (character->eyeRightX * SCALE);
+  int eyeY = y + (character->eyeY * SCALE);
+  int ew = character->eyeW * SCALE;
+  int eh = character->eyeH * SCALE;
+  bool isKiro = (character == &CHAR_KIRO);
+
+  // Use drawSleepEyes to close the eyes (same effect, no Zzz)
+  drawSleepEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
 }
 
 // Forward declaration of AppState enum (defined in main .ino)
@@ -792,7 +804,7 @@ void drawFolderIcon(TFT_eSPI &tft, int x, int y, uint16_t color) {
   // Folder body
   tft.fillRect(x, y + 1, 8, 6, color);
   // Inner fold line
-  tft.drawLine(x + 1, y + 2, x + 6, y + 2, 0x0000);
+  tft.fillRect(x + 1, y + 2, 6, 1, 0x0000);
 }
 
 // Draw tool/wrench icon (🛠️) - 8x8 pixels
@@ -826,7 +838,7 @@ void drawBrainIcon(TFT_eSPI &tft, int x, int y, uint16_t color) {
   tft.fillRect(x + 1, y, 6, 7, color);
   tft.fillRect(x, y + 1, 8, 5, color);
   // Brain folds (center line)
-  tft.drawLine(x + 4, y + 1, x + 4, y + 5, 0x0000);
+  tft.fillRect(x + 4, y + 1, 1, 5, 0x0000);
   // Top bumps
   tft.fillRect(x + 2, y, 1, 1, 0x0000);
   tft.fillRect(x + 5, y, 1, 1, 0x0000);

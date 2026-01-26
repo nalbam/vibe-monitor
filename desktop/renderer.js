@@ -188,6 +188,14 @@ function animationLoop(timestamp) {
 
   updateFloatingPosition();
 
+  // Increment blinkFrame for idle state (outside redraw check)
+  if (currentState === 'idle') {
+    blinkFrame++;
+    if (blinkFrame > BLINK_END_FRAME) {
+      blinkFrame = 0;
+    }
+  }
+
   // Only redraw when necessary
   if (needsAnimationRedraw(currentState, animFrame, blinkFrame)) {
     if (currentState === 'start') {
@@ -205,12 +213,10 @@ function animationLoop(timestamp) {
     }
 
     if (currentState === 'idle') {
-      blinkFrame++;
       if (blinkFrame === BLINK_START_FRAME) {
         drawCharacter('blink', currentState, currentCharacter, animFrame);
       } else if (blinkFrame === BLINK_END_FRAME) {
         drawCharacter('normal', currentState, currentCharacter, animFrame);
-        blinkFrame = 0;
       }
     }
 

@@ -126,6 +126,11 @@ export function drawEyes(eyeType, char, animFrame, drawRect) {
       drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
       drawZzz(effectX, effectY, animFrame, drawRect, effectColor);
       break;
+
+    case 'blink':
+      // Blink eyes (closed eyes without Zzz)
+      drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+      break;
   }
 }
 
