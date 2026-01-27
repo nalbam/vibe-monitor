@@ -95,7 +95,7 @@ app.whenReady().then(() => {
 
   app.on('activate', () => {
     const first = windowManager.getFirstWindow();
-    if (first) {
+    if (first && !first.isDestroyed()) {
       first.show();
       first.focus();
     }

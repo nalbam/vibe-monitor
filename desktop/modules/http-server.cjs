@@ -196,7 +196,9 @@ class HttpServer {
     const windowList = Object.entries(windows).map(([projectId, windowInfo]) => ({
       project: projectId,
       state: windowInfo.state ? windowInfo.state.state : 'unknown',
-      bounds: windowInfo.window ? windowInfo.window.getBounds() : null
+      bounds: windowInfo.window && !windowInfo.window.isDestroyed()
+        ? windowInfo.window.getBounds()
+        : null
     }));
 
     sendJson(res, 200, {

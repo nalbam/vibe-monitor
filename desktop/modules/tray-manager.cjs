@@ -294,7 +294,13 @@ class TrayManager {
 
   showContextMenu(sender) {
     const contextMenu = Menu.buildFromTemplate(this.buildMenuTemplate());
-    contextMenu.popup(BrowserWindow.fromWebContents(sender));
+    const win = BrowserWindow.fromWebContents(sender);
+    if (win) {
+      contextMenu.popup({ window: win });
+    } else {
+      // Fallback: popup without specific window
+      contextMenu.popup();
+    }
   }
 }
 

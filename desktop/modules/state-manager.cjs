@@ -140,13 +140,13 @@ class StateManager {
    */
   cleanup() {
     // Clear all state timeout timers
-    for (const [projectId, timer] of this.stateTimeoutTimers) {
+    for (const [, timer] of this.stateTimeoutTimers) {
       clearTimeout(timer);
     }
     this.stateTimeoutTimers.clear();
 
     // Clear all window close timers
-    for (const [projectId, timer] of this.windowCloseTimers) {
+    for (const [, timer] of this.windowCloseTimers) {
       clearTimeout(timer);
     }
     this.windowCloseTimers.clear();

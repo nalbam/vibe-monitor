@@ -269,7 +269,9 @@ class MultiWindowManager {
         this.windows.delete(oldProjectId);
         this.windows.set(projectId, entry);
         // Update state with new project
-        entry.state = { ...entry.state, project: projectId };
+        entry.state = entry.state
+          ? { ...entry.state, project: projectId }
+          : { project: projectId };
         return { window: entry.window, blocked: false, switchedProject: oldProjectId };
       }
     }
