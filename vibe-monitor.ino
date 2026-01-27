@@ -267,8 +267,8 @@ void loop() {
     updateAnimation();
   }
 
-  // Idle blink (every 3 seconds)
-  if (currentState == STATE_IDLE && millis() - lastBlink > 3000) {
+  // Idle blink (every 3.2 seconds, matches Desktop/Simulator frame-based timing)
+  if (currentState == STATE_IDLE && millis() - lastBlink > 3200) {
     lastBlink = millis();
     drawBlinkAnimation();
   }
