@@ -60,9 +60,9 @@ def get_state(event_type):
     """Map event type to state."""
     state_map = {
         "promptSubmit": "thinking",
-        "fileCreate": "working",
+        "fileCreated": "working",
         "fileEdited": "working",
-        "fileDelete": "working",
+        "fileDeleted": "working",
         "agentStop": "done",
     }
     return state_map.get(event_type, "working")
