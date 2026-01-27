@@ -176,11 +176,18 @@ curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/claud
 Edit `~/.claude/.env.local`:
 
 ```bash
+# Cache file for project metadata (model, memory) - optional
+# Default: ~/.claude/statusline-cache.json
+# export VIBE_MONITOR_CACHE="~/.claude/statusline-cache.json"
+
 # Desktop App URL (auto-launches via npx if not running)
 export VIBE_MONITOR_URL="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 # export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
+
+# ESP32 WiFi HTTP (optional)
+# export ESP32_HTTP_URL="http://192.168.1.100"
 ```
 
 ### Kiro IDE

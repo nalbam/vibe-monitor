@@ -802,6 +802,14 @@ vibe-monitor/
 │   ├── README.md               # Desktop-specific docs
 │   ├── start.sh                # Startup script
 │   ├── bin/cli.js              # CLI entry point (npx)
+│   ├── modules/                # Modular Electron code
+│   │   ├── constants.cjs       # HTTP port, lock modes
+│   │   ├── http-server.cjs     # HTTP API server
+│   │   ├── http-utils.cjs      # HTTP utilities
+│   │   ├── state-manager.cjs   # State/timer management
+│   │   ├── tray-manager.cjs    # System tray icon/menu
+│   │   ├── validators.cjs      # Input validation
+│   │   └── window-manager.cjs  # Window management
 │   ├── assets/                 # App icons and resources
 │   │   ├── characters/         # Character images
 │   │   │   ├── clawd-128.png   # Clawd character
