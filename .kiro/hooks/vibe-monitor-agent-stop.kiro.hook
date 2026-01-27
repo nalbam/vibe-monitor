@@ -1,0 +1,12 @@
+{
+  "name": "Vibe Monitor - Done",
+  "version": "1.0.0",
+  "description": "에이전트 작업 완료 시 Vibe Monitor에 done 상태 전송",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python3 ~/.kiro/hooks/vibe-monitor.py agentStop"
+  }
+}

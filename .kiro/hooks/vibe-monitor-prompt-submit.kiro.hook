@@ -1,0 +1,12 @@
+{
+  "name": "Vibe Monitor - Thinking",
+  "version": "1.0.0",
+  "description": "프롬프트 제출 시 Vibe Monitor에 thinking 상태 전송",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python3 ~/.kiro/hooks/vibe-monitor.py promptSubmit"
+  }
+}
