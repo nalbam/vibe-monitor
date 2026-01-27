@@ -17,6 +17,11 @@ const {
   LOCK_MODES
 } = require('./constants.cjs');
 
+// Platform-specific always-on-top level
+// macOS: 'floating' (required for tray menu visibility)
+// Windows/Linux: 'screen-saver' (required for window visibility in WSL/Windows)
+const ALWAYS_ON_TOP_LEVEL = process.platform === 'darwin' ? 'floating' : 'screen-saver';
+
 class MultiWindowManager {
   constructor() {
     this.windows = new Map();  // Map<projectId, { window, state }>
@@ -327,7 +332,7 @@ class MultiWindowManager {
     // Show window without stealing focus once ready
     window.once('ready-to-show', () => {
       if (this.isAlwaysOnTop) {
-        window.setAlwaysOnTop(true, 'floating');
+        window.setAlwaysOnTop(true, ALWAYS_ON_TOP_LEVEL);
       }
       window.showInactive();
 
@@ -618,7 +623,7 @@ class MultiWindowManager {
     this.isAlwaysOnTop = value;
     for (const [, entry] of this.windows) {
       if (entry.window && !entry.window.isDestroyed()) {
-        entry.window.setAlwaysOnTop(value, 'floating');
+        entry.window.setAlwaysOnTop(value, ALWAYS_ON_TOP_LEVEL);
       }
     }
   }
