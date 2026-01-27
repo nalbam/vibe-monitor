@@ -302,7 +302,6 @@ class MultiWindowManager {
       skipTaskbar: false,
       hasShadow: true,
       show: false,
-      focusable: false,  // Prevent stealing focus when window appears
       icon: path.join(__dirname, '..', 'assets', 'icon.png'),
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload.js'),
