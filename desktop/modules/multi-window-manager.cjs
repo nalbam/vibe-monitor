@@ -80,7 +80,7 @@ class MultiWindowManager {
     const position = this.calculatePosition(index);
 
     // Shift existing windows to the left
-    this.shiftWindowsLeft();
+    // Windows will be arranged after ready-to-show
 
     const window = new BrowserWindow({
       width: WINDOW_WIDTH,
@@ -125,6 +125,9 @@ class MultiWindowManager {
       if (windowEntry.state) {
         window.webContents.send('status-update', windowEntry.state);
       }
+
+      // Arrange all windows alphabetically
+      this.arrangeWindowsByName();
     });
 
     // Handle window closed
@@ -157,26 +160,24 @@ class MultiWindowManager {
   }
 
   /**
-   * Shift all existing windows to the left by one position
-   * Called when a new window is created (new window takes rightmost position)
-   * Windows are sorted by current x position (rightmost first) to maintain visual order
+   * Arrange all windows by project name alphabetically
+   * A-Z from right to left (A = rightmost)
    */
-  shiftWindowsLeft() {
-    // Collect windows with their current x positions
-    const windowsWithPositions = [];
+  arrangeWindowsByName() {
+    // Collect all windows with projectId
+    const windowsList = [];
     for (const [projectId, entry] of this.windows) {
       if (entry.window && !entry.window.isDestroyed()) {
-        const bounds = entry.window.getBounds();
-        windowsWithPositions.push({ projectId, entry, x: bounds.x });
+        windowsList.push({ projectId, entry });
       }
     }
 
-    // Sort by x position descending (rightmost first gets index 1, etc.)
-    windowsWithPositions.sort((a, b) => b.x - a.x);
+    // Sort alphabetically by projectId (A first)
+    windowsList.sort((a, b) => a.projectId.localeCompare(b.projectId));
 
-    // Assign positions starting from index 1 (index 0 is reserved for new window)
-    let index = 1;
-    for (const { entry } of windowsWithPositions) {
+    // Assign positions (index 0 = rightmost = first alphabetically)
+    let index = 0;
+    for (const { entry } of windowsList) {
       const position = this.calculatePosition(index);
       entry.window.setPosition(position.x, position.y);
       index++;
@@ -184,18 +185,11 @@ class MultiWindowManager {
   }
 
   /**
-   * Rearrange windows after one closes
-   * Repositions remaining windows from right to left
+   * Rearrange windows after one closes or new one created
+   * Sorts by project name alphabetically (A-Z from right to left)
    */
   rearrangeWindows() {
-    let index = 0;
-    for (const [, entry] of this.windows) {
-      if (entry.window && !entry.window.isDestroyed()) {
-        const position = this.calculatePosition(index);
-        entry.window.setPosition(position.x, position.y);
-        index++;
-      }
-    }
+    this.arrangeWindowsByName();
   }
 
   /**
