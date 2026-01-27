@@ -275,6 +275,47 @@ def get_status():
     except (URLError, TimeoutError, OSError):
         return False
 
+def get_lock_mode():
+    """Get current lock mode from monitor."""
+    url = os.environ.get("VIBE_MONITOR_URL")
+    if not url:
+        debug_log("VIBE_MONITOR_URL not set")
+        return False
+
+    try:
+        with urlopen(f"{url}/lock-mode", timeout=5) as response:
+            print(response.read().decode("utf-8"))
+            return True
+    except (URLError, TimeoutError, OSError):
+        return False
+
+def set_lock_mode(mode):
+    """Set lock mode on monitor."""
+    url = os.environ.get("VIBE_MONITOR_URL")
+    if not url:
+        debug_log("VIBE_MONITOR_URL not set")
+        return False
+
+    valid_modes = ["first-project", "on-thinking"]
+    if mode not in valid_modes:
+        print(f"Invalid mode: {mode}. Valid modes: {', '.join(valid_modes)}")
+        return False
+
+    debug_log(f"Setting lock mode: {mode}")
+    try:
+        data = json.dumps({"mode": mode})
+        req = Request(
+            f"{url}/lock-mode",
+            data=data.encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urlopen(req, timeout=5) as response:
+            print(response.read().decode("utf-8"))
+            return True
+    except (URLError, TimeoutError, OSError):
+        return False
+
 # ============================================================================
 # Send to All Targets
 # ============================================================================
@@ -333,6 +374,11 @@ def main():
             sys.exit(0 if send_unlock() else 1)
         elif cmd == "--status":
             sys.exit(0 if get_status() else 1)
+        elif cmd == "--lock-mode":
+            if len(sys.argv) > 2:
+                sys.exit(0 if set_lock_mode(sys.argv[2]) else 1)
+            else:
+                sys.exit(0 if get_lock_mode() else 1)
 
     # Read and parse input
     input_data = read_input()
