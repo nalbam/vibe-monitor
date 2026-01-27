@@ -49,6 +49,9 @@ prompt-*.md
 prompt.md
 docs/plans/
 
+# kiro
+.kiro/specs/
+
 # Node.js
 node_modules/
 package-lock.json
