@@ -23,6 +23,9 @@ let stateTimeoutTimer = null;
 const IDLE_TIMEOUT = 60 * 1000;       // 1 minute (start/done -> idle)
 const SLEEP_TIMEOUT = 5 * 60 * 1000;  // 5 minutes (idle -> sleep)
 
+// Snap to corner settings
+const SNAP_THRESHOLD = 30;  // pixels from edge to trigger snap
+
 // HTTP server for receiving status updates
 let httpServer;
 const HTTP_PORT = 19280;
@@ -184,6 +187,49 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+  });
+
+  // Snap to corner when drag ends (debounced)
+  let snapTimer = null;
+  mainWindow.on('move', () => {
+    // Clear previous timer
+    if (snapTimer) {
+      clearTimeout(snapTimer);
+    }
+
+    // Set new timer - snap after 150ms of no movement (drag ended)
+    snapTimer = setTimeout(() => {
+      const bounds = mainWindow.getBounds();
+      const display = screen.getDisplayMatching(bounds);
+      const { workArea } = display;
+
+      let newX = bounds.x;
+      let newY = bounds.y;
+      let shouldSnap = false;
+
+      // Check horizontal snap (left or right edge)
+      if (Math.abs(bounds.x - workArea.x) < SNAP_THRESHOLD) {
+        newX = workArea.x;
+        shouldSnap = true;
+      } else if (Math.abs((bounds.x + bounds.width) - (workArea.x + workArea.width)) < SNAP_THRESHOLD) {
+        newX = workArea.x + workArea.width - bounds.width;
+        shouldSnap = true;
+      }
+
+      // Check vertical snap (top or bottom edge)
+      if (Math.abs(bounds.y - workArea.y) < SNAP_THRESHOLD) {
+        newY = workArea.y;
+        shouldSnap = true;
+      } else if (Math.abs((bounds.y + bounds.height) - (workArea.y + workArea.height)) < SNAP_THRESHOLD) {
+        newY = workArea.y + workArea.height - bounds.height;
+        shouldSnap = true;
+      }
+
+      // Apply snap if needed
+      if (shouldSnap && (newX !== bounds.x || newY !== bounds.y)) {
+        mainWindow.setPosition(newX, newY);
+      }
+    }, 150);
   });
 }
 
