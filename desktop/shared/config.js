@@ -29,6 +29,13 @@ export const states = {
     showLoading: true,
     textColor: '#FFFFFF'
   },
+  planning: {
+    bgColor: '#008888',
+    text: 'Planning',
+    eyeType: 'thinking',
+    showLoading: true,
+    textColor: '#FFFFFF'
+  },
   working: {
     bgColor: '#0066CC',
     text: 'Working',
@@ -97,6 +104,9 @@ export const DEFAULT_CHARACTER = 'clawd';
 
 // Thinking state texts (random selection)
 export const THINKING_TEXTS = ['Thinking', 'Hmm...', 'Let me see'];
+
+// Planning state texts (random selection)
+export const PLANNING_TEXTS = ['Planning', 'Designing', 'Drafting'];
 
 // Tool-based status texts for working state (lowercase keys)
 export const TOOL_TEXTS = {

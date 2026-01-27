@@ -50,7 +50,7 @@ const HTTP_PORT = 19280;
 const MAX_PAYLOAD_SIZE = 10 * 1024; // 10KB limit for security
 
 // Valid states for validation
-const VALID_STATES = ['start', 'idle', 'thinking', 'working', 'notification', 'done', 'sleep'];
+const VALID_STATES = ['start', 'idle', 'thinking', 'planning', 'working', 'notification', 'done', 'sleep'];
 
 // State colors for tray icon (must match shared/config.js states.bgColor)
 // NOTE: Cannot import ESM from CommonJS, keep in sync manually
@@ -58,6 +58,7 @@ const STATE_COLORS = {
   start: '#00CCCC',
   idle: '#00AA00',
   thinking: '#6633CC',
+  planning: '#008888',
   working: '#0066CC',
   notification: '#FFCC00',
   done: '#00AA00',
@@ -339,6 +340,8 @@ function buildMenuTemplate() {
       submenu: [
         { label: 'Start', type: 'radio', checked: currentState === 'start', click: () => updateState({ state: 'start' }) },
         { label: 'Idle', type: 'radio', checked: currentState === 'idle', click: () => updateState({ state: 'idle' }) },
+        { label: 'Thinking', type: 'radio', checked: currentState === 'thinking', click: () => updateState({ state: 'thinking' }) },
+        { label: 'Planning', type: 'radio', checked: currentState === 'planning', click: () => updateState({ state: 'planning' }) },
         { label: 'Working', type: 'radio', checked: currentState === 'working', click: () => updateState({ state: 'working' }) },
         { label: 'Notification', type: 'radio', checked: currentState === 'notification', click: () => updateState({ state: 'notification' }) },
         { label: 'Done', type: 'radio', checked: currentState === 'done', click: () => updateState({ state: 'done' }) },

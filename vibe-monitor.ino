@@ -91,6 +91,7 @@ AppState parseState(const char* stateStr) {
   if (strcmp(stateStr, "start") == 0) return STATE_START;
   if (strcmp(stateStr, "idle") == 0) return STATE_IDLE;
   if (strcmp(stateStr, "thinking") == 0) return STATE_THINKING;
+  if (strcmp(stateStr, "planning") == 0) return STATE_PLANNING;
   if (strcmp(stateStr, "working") == 0) return STATE_WORKING;
   if (strcmp(stateStr, "notification") == 0) return STATE_NOTIFICATION;
   if (strcmp(stateStr, "done") == 0) return STATE_DONE;
@@ -203,6 +204,7 @@ const char* getStateString(AppState state) {
     case STATE_START: return "start";
     case STATE_IDLE: return "idle";
     case STATE_THINKING: return "thinking";
+    case STATE_PLANNING: return "planning";
     case STATE_WORKING: return "working";
     case STATE_NOTIFICATION: return "notification";
     case STATE_DONE: return "done";
@@ -543,8 +545,8 @@ void drawStatus() {
     tft.println(statusText);
   }
 
-  // Loading dots (thinking and working states)
-  if (currentState == STATE_THINKING) {
+  // Loading dots (thinking, planning and working states)
+  if (currentState == STATE_THINKING || currentState == STATE_PLANNING) {
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);  // Slow
   } else if (currentState == STATE_WORKING) {
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);  // Normal
@@ -637,7 +639,7 @@ void updateAnimation() {
   }
 
   // State-specific animations (only redraw if needed)
-  if (currentState == STATE_THINKING) {
+  if (currentState == STATE_THINKING || currentState == STATE_PLANNING) {
     // Update loading dots (slow) and thinking animation
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);
     if (!positionChanged) {

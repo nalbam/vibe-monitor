@@ -133,6 +133,7 @@ bool isValidCharacter(String name) {
 // Background colors by state (RGB565)
 #define COLOR_BG_IDLE     0x0540  // #00AA00 Green
 #define COLOR_BG_THINKING 0x61A6  // #6633CC Purple
+#define COLOR_BG_PLANNING 0x0451  // #008888 Teal
 #define COLOR_BG_WORKING  0x0339  // #0066CC Blue
 #define COLOR_BG_NOTIFY   0xFE60  // #FFCC00 Yellow
 #define COLOR_BG_SESSION  0x0666  // #00CCCC Cyan
@@ -165,6 +166,9 @@ extern int animFrame;
 
 // Thinking state texts (random selection)
 const char* THINKING_TEXTS[] = {"Thinking", "Hmm...", "Let me see"};
+
+// Planning state texts (random selection)
+const char* PLANNING_TEXTS[] = {"Planning", "Designing", "Drafting"};
 
 // Tool-based status texts for working state
 const char* BASH_TEXTS[] = {"Running", "Executing", "Processing"};
@@ -671,6 +675,7 @@ enum AppState {
   STATE_START,
   STATE_IDLE,
   STATE_THINKING,
+  STATE_PLANNING,
   STATE_WORKING,
   STATE_NOTIFICATION,
   STATE_DONE,
@@ -683,6 +688,7 @@ uint16_t getBackgroundColorEnum(AppState state) {
     case STATE_START: return COLOR_BG_SESSION;
     case STATE_IDLE: return COLOR_BG_IDLE;
     case STATE_THINKING: return COLOR_BG_THINKING;
+    case STATE_PLANNING: return COLOR_BG_PLANNING;
     case STATE_WORKING: return COLOR_BG_WORKING;
     case STATE_NOTIFICATION: return COLOR_BG_NOTIFY;
     case STATE_DONE: return COLOR_BG_DONE;
@@ -697,6 +703,7 @@ EyeType getEyeTypeEnum(AppState state) {
     case STATE_START: return EYE_SPARKLE;
     case STATE_IDLE: return EYE_NORMAL;
     case STATE_THINKING: return EYE_THINKING;
+    case STATE_PLANNING: return EYE_THINKING;
     case STATE_WORKING: return EYE_FOCUSED;
     case STATE_NOTIFICATION: return EYE_ALERT;
     case STATE_DONE: return EYE_HAPPY;
@@ -758,6 +765,9 @@ void getStatusTextEnum(AppState state, const char* tool, char* buf, size_t bufSi
     case STATE_THINKING:
       strncpy(buf, THINKING_TEXTS[random(3)], bufSize - 1);
       break;
+    case STATE_PLANNING:
+      strncpy(buf, PLANNING_TEXTS[random(3)], bufSize - 1);
+      break;
     case STATE_WORKING:
       getWorkingTextBuf(tool, buf, bufSize);
       return;  // Already null-terminated
@@ -782,6 +792,7 @@ uint16_t getBackgroundColor(String state) {
   if (state == "start") return COLOR_BG_SESSION;
   if (state == "idle") return COLOR_BG_IDLE;
   if (state == "thinking") return COLOR_BG_THINKING;
+  if (state == "planning") return COLOR_BG_PLANNING;
   if (state == "working") return COLOR_BG_WORKING;
   if (state == "notification") return COLOR_BG_NOTIFY;
   if (state == "done") return COLOR_BG_DONE;
@@ -793,6 +804,7 @@ EyeType getEyeType(String state) {
   if (state == "start") return EYE_SPARKLE;
   if (state == "idle") return EYE_NORMAL;
   if (state == "thinking") return EYE_THINKING;
+  if (state == "planning") return EYE_THINKING;
   if (state == "working") return EYE_FOCUSED;
   if (state == "notification") return EYE_ALERT;
   if (state == "done") return EYE_HAPPY;
@@ -810,10 +822,15 @@ String getThinkingText() {
   return THINKING_TEXTS[random(3)];
 }
 
+String getPlanningText() {
+  return PLANNING_TEXTS[random(3)];
+}
+
 String getStatusText(String state, String tool = "") {
   if (state == "start") return "Hello!";
   if (state == "idle") return "Ready";
   if (state == "thinking") return getThinkingText();
+  if (state == "planning") return getPlanningText();
   if (state == "working") return getWorkingText(tool);
   if (state == "notification") return "Input?";
   if (state == "done") return "Done!";

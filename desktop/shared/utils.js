@@ -1,8 +1,13 @@
-import { TOOL_TEXTS, THINKING_TEXTS } from './config.js';
+import { TOOL_TEXTS, THINKING_TEXTS, PLANNING_TEXTS } from './config.js';
 
 // Get thinking text (random selection)
 export function getThinkingText() {
   return THINKING_TEXTS[Math.floor(Math.random() * THINKING_TEXTS.length)];
+}
+
+// Get planning text (random selection)
+export function getPlanningText() {
+  return PLANNING_TEXTS[Math.floor(Math.random() * PLANNING_TEXTS.length)];
 }
 
 // Get working text based on tool (random selection, case-insensitive)

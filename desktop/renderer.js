@@ -6,7 +6,7 @@ import {
   PROJECT_NAME_MAX_LENGTH, PROJECT_NAME_TRUNCATE_AT,
   MODEL_NAME_MAX_LENGTH, MODEL_NAME_TRUNCATE_AT
 } from './shared/config.js';
-import { getThinkingText, getWorkingText, updateMemoryBar } from './shared/utils.js';
+import { getThinkingText, getPlanningText, getWorkingText, updateMemoryBar } from './shared/utils.js';
 import { initRenderer, drawCharacter } from './shared/character.js';
 import { drawInfoIcons } from './shared/icons.js';
 import { getFloatOffsetX, getFloatOffsetY, needsAnimationRedraw } from './shared/animation.js';
@@ -115,6 +115,8 @@ function updateDisplay() {
   // Update text and color
   if (currentState === 'thinking') {
     d.statusText.textContent = getThinkingText();
+  } else if (currentState === 'planning') {
+    d.statusText.textContent = getPlanningText();
   } else if (currentState === 'working') {
     d.statusText.textContent = getWorkingText(currentTool);
   } else {
@@ -212,6 +214,11 @@ function animationLoop(timestamp) {
 
     if (currentState === 'thinking') {
       updateLoadingDots(true);  // Slow for thinking
+      drawCharacter('thinking', currentState, currentCharacter, animFrame);
+    }
+
+    if (currentState === 'planning') {
+      updateLoadingDots(true);  // Slow for planning
       drawCharacter('thinking', currentState, currentCharacter, animFrame);
     }
 

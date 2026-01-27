@@ -94,8 +94,8 @@ def get_project_name(cwd, transcript_path):
         return os.path.basename(os.path.dirname(transcript_path))
     return ""
 
-def get_state(event_name):
-    """Map event name to state."""
+def get_state(event_name, permission_mode="default"):
+    """Map event name to state, considering permission mode."""
     state_map = {
         "SessionStart": "start",
         "UserPromptSubmit": "thinking",
@@ -103,7 +103,13 @@ def get_state(event_name):
         "Stop": "done",
         "Notification": "notification",
     }
-    return state_map.get(event_name, "working")
+    state = state_map.get(event_name, "working")
+
+    # Override to planning state when in plan mode
+    if permission_mode == "plan" and state in ("thinking", "working"):
+        return "planning"
+
+    return state
 
 def get_project_metadata(project):
     """Get model and memory from cache for a project."""
@@ -387,10 +393,11 @@ def main():
     tool_name = parse_json_field(input_data, "tool_name", "")
     cwd = parse_json_field(input_data, "cwd", "")
     transcript_path = parse_json_field(input_data, "transcript_path", "")
+    permission_mode = parse_json_field(input_data, "permission_mode", "default")
 
     # Get project name and state
     project_name = get_project_name(cwd, transcript_path)
-    state = get_state(event_name)
+    state = get_state(event_name, permission_mode)
 
     debug_log(f"Event: {event_name}, Tool: {tool_name}, Project: {project_name}")
 
