@@ -423,6 +423,24 @@ curl -s -X POST http://127.0.0.1:19280/lock \
 curl -s -X POST http://127.0.0.1:19280/unlock
 ```
 
+### CLI (Python script)
+
+The hook script also supports direct CLI commands:
+
+```bash
+# Lock current project
+python3 ~/.claude/hooks/vibe-monitor.py --lock
+
+# Lock specific project
+python3 ~/.claude/hooks/vibe-monitor.py --lock my-project
+
+# Unlock
+python3 ~/.claude/hooks/vibe-monitor.py --unlock
+
+# Get current status
+python3 ~/.claude/hooks/vibe-monitor.py --status
+```
+
 ## HTTP API
 
 Both Desktop App (port 19280) and ESP32 WiFi mode (port 80) support the same API.
