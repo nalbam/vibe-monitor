@@ -96,11 +96,16 @@ class HttpServer {
       return;
     }
 
-    // Validate character field via stateManager
-    const stateData = this.stateManager.validateStateData(data);
+    // Validate and normalize state data via stateManager
+    const stateValidation = this.stateManager.validateStateData(data);
+    if (!stateValidation.valid) {
+      sendError(res, 400, stateValidation.error || 'Invalid state data');
+      return;
+    }
+    const stateData = stateValidation.data;  // Extract normalized data
 
     // Get projectId from data or use default
-    const projectId = data.project || 'default';
+    const projectId = stateData.project || 'default';
 
     // Create window if not exists
     if (!this.windowManager.getWindow(projectId)) {
