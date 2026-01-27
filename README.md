@@ -552,6 +552,7 @@ curl -X POST http://192.168.1.100/reboot
 - **System Tray**: Quick access from menubar/taskbar
 - **Platform icons**: Emoji on macOS, pixel art on Windows/Linux
 - **Draggable**: Move window anywhere on screen
+- **Snap to corner**: Auto-snaps to screen corners when near edges (30px threshold)
 
 ### System Tray Menu
 

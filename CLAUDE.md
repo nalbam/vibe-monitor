@@ -59,6 +59,7 @@ open simulator/index.html
 - **Sunglasses (working)**: Matrix-style dark green sunglasses with frame and shine
 - **Loading dots speed**: Thinking state uses 3x slower animation than working state
 - **Project lock**: First project auto-locks; `/lock` and `/unlock` API endpoints; lock change transitions to `idle`
+- **Snap to corner**: Window snaps to screen corners when dragged within 30px of edges (150ms debounce)
 
 ## States
 
