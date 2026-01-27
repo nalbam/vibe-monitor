@@ -401,6 +401,8 @@ Any new status update resets the timeout timer and wakes the display from sleep.
 
 Lock the monitor to a specific project to prevent display updates from other projects.
 
+> **Note:** Project lock is only available in **single-window mode**. Switch to single mode first using the tray menu or `/window-mode` API.
+
 ### Features
 
 - **Lock modes**: Two auto-lock strategies available (default: `on-thinking`)
@@ -590,6 +592,34 @@ Health check endpoint.
 curl http://127.0.0.1:19280/health
 ```
 
+### GET /window-mode (Desktop only)
+
+Get current window mode.
+
+```bash
+curl http://127.0.0.1:19280/window-mode
+```
+
+**Response:**
+```json
+{"mode": "multi", "windowCount": 2, "lockedProject": null}
+```
+
+### POST /window-mode (Desktop only)
+
+Set window mode.
+
+```bash
+curl -X POST http://127.0.0.1:19280/window-mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"single"}'
+```
+
+**Response:**
+```json
+{"success": true, "mode": "single", "windowCount": 1, "lockedProject": null}
+```
+
 ### POST /show (Desktop only)
 
 Show window and position to top-right corner.
@@ -621,6 +651,48 @@ Reboot the ESP32 device.
 ```bash
 curl -X POST http://192.168.1.100/reboot
 ```
+
+## Window Mode
+
+The Desktop App supports two window modes:
+
+| Mode | Description | Features |
+|------|-------------|----------|
+| `multi` | Multiple windows | One window per project, max 5 windows |
+| `single` | Single window | One window with project lock support |
+
+### Multi-Window Mode (Default)
+
+- Each project gets its own window
+- Windows arranged right-to-left from screen corner (alphabetically by project name)
+- Max 5 windows (or screen limit)
+- Auto-rearranges when window closes
+- 10px gap between windows
+
+### Single-Window Mode
+
+- Only one window at a time
+- Project lock feature available (see [Project Lock](#project-lock))
+- When switching projects, the same window is reused
+
+### Switching Modes
+
+```bash
+# Get current mode
+curl http://127.0.0.1:19280/window-mode
+
+# Switch to single window mode
+curl -X POST http://127.0.0.1:19280/window-mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"single"}'
+
+# Switch to multi window mode
+curl -X POST http://127.0.0.1:19280/window-mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"multi"}'
+```
+
+Or use the system tray menu to toggle between modes.
 
 ## Desktop App
 

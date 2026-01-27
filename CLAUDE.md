@@ -62,9 +62,13 @@ open simulator/index.html
 - **Snap to corner**: Window snaps to screen corners when dragged within 30px of edges (150ms debounce)
 - **Window close timer**: Desktop window auto-closes after 10min in sleep state; reopens on new status
 
-## Multi-Window Mode
+## Window Mode
 
-Each project gets its own window:
+Two modes available (`multi` or `single`):
+- **Multi mode** (default): Each project gets own window (max 5)
+- **Single mode**: One window, reused for each project; supports project lock
+
+### Multi-Window Mode
 - Windows arranged right-to-left from screen corner
 - Max 5 windows (or screen limit)
 - Auto-rearranges when window closes
@@ -78,6 +82,10 @@ Each project gets its own window:
 | `POST /close` | Close specific project window |
 | `GET /status` | Returns all windows' states |
 | `POST /status` | Create/update window for project |
+| `GET /window-mode` | Get current window mode (multi/single) |
+| `POST /window-mode` | Set window mode |
+| `POST /lock` | Lock to project (single mode only) |
+| `POST /unlock` | Unlock project (single mode only) |
 
 ## States
 
