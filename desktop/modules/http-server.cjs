@@ -1,9 +1,9 @@
 /**
- * HTTP server for Vibe Monitor
+ * HTTP server for Vibe Monitor (Multi-Window)
  */
 
 const http = require('http');
-const { HTTP_PORT, MAX_PAYLOAD_SIZE, LOCK_MODES } = require('./constants.cjs');
+const { HTTP_PORT, MAX_PAYLOAD_SIZE, MAX_WINDOWS } = require('./constants.cjs');
 const { setCorsHeaders, sendJson, sendError, parseJsonBody } = require('./http-utils.cjs');
 const { validateStatusPayload } = require('./validators.cjs');
 
@@ -57,23 +57,17 @@ class HttpServer {
       case 'GET /status':
         this.handleGetStatus(res);
         break;
-      case 'POST /lock':
-        await this.handlePostLock(req, res);
+      case 'GET /windows':
+        this.handleGetWindows(res);
         break;
-      case 'POST /unlock':
-        this.handlePostUnlock(res);
-        break;
-      case 'GET /lock-mode':
-        this.handleGetLockMode(res);
-        break;
-      case 'POST /lock-mode':
-        await this.handlePostLockMode(req, res);
+      case 'POST /close':
+        await this.handlePostClose(req, res);
         break;
       case 'GET /health':
         this.handleGetHealth(res);
         break;
       case 'POST /show':
-        this.handlePostShow(res);
+        await this.handlePostShow(req, res);
         break;
       case 'GET /debug':
         this.handleGetDebug(res);
@@ -102,83 +96,73 @@ class HttpServer {
       return;
     }
 
-    const result = this.stateManager.updateState(data);
+    // Validate character field via stateManager
+    const stateData = this.stateManager.validateStateData(data);
 
-    if (result.blocked) {
-      if (result.menuUpdateOnly && this.onStateUpdate) {
-        this.onStateUpdate(true);  // Menu only
+    // Get projectId from data or use default
+    const projectId = data.project || 'default';
+
+    // Create window if not exists
+    if (!this.windowManager.getWindow(projectId)) {
+      const windowInfo = this.windowManager.createWindow(projectId);
+      if (!windowInfo) {
+        // Max windows limit reached
+        sendJson(res, 200, {
+          success: false,
+          error: `Maximum windows limit (${MAX_WINDOWS}) reached`,
+          windowCount: this.windowManager.getWindowCount()
+        });
+        return;
       }
-      sendJson(res, 200, { success: true, state: this.stateManager.getState().state });
-      return;
     }
 
-    // Recreate window if needed
-    if (result.needsWindowRecreation && !this.windowManager.isWindowAvailable()) {
-      this.windowManager.createWindow();
-    }
+    // Update window state via windowManager
+    this.windowManager.updateState(projectId, stateData);
+
+    // Set up state timeout for this project
+    this.stateManager.setupStateTimeout(projectId, stateData.state);
 
     // Send update to renderer
-    this.windowManager.sendToWindow('state-update', result.data);
+    this.windowManager.sendToWindow(projectId, 'state-update', stateData);
 
     // Update tray
     if (this.onStateUpdate) {
       this.onStateUpdate(false);  // Full update
     }
 
-    sendJson(res, 200, { success: true, state: this.stateManager.getState().state });
-  }
-
-  handleGetStatus(res) {
-    sendJson(res, 200, this.stateManager.getState());
-  }
-
-  async handlePostLock(req, res) {
-    const { data, error, statusCode } = await parseJsonBody(req, MAX_PAYLOAD_SIZE);
-
-    if (error) {
-      sendError(res, statusCode, error);
-      return;
-    }
-
-    const state = this.stateManager.getState();
-    const projectToLock = data.project || state.project;
-
-    if (!projectToLock) {
-      sendError(res, 400, 'No project to lock');
-      return;
-    }
-
-    const needsWindowRecreation = this.stateManager.lockProject(projectToLock);
-
-    if (needsWindowRecreation && !this.windowManager.isWindowAvailable()) {
-      this.windowManager.createWindow();
-    }
-
-    if (this.onStateUpdate) {
-      this.onStateUpdate(false);
-    }
-
-    sendJson(res, 200, { success: true, locked: this.stateManager.getLockedProject() });
-  }
-
-  handlePostUnlock(res) {
-    this.stateManager.unlockProject();
-
-    if (this.onStateUpdate) {
-      this.onStateUpdate(true);  // Menu only
-    }
-
-    sendJson(res, 200, { success: true, locked: null });
-  }
-
-  handleGetLockMode(res) {
     sendJson(res, 200, {
-      lockMode: this.stateManager.getLockMode(),
-      modes: LOCK_MODES
+      success: true,
+      project: projectId,
+      state: stateData.state,
+      windowCount: this.windowManager.getWindowCount()
     });
   }
 
-  async handlePostLockMode(req, res) {
+  handleGetStatus(res) {
+    // Return all windows' states
+    const states = this.windowManager.getStates();
+    sendJson(res, 200, {
+      windowCount: this.windowManager.getWindowCount(),
+      projects: states
+    });
+  }
+
+  handleGetWindows(res) {
+    // List all active windows
+    const windows = this.windowManager.getWindows();
+    const windowList = Object.entries(windows).map(([projectId, windowInfo]) => ({
+      project: projectId,
+      state: windowInfo.state ? windowInfo.state.state : 'unknown',
+      bounds: windowInfo.window ? windowInfo.window.getBounds() : null
+    }));
+
+    sendJson(res, 200, {
+      windowCount: windowList.length,
+      windows: windowList
+    });
+  }
+
+  async handlePostClose(req, res) {
     const { data, error, statusCode } = await parseJsonBody(req, MAX_PAYLOAD_SIZE);
 
     if (error) {
@@ -186,27 +170,58 @@ class HttpServer {
       return;
     }
 
-    if (!data.mode || !LOCK_MODES[data.mode]) {
-      sendError(res, 400, `Invalid mode. Valid modes: ${Object.keys(LOCK_MODES).join(', ')}`);
+    const projectId = data.project;
+
+    if (!projectId) {
+      sendError(res, 400, 'Project is required');
       return;
     }
 
-    this.stateManager.setLockMode(data.mode);
+    const closed = this.windowManager.closeWindow(projectId);
 
+    if (!closed) {
+      sendJson(res, 200, {
+        success: false,
+        error: `Window for project '${projectId}' not found`
+      });
+      return;
+    }
+
+    // Update tray
     if (this.onStateUpdate) {
       this.onStateUpdate(true);  // Menu only
     }
 
-    sendJson(res, 200, { success: true, lockMode: this.stateManager.getLockMode() });
+    sendJson(res, 200, {
+      success: true,
+      project: projectId,
+      windowCount: this.windowManager.getWindowCount()
+    });
   }
 
   handleGetHealth(res) {
     sendJson(res, 200, { status: 'ok' });
   }
 
-  handlePostShow(res) {
-    const shown = this.windowManager.showAndPosition();
-    sendJson(res, 200, { success: shown });
+  async handlePostShow(req, res) {
+    const { data, error, statusCode } = await parseJsonBody(req, MAX_PAYLOAD_SIZE);
+
+    if (error) {
+      sendError(res, statusCode, error);
+      return;
+    }
+
+    const projectId = data.project;
+
+    // Show specific project window or first window
+    const shown = projectId
+      ? this.windowManager.showWindow(projectId)
+      : this.windowManager.showFirstWindow();
+
+    sendJson(res, 200, {
+      success: shown,
+      project: projectId || 'first'
+    });
   }
 
   handleGetDebug(res) {
