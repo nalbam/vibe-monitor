@@ -1,7 +1,7 @@
 {
   "name": "Vibe Monitor - File Edited",
   "version": "1.0.0",
-  "description": "Send working state to Vibe Monitor on file save",
+  "description": "Send 'working' state to Vibe Monitor when files are edited",
   "when": {
     "type": "fileEdited",
     "patterns": ["**/*"]

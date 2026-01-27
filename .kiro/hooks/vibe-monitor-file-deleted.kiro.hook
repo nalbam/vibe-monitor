@@ -1,7 +1,7 @@
 {
-  "name": "Vibe Monitor - File Delete",
+  "name": "Vibe Monitor - File Deleted",
   "version": "1.0.0",
-  "description": "Send working state to Vibe Monitor on file delete",
+  "description": "Send 'working' state to Vibe Monitor when files are deleted",
   "when": {
     "type": "fileDeleted",
     "patterns": ["**/*"]
