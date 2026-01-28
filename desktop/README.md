@@ -31,8 +31,11 @@ See at a glance what your AI coding assistant is doing — thinking, writing cod
 - **Always on Top**: Always displayed above other windows
 - **System Tray**: Quick control from the menu bar
 - **Multi-window**: One window per project (up to 5 simultaneous)
+- **Single-window**: Project lock for focused monitoring
 - **HTTP API**: Easy integration with hooks
 - **Draggable**: Move the window to any position
+- **Snap to Corner**: Auto-snaps to screen corners when near edges
+- **Click to Focus**: Click window to switch to corresponding iTerm2 tab (macOS)
 - **Auto-launch**: Hook scripts auto-start via `npx vibe-monitor` if not running
 
 ## Installation
@@ -130,7 +133,13 @@ The `working` state displays context-aware text based on the active tool:
 
 ## IDE Integration
 
-### Claude Code
+### Quick Install (Recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/install.py | python3
+```
+
+### Claude Code (Manual)
 
 Claude Code uses **hooks** and **statusline** to send data:
 
@@ -142,20 +151,14 @@ Claude Code uses **hooks** and **statusline** to send data:
 #### 1. Download scripts
 
 ```bash
-# Create directories
 mkdir -p ~/.claude/hooks
 
-# Download hook script
 curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/claude/hooks/vibe-monitor.py \
   -o ~/.claude/hooks/vibe-monitor.py
-chmod +x ~/.claude/hooks/vibe-monitor.py
 
-# Download statusline script
 curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/claude/statusline.py \
   -o ~/.claude/statusline.py
-chmod +x ~/.claude/statusline.py
 
-# Download environment sample
 curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/claude/.env.sample \
   -o ~/.claude/.env.local
 ```
@@ -165,11 +168,21 @@ curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/claud
 ```json
 {
   "hooks": {
-    "SessionStart": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
-    "UserPromptSubmit": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
-    "PreToolUse": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
-    "Notification": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }],
-    "Stop": [{ "command": "python3 ~/.claude/hooks/vibe-monitor.py" }]
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
+    ],
+    "PreToolUse": [
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
+    ],
+    "Notification": [
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
+    ]
   },
   "statusLine": {
     "type": "command",
@@ -183,38 +196,27 @@ curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/claud
 Edit `~/.claude/.env.local`:
 
 ```bash
-# Cache file for project metadata (model, memory) - optional
-# Default: ~/.claude/statusline-cache.json
-# export VIBE_MONITOR_CACHE="~/.claude/statusline-cache.json"
-
-# Desktop App URL (auto-launches via npx if not running)
 export VIBE_MONITOR_URL="http://127.0.0.1:19280"
 
-# ESP32 USB Serial port (optional)
+# Optional settings:
+# export VIBE_MONITOR_CACHE="~/.claude/statusline-cache.json"
 # export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
-
-# ESP32 WiFi HTTP (optional)
 # export ESP32_HTTP_URL="http://192.168.1.100"
 ```
 
-### Kiro
+### Kiro (Manual)
 
 ```bash
-# Create directory
 mkdir -p ~/.kiro/hooks
 
-# Download hook script
 curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/kiro/hooks/vibe-monitor.py \
   -o ~/.kiro/hooks/vibe-monitor.py
-chmod +x ~/.kiro/hooks/vibe-monitor.py
 
-# Download hook files
-for hook in agent-spawn agent-stop pre-tool-use prompt-submit; do
+for hook in prompt-submit file-created file-edited file-deleted agent-stop; do
   curl -sL "https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/kiro/hooks/vibe-monitor-${hook}.kiro.hook" \
     -o ~/.kiro/hooks/vibe-monitor-${hook}.kiro.hook
 done
 
-# Download environment sample (optional)
 curl -sL https://raw.githubusercontent.com/nalbam/vibe-monitor/main/config/kiro/.env.sample \
   -o ~/.kiro/.env.local
 ```
@@ -331,12 +333,70 @@ Quit application:
 curl -X POST http://127.0.0.1:19280/quit
 ```
 
+### GET /window-mode
+
+Get current window mode:
+
+```bash
+curl http://127.0.0.1:19280/window-mode
+# {"mode": "multi", "windowCount": 2, "lockedProject": null}
+```
+
+### POST /window-mode
+
+Set window mode (`multi` or `single`):
+
+```bash
+curl -X POST http://127.0.0.1:19280/window-mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"single"}'
+```
+
+### POST /lock
+
+Lock to a specific project (single-window mode only):
+
+```bash
+curl -X POST http://127.0.0.1:19280/lock \
+  -H "Content-Type: application/json" \
+  -d '{"project":"my-project"}'
+```
+
+### POST /unlock
+
+Unlock project:
+
+```bash
+curl -X POST http://127.0.0.1:19280/unlock
+```
+
+### GET /lock-mode
+
+Get current lock mode:
+
+```bash
+curl http://127.0.0.1:19280/lock-mode
+# {"mode": "on-thinking", "lockedProject": null, "windowMode": "single"}
+```
+
+### POST /lock-mode
+
+Set lock mode (`first-project` or `on-thinking`):
+
+```bash
+curl -X POST http://127.0.0.1:19280/lock-mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"first-project"}'
+```
+
 ## Tray Menu
 
 Click the system tray icon to:
 - View active windows and their states
 - Manually change state (per window)
 - Switch character (Clawd/Kiro)
+- Toggle window mode (Multi/Single)
+- Project lock (in single mode)
 - Close individual project windows
 - Toggle Always on Top
 - Show/Hide windows
