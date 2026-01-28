@@ -1,8 +1,24 @@
 # HTTP API Reference
 
-Both Desktop App (port 19280) and ESP32 WiFi mode (port 80) support the same API.
+Default port: Desktop App `19280`, ESP32 WiFi `80`
 
 > **Note:** Desktop App has a 10KB payload size limit for security.
+
+### Platform Support
+
+| Endpoint | Desktop | ESP32 WiFi |
+|----------|---------|------------|
+| POST/GET /status | ✓ | ✓ |
+| GET /windows | ✓ | - |
+| POST /close | ✓ | - |
+| POST /show | ✓ | - |
+| GET /health | ✓ | - |
+| GET /debug | ✓ | - |
+| POST /quit | ✓ | - |
+| POST /lock, /unlock | ✓ | ✓ |
+| GET/POST /lock-mode | ✓ | ✓ |
+| GET/POST /window-mode | ✓ | - |
+| POST /reboot | - | ✓ |
 
 ## Status
 
@@ -91,7 +107,24 @@ curl -X POST http://127.0.0.1:19280/close \
 Show window and position to top-right corner.
 
 ```bash
+# Show first window
 curl -X POST http://127.0.0.1:19280/show
+
+# Show specific project window
+curl -X POST http://127.0.0.1:19280/show \
+  -H "Content-Type: application/json" \
+  -d '{"project":"my-project"}'
+```
+
+**Request Body (optional):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `project` | string | Project name to show (defaults to first window) |
+
+**Response:**
+```json
+{"success": true, "project": "my-project"}
 ```
 
 ### GET /window-mode (Desktop only)
@@ -182,6 +215,11 @@ Health check endpoint.
 
 ```bash
 curl http://127.0.0.1:19280/health
+```
+
+**Response:**
+```json
+{"status": "ok"}
 ```
 
 ### GET /debug (Desktop only)

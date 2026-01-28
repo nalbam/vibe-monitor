@@ -25,7 +25,7 @@ export const MAX_WINDOWS = 5;       // Maximum simultaneous windows
 export const IDLE_TIMEOUT = 60 * 1000;                  // 1 minute (start/done -> idle)
 export const SLEEP_TIMEOUT = 5 * 60 * 1000;             // 5 minutes (idle -> sleep)
 export const WINDOW_CLOSE_TIMEOUT = 10 * 60 * 1000;     // 10 minutes (sleep -> close window)
-export const ALWAYS_ON_TOP_GRACE_PERIOD = 60 * 1000;    // 1 minute (grace period before disabling always on top)
+export const ALWAYS_ON_TOP_GRACE_PERIOD = 10 * 1000;    // 10 seconds (grace period before disabling always on top)
 
 // =============================================================================
 // Character Settings

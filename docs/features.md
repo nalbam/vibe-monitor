@@ -127,11 +127,23 @@ python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
 ## Desktop App Features
 
 - **Frameless window**: Clean floating design
-- **Always on Top**: Stays visible above other windows
+- **Always on Top**: Stays visible above other windows (configurable modes)
 - **System Tray**: Quick access from menubar/taskbar
 - **Draggable**: Move window anywhere on screen
 - **Snap to corner**: Auto-snaps to screen corners (30px threshold)
 - **Click to focus terminal**: Click window to switch to iTerm2 tab (macOS only)
+
+### Always on Top Modes
+
+| Mode | Description |
+|------|-------------|
+| `active-only` | Only active states (thinking, planning, working, notification) stay on top - **Default** |
+| `all` | All windows stay on top regardless of state |
+| `disabled` | No windows stay on top |
+
+When `active-only` is selected, inactive states (start, idle, done, sleep) disable always on top after a 1-minute grace period to reduce screen obstruction.
+
+Change via system tray menu: Always on Top → Select mode
 
 ### Click to Focus Terminal (macOS)
 
