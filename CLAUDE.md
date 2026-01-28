@@ -93,6 +93,7 @@ Two modes available (`multi` or `single`):
 | `POST /lock-mode` | Set lock mode |
 | `GET /debug` | Window/display debug info (Desktop only) |
 | `POST /quit` | Quit application (Desktop only) |
+| `POST /reboot` | Reboot device (ESP32 only) |
 
 ## States
 

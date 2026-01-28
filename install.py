@@ -13,9 +13,7 @@ Usage:
 
 import difflib
 import json
-import shutil
 import sys
-import tempfile
 from pathlib import Path
 from urllib.request import urlopen
 from urllib.error import URLError
@@ -27,7 +25,6 @@ GITHUB_RAW_BASE = "https://raw.githubusercontent.com/nalbam/vibe-monitor/main"
 CLAUDE_FILES = [
     "config/claude/statusline.py",
     "config/claude/hooks/vibe-monitor.py",
-    "config/claude/.env.sample",
     "config/claude/settings.json",
     "config/claude/skills/vibemon-lock/SKILL.md",
     "config/claude/skills/vibemon-mode/SKILL.md",
@@ -40,7 +37,6 @@ KIRO_FILES = [
     "config/kiro/hooks/vibe-monitor-file-edited.kiro.hook",
     "config/kiro/hooks/vibe-monitor-file-deleted.kiro.hook",
     "config/kiro/hooks/vibe-monitor-agent-stop.kiro.hook",
-    "config/kiro/.env.sample",
 ]
 
 
@@ -230,10 +226,6 @@ def install_claude(source: FileSource) -> bool:
     content = source.get_file("config/claude/hooks/vibe-monitor.py")
     write_file_with_diff(claude_home / "hooks" / "vibe-monitor.py", content, "hooks/vibe-monitor.py")
 
-    # .env.sample
-    env_content = source.get_file("config/claude/.env.sample")
-    write_file(claude_home / ".env.sample", env_content, ".env.sample")
-
     # skills
     for skill in ["vibemon-lock", "vibemon-mode"]:
         content = source.get_file(f"config/claude/skills/{skill}/SKILL.md")
@@ -242,13 +234,15 @@ def install_claude(source: FileSource) -> bool:
         write_file(skill_dir / "SKILL.md", content, f"skills/{skill}/SKILL.md")
 
     # Handle .env.local
+    env_content = source.get_file("config/claude/.env.sample")
     env_local = claude_home / ".env.local"
     if not env_local.exists():
         print()
-        if ask_yes_no("Copy .env.sample to .env.local?"):
-            write_file(env_local, env_content, ".env.local (from .env.sample)")
+        if ask_yes_no("Create .env.local from .env.sample?"):
+            write_file(env_local, env_content, ".env.local")
     else:
-        print(f"\n  {colored('!', 'yellow')} .env.local already exists, skipping")
+        print()
+        write_file_with_diff(env_local, env_content, ".env.local")
 
     # Handle settings.json
     print("\nConfiguring settings.json:")
@@ -321,18 +315,16 @@ def install_kiro(source: FileSource) -> bool:
     content = source.get_file("config/kiro/hooks/vibe-monitor.py")
     write_file_with_diff(kiro_home / "hooks" / "vibe-monitor.py", content, "hooks/vibe-monitor.py")
 
-    # .env.sample
-    env_content = source.get_file("config/kiro/.env.sample")
-    write_file(kiro_home / ".env.sample", env_content, ".env.sample")
-
     # Handle .env.local
+    env_content = source.get_file("config/kiro/.env.sample")
     env_local = kiro_home / ".env.local"
     if not env_local.exists():
         print()
-        if ask_yes_no("Copy .env.sample to .env.local?"):
-            write_file(env_local, env_content, ".env.local (from .env.sample)")
+        if ask_yes_no("Create .env.local from .env.sample?"):
+            write_file(env_local, env_content, ".env.local")
     else:
-        print(f"\n  {colored('!', 'yellow')} .env.local already exists, skipping")
+        print()
+        write_file_with_diff(env_local, env_content, ".env.local")
 
     print(f"\n{colored('Kiro IDE installation complete!', 'green')}")
     return True
