@@ -126,6 +126,7 @@ python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
 
 ## Desktop App Features
 
+- **Single instance**: Only one app instance can run at a time
 - **Frameless window**: Clean floating design
 - **Always on Top**: Stays visible above other windows (configurable modes)
 - **System Tray**: Quick access from menubar/taskbar

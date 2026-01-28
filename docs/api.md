@@ -2,9 +2,28 @@
 
 Default port: Desktop App `19280`, ESP32 WiFi `80`
 
-> **Note:** Desktop App has a 10KB payload size limit for security.
+## Security & Limits
 
-### Platform Support
+| Limit | Value | Description |
+|-------|-------|-------------|
+| Payload size | 10KB | Maximum request body size |
+| Rate limit | 100 req/min | Per IP address |
+
+### Input Validation
+
+| Field | Max Length | Format |
+|-------|------------|--------|
+| `project` | 100 chars | String |
+| `tool` | 50 chars | String |
+| `model` | 50 chars | String |
+| `event` | 50 chars | String |
+| `memory` | - | `N%` where N is 0-100 |
+| `state` | - | One of valid states |
+| `character` | - | `clawd` or `kiro` |
+
+---
+
+## Platform Support
 
 | Endpoint | Desktop | ESP32 WiFi |
 |----------|---------|------------|
