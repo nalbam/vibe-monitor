@@ -1,0 +1,16 @@
+{
+  "thinking": ["Thinking", "Hmm...", "Let me see"],
+  "planning": ["Planning", "Designing", "Drafting"],
+  "tools": {
+    "bash": ["Running", "Executing", "Processing"],
+    "read": ["Reading", "Scanning", "Checking"],
+    "edit": ["Editing", "Modifying", "Fixing"],
+    "write": ["Writing", "Creating", "Saving"],
+    "grep": ["Searching", "Finding", "Looking"],
+    "glob": ["Scanning", "Browsing", "Finding"],
+    "task": ["Thinking", "Working", "Planning"],
+    "webfetch": ["Fetching", "Loading", "Getting"],
+    "websearch": ["Searching", "Googling", "Looking"],
+    "default": ["Working", "Busy", "Coding"]
+  }
+}

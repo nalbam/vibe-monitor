@@ -1,40 +1,21 @@
 /**
  * Shared configuration for Vibe Monitor (CommonJS)
- * Single source of truth for constants shared between main process and renderer
+ * Single source of truth: JSON files in ./data/
  */
 
-// Valid states
-const VALID_STATES = ['start', 'idle', 'thinking', 'planning', 'working', 'notification', 'done', 'sleep'];
+// JSON require (CommonJS) - Single source of truth
+const states = require('./data/states.json');
+const characters = require('./data/characters.json');
 
-// State colors for tray icon
-const STATE_COLORS = {
-  start: '#00CCCC',
-  idle: '#00AA00',
-  thinking: '#6633CC',
-  planning: '#008888',
-  working: '#0066CC',
-  notification: '#FFCC00',
-  done: '#00AA00',
-  sleep: '#1a1a4e'
-};
+// Derived from states (Single Source of Truth)
+const VALID_STATES = Object.keys(states);
+const STATE_COLORS = Object.fromEntries(
+  Object.entries(states).map(([k, v]) => [k, v.bgColor])
+);
 
-// Character configurations
-const CHARACTER_CONFIG = {
-  clawd: {
-    name: 'clawd',
-    displayName: 'Clawd',
-    color: '#D97757',
-    isGhost: false
-  },
-  kiro: {
-    name: 'kiro',
-    displayName: 'Kiro',
-    color: '#FFFFFF',
-    isGhost: true
-  }
-};
-
-const CHARACTER_NAMES = Object.keys(CHARACTER_CONFIG);
+// Character configuration
+const CHARACTER_CONFIG = characters;
+const CHARACTER_NAMES = Object.keys(characters);
 const DEFAULT_CHARACTER = 'clawd';
 
 // Colors

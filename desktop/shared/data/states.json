@@ -1,0 +1,58 @@
+{
+  "start": {
+    "bgColor": "#00CCCC",
+    "text": "Hello!",
+    "eyeType": "sparkle",
+    "showLoading": false,
+    "textColor": "#000000"
+  },
+  "idle": {
+    "bgColor": "#00AA00",
+    "text": "Ready",
+    "eyeType": "normal",
+    "showLoading": false,
+    "textColor": "#FFFFFF"
+  },
+  "thinking": {
+    "bgColor": "#6633CC",
+    "text": "Thinking",
+    "eyeType": "thinking",
+    "showLoading": true,
+    "textColor": "#FFFFFF"
+  },
+  "planning": {
+    "bgColor": "#008888",
+    "text": "Planning",
+    "eyeType": "thinking",
+    "showLoading": true,
+    "textColor": "#FFFFFF"
+  },
+  "working": {
+    "bgColor": "#0066CC",
+    "text": "Working",
+    "eyeType": "focused",
+    "showLoading": true,
+    "textColor": "#FFFFFF"
+  },
+  "notification": {
+    "bgColor": "#FFCC00",
+    "text": "Input?",
+    "eyeType": "alert",
+    "showLoading": false,
+    "textColor": "#000000"
+  },
+  "done": {
+    "bgColor": "#00AA00",
+    "text": "Done!",
+    "eyeType": "happy",
+    "showLoading": false,
+    "textColor": "#FFFFFF"
+  },
+  "sleep": {
+    "bgColor": "#1a1a4e",
+    "text": "Zzz...",
+    "eyeType": "sleep",
+    "showLoading": false,
+    "textColor": "#FFFFFF"
+  }
+}

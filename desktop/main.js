@@ -17,11 +17,31 @@ const { MultiWindowManager } = require('./modules/multi-window-manager.cjs');
 const { TrayManager } = require('./modules/tray-manager.cjs');
 const { HttpServer } = require('./modules/http-server.cjs');
 
+// Single instance lock - prevent duplicate instances
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  // Another instance is already running, quit immediately
+  console.log('Another instance is already running. Exiting...');
+  app.exit(0);
+}
+
 // Initialize managers
 const stateManager = new StateManager();
 const windowManager = new MultiWindowManager();
 let trayManager = null;
 let httpServer = null;
+
+// Handle second instance launch attempt
+app.on('second-instance', () => {
+  // Focus the first window if available
+  const first = windowManager.getFirstWindow();
+  if (first && !first.isDestroyed()) {
+    if (first.isMinimized()) first.restore();
+    first.show();
+    first.focus();
+  }
+});
 
 // Set up state manager callbacks
 stateManager.onStateTimeout = (projectId, newState) => {

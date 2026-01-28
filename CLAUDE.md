@@ -9,7 +9,7 @@ Real-time status monitor for AI coding assistants (Claude Code, Kiro IDE/CLI) wi
 **Platforms:**
 - Desktop App (Electron) - Primary, recommended for daily use
 - ESP32 Hardware (172×320 LCD) - Dedicated display device
-- Web Simulator - Browser-based testing
+- Web Simulator - Browser-based testing/debugging only (not for production)
 
 ## Development Environment
 
@@ -45,6 +45,10 @@ open simulator/index.html
 - **ESP32**: `vibe-monitor.ino` (main), `sprites.h` (rendering)
 - **Desktop**: `main.js` (server/tray), `multi-window-manager.cjs` (window management), `index.html` (renderer)
 - **Shared**: `desktop/shared/` folder (config, character, animation, effects)
+- **Config Data**: `desktop/shared/data/` folder (JSON files - single source of truth)
+  - `states.json`: State colors, text, eyeType definitions
+  - `characters.json`: Character body/eyes/limbs configuration
+  - `texts.json`: Thinking/planning/tool status texts
 
 ## Key Patterns
 
