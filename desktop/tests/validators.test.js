@@ -7,6 +7,9 @@ const {
   validateCharacter,
   validateProject,
   validateMemory,
+  validateTool,
+  validateModel,
+  validateEvent,
   validateStatusPayload
 } = require('../modules/validators.cjs');
 
@@ -135,6 +138,79 @@ describe('validateMemory', () => {
   });
 });
 
+describe('validateTool', () => {
+  test('accepts undefined tool', () => {
+    const result = validateTool(undefined);
+    expect(result.valid).toBe(true);
+  });
+
+  test('accepts empty string tool', () => {
+    const result = validateTool('');
+    expect(result.valid).toBe(true);
+  });
+
+  test('accepts valid tool name', () => {
+    const result = validateTool('Bash');
+    expect(result.valid).toBe(true);
+  });
+
+  test('rejects non-string tool', () => {
+    const result = validateTool(123);
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('must be a string');
+  });
+
+  test('rejects too long tool name', () => {
+    const result = validateTool('a'.repeat(51));
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('exceeds');
+  });
+});
+
+describe('validateModel', () => {
+  test('accepts undefined model', () => {
+    const result = validateModel(undefined);
+    expect(result.valid).toBe(true);
+  });
+
+  test('accepts valid model name', () => {
+    const result = validateModel('claude-opus-4.5');
+    expect(result.valid).toBe(true);
+  });
+
+  test('rejects non-string model', () => {
+    const result = validateModel(123);
+    expect(result.valid).toBe(false);
+  });
+
+  test('rejects too long model name', () => {
+    const result = validateModel('a'.repeat(51));
+    expect(result.valid).toBe(false);
+  });
+});
+
+describe('validateEvent', () => {
+  test('accepts undefined event', () => {
+    const result = validateEvent(undefined);
+    expect(result.valid).toBe(true);
+  });
+
+  test('accepts valid event name', () => {
+    const result = validateEvent('start');
+    expect(result.valid).toBe(true);
+  });
+
+  test('rejects non-string event', () => {
+    const result = validateEvent(123);
+    expect(result.valid).toBe(false);
+  });
+
+  test('rejects too long event name', () => {
+    const result = validateEvent('a'.repeat(51));
+    expect(result.valid).toBe(false);
+  });
+});
+
 describe('validateStatusPayload', () => {
   test('accepts valid payload', () => {
     const result = validateStatusPayload({
@@ -175,5 +251,23 @@ describe('validateStatusPayload', () => {
     });
     expect(result.valid).toBe(false);
     expect(result.error).toContain('0-100');
+  });
+
+  test('accepts payload with tool, model, event', () => {
+    const result = validateStatusPayload({
+      state: 'working',
+      tool: 'Bash',
+      model: 'claude-opus-4.5',
+      event: 'start'
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  test('rejects invalid tool in payload', () => {
+    const result = validateStatusPayload({
+      tool: 123
+    });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('Tool');
   });
 });

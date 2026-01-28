@@ -6,6 +6,9 @@ const { VALID_STATES, CHARACTER_NAMES } = require('../shared/config.cjs');
 
 // Validation limits
 const PROJECT_MAX_LENGTH = 100;
+const TOOL_MAX_LENGTH = 50;
+const MODEL_MAX_LENGTH = 50;
+const EVENT_MAX_LENGTH = 50;
 const MEMORY_PATTERN = /^(100|[1-9]?\d)%$/;  // 0-100 only
 
 /**
@@ -75,6 +78,60 @@ function validateMemory(memory) {
 }
 
 /**
+ * Validate tool name
+ * @param {string} tool
+ * @returns {{valid: boolean, error: string|null}}
+ */
+function validateTool(tool) {
+  if (tool === undefined || tool === '') {
+    return { valid: true, error: null };
+  }
+  if (typeof tool !== 'string') {
+    return { valid: false, error: 'Tool must be a string' };
+  }
+  if (tool.length > TOOL_MAX_LENGTH) {
+    return { valid: false, error: `Tool name exceeds ${TOOL_MAX_LENGTH} characters` };
+  }
+  return { valid: true, error: null };
+}
+
+/**
+ * Validate model name
+ * @param {string} model
+ * @returns {{valid: boolean, error: string|null}}
+ */
+function validateModel(model) {
+  if (model === undefined || model === '') {
+    return { valid: true, error: null };
+  }
+  if (typeof model !== 'string') {
+    return { valid: false, error: 'Model must be a string' };
+  }
+  if (model.length > MODEL_MAX_LENGTH) {
+    return { valid: false, error: `Model name exceeds ${MODEL_MAX_LENGTH} characters` };
+  }
+  return { valid: true, error: null };
+}
+
+/**
+ * Validate event name
+ * @param {string} event
+ * @returns {{valid: boolean, error: string|null}}
+ */
+function validateEvent(event) {
+  if (event === undefined || event === '') {
+    return { valid: true, error: null };
+  }
+  if (typeof event !== 'string') {
+    return { valid: false, error: 'Event must be a string' };
+  }
+  if (event.length > EVENT_MAX_LENGTH) {
+    return { valid: false, error: `Event name exceeds ${EVENT_MAX_LENGTH} characters` };
+  }
+  return { valid: true, error: null };
+}
+
+/**
  * Validate status payload
  * @param {object} data
  * @returns {{valid: boolean, error: string|null}}
@@ -92,6 +149,15 @@ function validateStatusPayload(data) {
   const memoryResult = validateMemory(data.memory);
   if (!memoryResult.valid) return memoryResult;
 
+  const toolResult = validateTool(data.tool);
+  if (!toolResult.valid) return toolResult;
+
+  const modelResult = validateModel(data.model);
+  if (!modelResult.valid) return modelResult;
+
+  const eventResult = validateEvent(data.event);
+  if (!eventResult.valid) return eventResult;
+
   return { valid: true, error: null };
 }
 
@@ -100,5 +166,8 @@ module.exports = {
   validateCharacter,
   validateProject,
   validateMemory,
+  validateTool,
+  validateModel,
+  validateEvent,
   validateStatusPayload
 };

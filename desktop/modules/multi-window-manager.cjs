@@ -302,6 +302,7 @@ class MultiWindowManager {
         }
 
         // Remove old entry and re-register with new projectId
+        // Note: These operations are atomic within Node.js event loop tick
         this.windows.delete(oldProjectId);
         this.windows.set(projectId, entry);
         // Update mutable projectId for event handlers using closure
@@ -794,9 +795,10 @@ class MultiWindowManager {
 
         const timer = setTimeout(() => {
           this.alwaysOnTopTimers.delete(projectId);
-          // Re-check window still exists
-          if (this.isWindowValid(entry)) {
-            entry.window.setAlwaysOnTop(false, ALWAYS_ON_TOP_LEVEL);
+          // Re-fetch entry by projectId to handle single-mode window reuse
+          const currentEntry = this.windows.get(projectId);
+          if (this.isWindowValid(currentEntry)) {
+            currentEntry.window.setAlwaysOnTop(false, ALWAYS_ON_TOP_LEVEL);
           }
         }, ALWAYS_ON_TOP_GRACE_PERIOD);
 

@@ -1,9 +1,15 @@
 import { CHAR_SIZE, SCALE, CHARACTER_CONFIG, DEFAULT_CHARACTER, states } from './config.js';
 import { drawEyes, drawMatrixBackground } from './effects.js';
 
+/**
+ * Module-level state for character rendering.
+ * Note: Each Electron renderer window runs in its own isolated JS context,
+ * so these module-level variables are safe (not shared between windows).
+ * If this changes, consider refactoring to a class-based renderer.
+ */
 let ctx = null;
 
-// Character images cache
+// Character images cache (per renderer context)
 const characterImages = {};
 let imagesLoaded = false;
 

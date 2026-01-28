@@ -24,7 +24,7 @@ $RECYCLE.BIN/
 __pycache__
 .pytest_cache
 
-# maven
+# build
 build/
 builds/
 target/
@@ -57,6 +57,7 @@ node_modules/
 package-lock.json
 
 # Electron
+desktop/coverage/
 desktop/dist/
 desktop/out/
 *.dmg

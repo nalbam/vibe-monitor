@@ -41,23 +41,37 @@ function sendError(res, statusCode, message) {
   sendJson(res, statusCode, { error: message });
 }
 
+// Request timeout in milliseconds (prevents Slowloris attacks)
+const REQUEST_TIMEOUT = 30000;
+
 /**
- * Parse JSON body from request with size limit
+ * Parse JSON body from request with size limit and timeout
  * @param {http.IncomingMessage} req
  * @param {number} maxSize - Maximum payload size in bytes
+ * @param {number} timeout - Request timeout in milliseconds
  * @returns {Promise<{data: object|null, error: string|null, statusCode: number|null}>}
  */
-function parseJsonBody(req, maxSize) {
+function parseJsonBody(req, maxSize, timeout = REQUEST_TIMEOUT) {
   return new Promise((resolve) => {
     const chunks = [];
     let bodySize = 0;
     let aborted = false;
+
+    // Timeout handler
+    const timer = setTimeout(() => {
+      if (!aborted) {
+        aborted = true;
+        req.destroy();
+        resolve({ data: null, error: 'Request timeout', statusCode: 408 });
+      }
+    }, timeout);
 
     req.on('data', (chunk) => {
       if (aborted) return;
       bodySize += chunk.length;
       if (bodySize > maxSize) {
         aborted = true;
+        clearTimeout(timer);
         req.destroy();
         resolve({ data: null, error: 'Payload too large', statusCode: 413 });
         return;
@@ -66,6 +80,7 @@ function parseJsonBody(req, maxSize) {
     });
 
     req.on('end', () => {
+      clearTimeout(timer);
       if (aborted) return;
       try {
         const body = chunks.length > 0 ? Buffer.concat(chunks).toString('utf-8') : '{}';
@@ -78,6 +93,7 @@ function parseJsonBody(req, maxSize) {
     });
 
     req.on('error', (err) => {
+      clearTimeout(timer);
       if (!aborted) {
         console.error('HTTP request error:', err.message);
         resolve({ data: null, error: 'Request error', statusCode: 500 });

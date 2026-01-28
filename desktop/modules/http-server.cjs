@@ -7,6 +7,10 @@ const { HTTP_PORT, MAX_PAYLOAD_SIZE, MAX_WINDOWS } = require('../shared/config.c
 const { setCorsHeaders, sendJson, sendError, parseJsonBody } = require('./http-utils.cjs');
 const { validateStatusPayload } = require('./validators.cjs');
 
+// Rate limiting configuration
+const RATE_LIMIT = 100;       // Max requests per window
+const RATE_WINDOW_MS = 60000; // 1 minute window
+
 class HttpServer {
   constructor(stateManager, windowManager, app) {
     this.server = null;
@@ -15,6 +19,32 @@ class HttpServer {
     this.app = app;
     this.onStateUpdate = null;  // Callback for menu/icon updates
     this.onError = null;        // Callback for server errors
+
+    // Rate limiting state
+    this.requestCounts = new Map();  // IP -> { count, resetTime }
+  }
+
+  /**
+   * Check rate limit for an IP address
+   * @param {string} ip
+   * @returns {boolean} true if allowed, false if rate limited
+   */
+  checkRateLimit(ip) {
+    const now = Date.now();
+    const record = this.requestCounts.get(ip);
+
+    if (!record || now > record.resetTime) {
+      // New window or expired - reset counter
+      this.requestCounts.set(ip, { count: 1, resetTime: now + RATE_WINDOW_MS });
+      return true;
+    }
+
+    if (record.count >= RATE_LIMIT) {
+      return false;  // Rate limited
+    }
+
+    record.count++;
+    return true;
   }
 
   start() {
@@ -54,6 +84,13 @@ class HttpServer {
     if (req.method === 'OPTIONS') {
       res.writeHead(200);
       res.end();
+      return;
+    }
+
+    // Rate limiting check
+    const ip = req.socket.remoteAddress || '127.0.0.1';
+    if (!this.checkRateLimit(ip)) {
+      sendError(res, 429, 'Too many requests');
       return;
     }
 

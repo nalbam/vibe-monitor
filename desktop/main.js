@@ -45,22 +45,25 @@ app.on('second-instance', () => {
 
 // Set up state manager callbacks
 stateManager.onStateTimeout = (projectId, newState) => {
-  if (windowManager.hasWindow(projectId)) {
-    // Merge with existing state to preserve project, model, memory, etc.
-    const existingState = windowManager.getState(projectId) || {};
-    const stateData = { ...existingState, state: newState };
-    windowManager.updateState(projectId, stateData);
-    windowManager.sendToWindow(projectId, 'state-update', stateData);
-    stateManager.setupStateTimeout(projectId, newState);
+  // Merge with existing state to preserve project, model, memory, etc.
+  const existingState = windowManager.getState(projectId);
+  if (!existingState) return;  // Window no longer exists
 
-    // Update always on top based on new state and rearrange windows
-    windowManager.updateAlwaysOnTopByState(projectId, newState);
-    windowManager.rearrangeWindows();
+  const stateData = { ...existingState, state: newState };
 
-    if (trayManager) {
-      trayManager.updateIcon();
-      trayManager.updateMenu();
-    }
+  // updateState returns false if window doesn't exist (handles race condition)
+  if (!windowManager.updateState(projectId, stateData)) return;
+
+  windowManager.sendToWindow(projectId, 'state-update', stateData);
+  stateManager.setupStateTimeout(projectId, newState);
+
+  // Update always on top based on new state and rearrange windows
+  windowManager.updateAlwaysOnTopByState(projectId, newState);
+  windowManager.rearrangeWindows();
+
+  if (trayManager) {
+    trayManager.updateIcon();
+    trayManager.updateMenu();
   }
 };
 

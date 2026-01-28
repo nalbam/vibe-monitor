@@ -150,7 +150,10 @@ class TrayManager {
               type: 'radio',
               checked: currentState === s,
               click: () => {
-                const newState = { ...state, state: s };
+                // Re-fetch state at click time to avoid stale closure reference
+                const currentState = this.windowManager.getState(projectId);
+                if (!currentState) return;
+                const newState = { ...currentState, state: s };
                 this.windowManager.updateState(projectId, newState);
                 this.windowManager.sendToWindow(projectId, 'state-update', newState);
                 this.windowManager.updateAlwaysOnTopByState(projectId, s);
@@ -166,7 +169,10 @@ class TrayManager {
               type: 'radio',
               checked: currentCharacter === c,
               click: () => {
-                const newState = { ...state, character: c };
+                // Re-fetch state at click time to avoid stale closure reference
+                const currentState = this.windowManager.getState(projectId);
+                if (!currentState) return;
+                const newState = { ...currentState, character: c };
                 this.windowManager.updateState(projectId, newState);
                 this.windowManager.sendToWindow(projectId, 'state-update', newState);
                 this.updateMenu();

@@ -6,7 +6,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showContextMenu: () => ipcRenderer.send('show-context-menu'),
   focusTerminal: () => ipcRenderer.invoke('focus-terminal'),
   onStateUpdate: (callback) => {
-    const handler = (_event, data) => callback(data);
+    const handler = (_event, data) => {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error('State update callback error:', error);
+      }
+    };
     ipcRenderer.on('state-update', handler);
     // Return cleanup function to prevent memory leaks
     return () => ipcRenderer.removeListener('state-update', handler);
