@@ -18,6 +18,17 @@ from pathlib import Path
 from urllib.request import urlopen
 from urllib.error import URLError
 
+
+def setup_tty_input():
+    """Reopen stdin from /dev/tty to allow interactive input when piped."""
+    if not sys.stdin.isatty():
+        try:
+            sys.stdin = open("/dev/tty", "r")
+        except OSError:
+            print("Error: Cannot open /dev/tty for interactive input.")
+            print("Please run this script directly: python3 install.py")
+            sys.exit(1)
+
 # GitHub raw content base URL
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/nalbam/vibe-monitor/main"
 
@@ -332,6 +343,9 @@ def install_kiro(source: FileSource) -> bool:
 
 def main():
     """Main entry point."""
+    # Enable interactive input when running via curl pipe
+    setup_tty_input()
+
     # Determine if running locally or online
     script_path = Path(__file__).parent.resolve() if "__file__" in dir() else None
     source = FileSource(script_path)
