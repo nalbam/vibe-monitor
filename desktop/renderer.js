@@ -105,6 +105,15 @@ async function init() {
       window.electronAPI.showContextMenu();
     }
   });
+
+  // Click to focus terminal (iTerm2 on macOS)
+  document.addEventListener('click', (e) => {
+    // Ignore right-click
+    if (e.button !== 0) return;
+    if (window.electronAPI?.focusTerminal) {
+      window.electronAPI.focusTerminal();
+    }
+  });
 }
 
 // Update display

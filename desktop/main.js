@@ -9,6 +9,7 @@
  */
 
 const { app, ipcMain, BrowserWindow, Menu } = require('electron');
+const { exec } = require('child_process');
 
 // Modules
 const { StateManager } = require('./modules/state-manager.cjs');
@@ -73,6 +74,61 @@ ipcMain.on('show-context-menu', (event) => {
   if (trayManager) {
     trayManager.showContextMenu(event.sender);
   }
+});
+
+// Focus terminal (iTerm2 on macOS)
+ipcMain.handle('focus-terminal', async (event) => {
+  // Only supported on macOS
+  if (process.platform !== 'darwin') {
+    return { success: false, reason: 'not-macos' };
+  }
+
+  // Get project ID from the window that sent the request
+  const projectId = windowManager.getProjectIdByWebContents(event.sender);
+  if (!projectId) {
+    return { success: false, reason: 'no-project' };
+  }
+
+  // Get terminal ID for this project
+  const terminalId = windowManager.getTerminalId(projectId);
+  if (!terminalId) {
+    return { success: false, reason: 'no-terminal-id' };
+  }
+
+  // Extract UUID from terminal ID (format: w0t4p0:UUID)
+  const uuid = terminalId.includes(':') ? terminalId.split(':')[1] : terminalId;
+  if (!uuid) {
+    return { success: false, reason: 'invalid-terminal-id' };
+  }
+
+  // AppleScript to activate iTerm2 and select the session
+  const script = `
+    tell application "iTerm2"
+      activate
+      repeat with aWindow in windows
+        repeat with aTab in tabs of aWindow
+          repeat with aSession in sessions of aTab
+            if unique ID of aSession is "${uuid}" then
+              select aTab
+              return "ok"
+            end if
+          end repeat
+        end repeat
+      end repeat
+      return "not-found"
+    end tell
+  `;
+
+  return new Promise((resolve) => {
+    exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, (error, stdout) => {
+      if (error) {
+        resolve({ success: false, reason: 'applescript-error', error: error.message });
+      } else {
+        const result = stdout.trim();
+        resolve({ success: result === 'ok', reason: result });
+      }
+    });
+  });
 });
 
 // App lifecycle

@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeWindow: () => ipcRenderer.send('close-window'),
   minimizeWindow: () => ipcRenderer.send('minimize-window'),
   showContextMenu: () => ipcRenderer.send('show-context-menu'),
+  focusTerminal: () => ipcRenderer.invoke('focus-terminal'),
   onStateUpdate: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('state-update', handler);

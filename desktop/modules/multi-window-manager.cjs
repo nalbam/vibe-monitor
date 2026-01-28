@@ -699,6 +699,31 @@ class MultiWindowManager {
   }
 
   /**
+   * Get terminal ID for a project
+   * @param {string} projectId
+   * @returns {string|null}
+   */
+  getTerminalId(projectId) {
+    const entry = this.windows.get(projectId);
+    return entry && entry.state ? entry.state.terminalId || null : null;
+  }
+
+  /**
+   * Get project ID by webContents
+   * @param {Electron.WebContents} webContents
+   * @returns {string|null}
+   */
+  getProjectIdByWebContents(webContents) {
+    for (const [projectId, entry] of this.windows) {
+      if (entry.window && !entry.window.isDestroyed() &&
+          entry.window.webContents === webContents) {
+        return projectId;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Get debug info for all windows
    * @returns {Object}
    */

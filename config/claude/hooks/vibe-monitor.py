@@ -134,13 +134,17 @@ def build_payload(state, tool, project):
     model = metadata.get("model", "")
     memory = metadata.get("memory", "")
 
+    # iTerm2 session ID (macOS only)
+    terminal_id = os.environ.get("ITERM_SESSION_ID", "")
+
     return json.dumps({
         "state": state,
         "tool": tool,
         "project": project,
         "model": model,
         "memory": memory,
-        "character": "clawd"
+        "character": "clawd",
+        "terminalId": terminal_id
     })
 
 # ============================================================================
