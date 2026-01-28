@@ -76,7 +76,7 @@ Two modes available (`multi` or `single`):
 - **Single mode**: One window, reused for each project; supports project lock
 
 ### Multi-Window Mode
-- Windows arranged by state and name: active states (right) → inactive states (left), alphabetically within each group
+- Windows arranged by state and name: active states (right) → inactive states (left), sorted by name descending (Z first = rightmost) within each group
 - Max 5 windows (or screen limit)
 - Auto-rearranges when state changes or window closes
 - 10px gap between windows

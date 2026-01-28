@@ -52,12 +52,15 @@ The `working` state displays context-aware text based on the active tool:
 
 - **Floating**: Gentle motion (±3px horizontal, ±5px vertical, ~3.2s cycle)
 - **Blink**: Idle state blinks every 3 seconds
-- **Loading dots**: Thinking/working states show animated progress dots
+- **Loading dots**: Thinking/planning/working states show animated progress dots
+  - Thinking/planning: 3x slower animation for contemplative feel
+  - Working: Normal speed animation
 - **Matrix rain**: Working state shows falling green code effect
 - **Sunglasses**: Working state character wears Matrix-style sunglasses
 - **Sparkle**: Session start shows rotating sparkle effect
 - **Thought bubble**: Thinking state shows animated thought bubble
 - **Zzz**: Sleep state shows blinking Z animation
+- **Memory bar**: Gradient colors based on usage (green → yellow → red)
 
 ## Window Mode
 
@@ -71,7 +74,10 @@ The Desktop App supports two window modes:
 ### Multi-Window Mode (Default)
 
 - Each project gets its own window
-- Windows arranged right-to-left from screen corner
+- Windows arranged by state and name:
+  - **Right side**: Active states (thinking, planning, working, notification)
+  - **Left side**: Inactive states (start, idle, done, sleep)
+  - Within each group, sorted by project name (Z first = rightmost)
 - Max 5 windows (or screen limit)
 - 10px gap between windows
 
@@ -142,7 +148,10 @@ python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
 | `all` | All windows stay on top regardless of state |
 | `disabled` | No windows stay on top |
 
-When `active-only` is selected, inactive states (start, idle, done, sleep) disable always on top after a 10-second grace period to reduce screen obstruction.
+When `active-only` is selected:
+- Active states immediately enable always on top
+- Inactive states (start, idle, done) have a 10-second grace period before disabling
+- Sleep state immediately disables always on top (no grace period)
 
 Change via system tray menu: Always on Top → Select mode
 
@@ -166,6 +175,7 @@ When running Claude Code in multiple terminal tabs, clicking a Vibe Monitor wind
 - Toggle window mode (Multi/Single)
 - Project lock (in single mode)
 - Toggle Always on Top
+- Rearrange (multi-window mode only)
 - Quit
 
 ## Build
