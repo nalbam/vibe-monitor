@@ -3,9 +3,15 @@
  */
 
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 const { HTTP_PORT, MAX_PAYLOAD_SIZE, MAX_WINDOWS } = require('../shared/config.cjs');
 const { setCorsHeaders, sendJson, sendError, parseJsonBody } = require('./http-utils.cjs');
 const { validateStatusPayload } = require('./validators.cjs');
+
+// Stats cache file path
+const STATS_CACHE_PATH = path.join(os.homedir(), '.claude', 'stats-cache.json');
 
 // Rate limiting configuration
 const RATE_LIMIT = 100;       // Max requests per window
@@ -138,6 +144,12 @@ class HttpServer {
         break;
       case 'POST /window-mode':
         await this.handlePostWindowMode(req, res);
+        break;
+      case 'GET /stats':
+        this.handleGetStatsPage(res);
+        break;
+      case 'GET /stats/data':
+        this.handleGetStatsData(res);
         break;
       default:
         res.writeHead(404);
@@ -492,6 +504,39 @@ class HttpServer {
       mode: this.windowManager.getWindowMode(),
       windowCount: this.windowManager.getWindowCount(),
       lockedProject: this.windowManager.getLockedProject()
+    });
+  }
+
+  handleGetStatsPage(res) {
+    const statsHtmlPath = path.join(__dirname, '..', 'stats.html');
+
+    fs.readFile(statsHtmlPath, 'utf8', (err, html) => {
+      if (err) {
+        sendError(res, 500, 'Failed to load stats page');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    });
+  }
+
+  handleGetStatsData(res) {
+    fs.readFile(STATS_CACHE_PATH, 'utf8', (err, data) => {
+      if (err) {
+        if (err.code === 'ENOENT') {
+          sendError(res, 404, 'Stats file not found: ~/.claude/stats-cache.json');
+        } else {
+          sendError(res, 500, `Failed to read stats file: ${err.message}`);
+        }
+        return;
+      }
+
+      try {
+        const stats = JSON.parse(data);
+        sendJson(res, 200, stats);
+      } catch (parseErr) {
+        sendError(res, 500, `Failed to parse stats file: ${parseErr.message}`);
+      }
     });
   }
 }
