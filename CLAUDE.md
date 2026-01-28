@@ -78,14 +78,20 @@ Two modes available (`multi` or `single`):
 
 | Endpoint | Description |
 |----------|-------------|
+| `POST /status` | Create/update window for project |
+| `GET /status` | Returns all windows' states |
 | `GET /windows` | List all active windows |
 | `POST /close` | Close specific project window |
-| `GET /status` | Returns all windows' states |
-| `POST /status` | Create/update window for project |
+| `POST /show` | Show window (Desktop only) |
+| `GET /health` | Health check |
 | `GET /window-mode` | Get current window mode (multi/single) |
 | `POST /window-mode` | Set window mode |
 | `POST /lock` | Lock to project (single mode only) |
 | `POST /unlock` | Unlock project (single mode only) |
+| `GET /lock-mode` | Get current lock mode |
+| `POST /lock-mode` | Set lock mode |
+| `GET /debug` | Window/display debug info (Desktop only) |
+| `POST /quit` | Quit application (Desktop only) |
 
 ## States
 
