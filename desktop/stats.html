@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claude Code Stats</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {
       margin: 0;
@@ -15,64 +14,47 @@
     body {
       font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #FAF9F6;
-      min-height: 100vh;
+      width: 640px;
+      height: 480px;
+      overflow: hidden;
       color: #1C1917;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
+      padding: 16px;
     }
 
     h1 {
-      text-align: center;
-      font-size: 2rem;
-      margin-bottom: 10px;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
       color: #D97706;
       font-weight: 600;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #78716C;
-      margin-bottom: 30px;
-      font-size: 0.9rem;
     }
 
     /* Summary Cards */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .summary-card {
       background: #FFFFFF;
       border: 1px solid #E7E5E4;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 8px;
+      padding: 8px 6px;
       text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .summary-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(28, 25, 23, 0.08);
     }
 
     .summary-card .value {
-      font-size: 2rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      margin-bottom: 5px;
+      margin-bottom: 2px;
     }
 
     .summary-card .label {
-      font-size: 0.85rem;
+      font-size: 0.6rem;
       color: #78716C;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     .summary-card.sessions .value { color: #D97706; }
@@ -80,89 +62,117 @@
     .summary-card.tools .value { color: #059669; }
     .summary-card.tokens .value { color: #DC2626; }
     .summary-card.days .value { color: #2563EB; }
-    .summary-card.longest .value { color: #EA580C; font-size: 1.5rem; }
+    .summary-card.longest .value { color: #EA580C; }
 
-    /* Chart Sections */
-    .chart-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      margin-bottom: 30px;
+    /* Contributions Graph */
+    .contributions-section {
+      background: #FFFFFF;
+      border: 1px solid #E7E5E4;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
 
-    @media (max-width: 1000px) {
-      .chart-grid {
-        grid-template-columns: 1fr;
-      }
+    .contributions-section h2 {
+      font-size: 0.75rem;
+      margin-bottom: 8px;
+      color: #44403C;
+      font-weight: 600;
+    }
+
+    .contributions-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .contributions-graph {
+      display: flex;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .contrib-week {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .contrib-day {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      background: #EBEDF0;
+    }
+
+    .contrib-day.level-1 { background: #FED7AA; }
+    .contrib-day.level-2 { background: #FDBA74; }
+    .contrib-day.level-3 { background: #F97316; }
+    .contrib-day.level-4 { background: #C2410C; }
+
+    .contrib-legend {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 0.65rem;
+      color: #78716C;
+    }
+
+    .contrib-legend span {
+      margin: 0 2px;
+    }
+
+    .legend-box {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+    }
+
+    /* Bottom Row */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      height: 200px;
     }
 
     .chart-section {
       background: #FFFFFF;
       border: 1px solid #E7E5E4;
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .chart-section.full-width {
-      grid-column: 1 / -1;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
     }
 
     .chart-section h2 {
-      font-size: 1rem;
-      margin-bottom: 15px;
+      font-size: 0.75rem;
+      margin-bottom: 8px;
       color: #44403C;
-      display: flex;
-      align-items: center;
-      gap: 8px;
       font-weight: 600;
     }
 
-    .chart-section h2::before {
-      content: '';
-      width: 4px;
-      height: 16px;
-      background: linear-gradient(180deg, #D97706, #EA580C);
-      border-radius: 2px;
-    }
-
     .chart-container {
+      flex: 1;
       position: relative;
-      height: 250px;
+      min-height: 0;
     }
 
-    .chart-container.tall {
-      height: 300px;
+    /* Model List */
+    .model-list {
+      font-size: 0.7rem;
     }
 
-    /* Model Usage Table */
-    .model-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
+    .model-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #F5F5F4;
     }
 
-    .model-table th,
-    .model-table td {
-      padding: 12px;
-      text-align: right;
-      border-bottom: 1px solid #E7E5E4;
-    }
-
-    .model-table th {
-      color: #78716C;
-      font-weight: 500;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.5px;
-    }
-
-    .model-table td:first-child,
-    .model-table th:first-child {
-      text-align: left;
-    }
-
-    .model-table tr:hover td {
-      background: #FAFAF9;
+    .model-item:last-child {
+      border-bottom: none;
     }
 
     .model-name {
@@ -170,58 +180,63 @@
       font-weight: 600;
     }
 
-    /* Loading State */
-    .loading {
-      text-align: center;
-      padding: 60px;
+    .model-tokens {
       color: #78716C;
     }
 
-    .loading::after {
-      content: '';
-      animation: dots 1.5s infinite;
+    /* Hour Line Chart */
+    .hour-chart {
+      width: 100%;
+      height: 100%;
     }
 
-    @keyframes dots {
-      0%, 20% { content: '.'; }
-      40% { content: '..'; }
-      60%, 100% { content: '...'; }
+    .hour-chart .line {
+      fill: none;
+      stroke: #D97706;
+      stroke-width: 1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
-    /* Error State */
-    .error {
-      text-align: center;
-      padding: 40px;
-      color: #DC2626;
-      background: #FEF2F2;
-      border-radius: 12px;
-      border: 1px solid #FECACA;
+    .hour-chart .area {
+      fill: url(#areaGradient);
     }
 
+    .hour-chart .axis {
+      font-size: 9px;
+      fill: #A8A29E;
+    }
+
+    .hour-chart .grid {
+      stroke: #E7E5E4;
+      stroke-width: 1;
+    }
+
+    /* Loading & Error */
+    .loading, .error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #78716C;
+    }
+
+    .error { color: #DC2626; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Claude Code Stats</h1>
-    <p class="subtitle">Usage statistics from ~/.claude/stats-cache.json</p>
-
-    <div id="content">
-      <div class="loading">Loading stats</div>
-    </div>
-
+  <h1>Claude Code Stats</h1>
+  <div id="content">
+    <div class="loading">Loading...</div>
   </div>
 
   <script>
-    // Claude brand colors
     const COLORS = {
       coral: '#D97706',
-      coralDark: '#EA580C',
       purple: '#9333EA',
       green: '#059669',
       red: '#DC2626',
-      blue: '#2563EB',
-      warmGray: '#78716C',
-      lightGray: '#A8A29E'
+      blue: '#2563EB'
     };
 
     const formatNumber = (num) => {
@@ -247,278 +262,203 @@
     async function loadStats() {
       try {
         const response = await fetch('/stats/data');
-        if (!response.ok) throw new Error('Failed to load stats');
+        if (!response.ok) throw new Error('Failed to load');
         const data = await response.json();
         renderStats(data);
       } catch (error) {
-        document.getElementById('content').innerHTML = `
-          <div class="error">
-            <p><strong>Failed to load stats</strong></p>
-            <p>${error.message}</p>
-            <p style="margin-top: 10px; color: #78716C;">Make sure ~/.claude/stats-cache.json exists</p>
-          </div>
-        `;
+        document.getElementById('content').innerHTML = `<div class="error">Failed to load stats</div>`;
       }
     }
 
     function renderStats(data) {
-      const { dailyActivity, dailyModelTokens, modelUsage, totalSessions, totalMessages, longestSession, firstSessionDate, hourCounts } = data;
+      const { dailyActivity, modelUsage, totalSessions, totalMessages, longestSession, firstSessionDate, hourCounts } = data;
 
-      // Calculate totals
       const totalToolCalls = dailyActivity.reduce((sum, d) => sum + d.toolCallCount, 0);
       const totalTokens = Object.values(modelUsage || {}).reduce((sum, m) => sum + (m.inputTokens || 0) + (m.outputTokens || 0), 0);
-      const totalCacheRead = Object.values(modelUsage || {}).reduce((sum, m) => sum + (m.cacheReadInputTokens || 0), 0);
       const daysSinceStart = firstSessionDate ? Math.ceil((new Date() - new Date(firstSessionDate)) / 86400000) : 0;
       const activeDays = dailyActivity?.length || 0;
 
-      const content = document.getElementById('content');
-      content.innerHTML = `
-        <!-- Summary Cards -->
+      document.getElementById('content').innerHTML = `
         <div class="summary-grid">
           <div class="summary-card sessions">
             <div class="value">${formatNumber(totalSessions || 0)}</div>
-            <div class="label">Total Sessions</div>
+            <div class="label">Sessions</div>
           </div>
           <div class="summary-card messages">
             <div class="value">${formatNumber(totalMessages || 0)}</div>
-            <div class="label">Total Messages</div>
+            <div class="label">Messages</div>
           </div>
           <div class="summary-card tools">
             <div class="value">${formatNumber(totalToolCalls)}</div>
-            <div class="label">Tool Calls</div>
+            <div class="label">Tools</div>
           </div>
           <div class="summary-card tokens">
             <div class="value">${formatNumber(totalTokens)}</div>
-            <div class="label">Output Tokens</div>
+            <div class="label">Tokens</div>
           </div>
           <div class="summary-card days">
-            <div class="value">${activeDays} / ${daysSinceStart}</div>
-            <div class="label">Active / Total Days</div>
+            <div class="value">${activeDays}/${daysSinceStart}</div>
+            <div class="label">Days</div>
           </div>
           <div class="summary-card longest">
-            <div class="value">${longestSession ? formatDuration(longestSession.duration) : 'N/A'}</div>
-            <div class="label">Longest Session</div>
+            <div class="value">${longestSession ? formatDuration(longestSession.duration) : '-'}</div>
+            <div class="label">Longest</div>
           </div>
         </div>
 
-        <!-- Charts -->
-        <div class="chart-grid">
-          <div class="chart-section full-width">
-            <h2>Daily Activity</h2>
-            <div class="chart-container tall">
-              <canvas id="dailyChart"></canvas>
+        <div class="contributions-section">
+          <h2>Activity</h2>
+          <div class="contributions-wrapper">
+            <div class="contributions-graph" id="contribGraph"></div>
+            <div class="contrib-legend">
+              <span>Less</span>
+              <div class="legend-box" style="background:#EBEDF0"></div>
+              <div class="legend-box" style="background:#FED7AA"></div>
+              <div class="legend-box" style="background:#FDBA74"></div>
+              <div class="legend-box" style="background:#F97316"></div>
+              <div class="legend-box" style="background:#C2410C"></div>
+              <span>More</span>
             </div>
           </div>
+        </div>
 
+        <div class="bottom-row">
           <div class="chart-section">
-            <h2>Activity by Hour (KST)</h2>
-            <div class="chart-container">
-              <canvas id="hourChart"></canvas>
-            </div>
+            <h2>By Hour</h2>
+            <div class="chart-container" id="hourChart"></div>
           </div>
-
           <div class="chart-section">
-            <h2>Token Usage by Model</h2>
-            <div class="chart-container">
-              <canvas id="modelChart"></canvas>
-            </div>
-          </div>
-
-          <div class="chart-section full-width">
-            <h2>Model Usage Details</h2>
-            <table class="model-table">
-              <thead>
-                <tr>
-                  <th>Model</th>
-                  <th>Input Tokens</th>
-                  <th>Output Tokens</th>
-                  <th>Cache Read</th>
-                  <th>Cache Created</th>
-                </tr>
-              </thead>
-              <tbody id="modelTable"></tbody>
-            </table>
+            <h2>Models</h2>
+            <div class="model-list" id="modelList"></div>
           </div>
         </div>
       `;
 
-      // Render charts
-      renderDailyChart(dailyActivity || []);
-      renderHourChart(hourCounts || {});
-      renderModelChart(modelUsage || {});
-      renderModelTable(modelUsage || {});
+      renderContributions(dailyActivity || []);
+      renderHourBars(hourCounts || {});
+      renderModelList(modelUsage || {});
     }
 
-    function renderDailyChart(dailyActivity) {
-      const ctx = document.getElementById('dailyChart').getContext('2d');
-      const labels = dailyActivity.map(d => d.date);
+    function renderContributions(dailyActivity) {
+      const container = document.getElementById('contribGraph');
 
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Messages',
-              data: dailyActivity.map(d => d.messageCount),
-              backgroundColor: 'rgba(147, 51, 234, 0.7)',
-              borderRadius: 4,
-              order: 2
-            },
-            {
-              label: 'Tool Calls',
-              data: dailyActivity.map(d => d.toolCallCount),
-              backgroundColor: 'rgba(5, 150, 105, 0.7)',
-              borderRadius: 4,
-              order: 3
-            },
-            {
-              label: 'Sessions',
-              data: dailyActivity.map(d => d.sessionCount * 50),
-              type: 'line',
-              borderColor: COLORS.coral,
-              backgroundColor: 'transparent',
-              tension: 0.3,
-              pointRadius: 3,
-              pointBackgroundColor: COLORS.coral,
-              order: 1,
-              yAxisID: 'y1'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { intersect: false, mode: 'index' },
-          plugins: {
-            legend: {
-              labels: { color: COLORS.warmGray, usePointStyle: true, padding: 20 }
-            },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => {
-                  if (ctx.dataset.label === 'Sessions') {
-                    return `Sessions: ${ctx.raw / 50}`;
-                  }
-                  return `${ctx.dataset.label}: ${ctx.raw.toLocaleString()}`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(120, 113, 108, 0.1)' },
-              ticks: { color: COLORS.warmGray, maxRotation: 45 }
-            },
-            y: {
-              grid: { color: 'rgba(120, 113, 108, 0.1)' },
-              ticks: { color: COLORS.warmGray },
-              position: 'left'
-            },
-            y1: {
-              grid: { display: false },
-              ticks: {
-                color: COLORS.coral,
-                callback: (v) => v / 50
-              },
-              position: 'right'
-            }
-          }
-        }
+      // Create activity map
+      const activityMap = {};
+      let maxActivity = 0;
+      dailyActivity.forEach(d => {
+        activityMap[d.date] = d.messageCount;
+        if (d.messageCount > maxActivity) maxActivity = d.messageCount;
       });
-    }
 
-    function renderHourChart(hourCounts) {
-      const ctx = document.getElementById('hourChart').getContext('2d');
-      const hours = Array.from({ length: 24 }, (_, i) => i);
-      const counts = hours.map(h => hourCounts[h] || 0);
+      // Generate last 52 weeks (364 days)
+      const today = new Date();
+      const weeks = [];
 
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: hours.map(h => `${h}:00`),
-          datasets: [{
-            label: 'Sessions',
-            data: counts,
-            backgroundColor: counts.map(c => {
-              const max = Math.max(...counts);
-              const intensity = max > 0 ? c / max : 0;
-              return `rgba(217, 119, 6, ${0.3 + intensity * 0.7})`;
-            }),
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: {
-                color: COLORS.warmGray,
-                callback: (_, i) => i % 3 === 0 ? `${i}:00` : ''
-              }
-            },
-            y: {
-              grid: { color: 'rgba(120, 113, 108, 0.1)' },
-              ticks: { color: COLORS.warmGray },
-              beginAtZero: true
-            }
+      // Find the start of the week grid (going back ~52 weeks, starting from Sunday)
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 363);
+      // Adjust to previous Sunday
+      startDate.setDate(startDate.getDate() - startDate.getDay());
+
+      let currentDate = new Date(startDate);
+
+      for (let w = 0; w < 52; w++) {
+        const week = [];
+        for (let d = 0; d < 7; d++) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          const activity = activityMap[dateStr] || 0;
+          let level = 0;
+          if (activity > 0) {
+            const ratio = activity / maxActivity;
+            if (ratio > 0.75) level = 4;
+            else if (ratio > 0.5) level = 3;
+            else if (ratio > 0.25) level = 2;
+            else level = 1;
           }
+          week.push({ date: dateStr, level, activity });
+          currentDate.setDate(currentDate.getDate() + 1);
         }
-      });
-    }
+        weeks.push(week);
+      }
 
-    function renderModelChart(modelUsage) {
-      const ctx = document.getElementById('modelChart').getContext('2d');
-      const models = Object.keys(modelUsage);
-      const chartColors = [COLORS.coral, COLORS.purple, COLORS.green, COLORS.blue, COLORS.red];
-
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: models.map(getModelShortName),
-          datasets: [{
-            data: models.map(m => (modelUsage[m].inputTokens || 0) + (modelUsage[m].outputTokens || 0)),
-            backgroundColor: chartColors.slice(0, models.length),
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { color: COLORS.warmGray, padding: 15, usePointStyle: true }
-            },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${ctx.label}: ${formatNumber(ctx.raw)} tokens`
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function renderModelTable(modelUsage) {
-      const tbody = document.getElementById('modelTable');
-      tbody.innerHTML = Object.entries(modelUsage).map(([model, usage]) => `
-        <tr>
-          <td class="model-name">${getModelShortName(model)}</td>
-          <td>${formatNumber(usage.inputTokens || 0)}</td>
-          <td>${formatNumber(usage.outputTokens || 0)}</td>
-          <td>${formatNumber(usage.cacheReadInputTokens || 0)}</td>
-          <td>${formatNumber(usage.cacheCreationInputTokens || 0)}</td>
-        </tr>
+      container.innerHTML = weeks.map(week => `
+        <div class="contrib-week">
+          ${week.map(day => `
+            <div class="contrib-day level-${day.level}" title="${day.date}: ${day.activity} messages"></div>
+          `).join('')}
+        </div>
       `).join('');
     }
 
-    // Load stats on page load
+    function renderHourBars(hourCounts) {
+      const container = document.getElementById('hourChart');
+      const hours = Array.from({ length: 24 }, (_, i) => i);
+      const counts = hours.map(h => hourCounts[h] || 0);
+      const maxCount = Math.max(...counts, 1);
+
+      const width = 280;
+      const height = 140;
+      const padding = { top: 10, right: 10, bottom: 20, left: 25 };
+      const chartW = width - padding.left - padding.right;
+      const chartH = height - padding.top - padding.bottom;
+
+      // Generate points
+      const points = hours.map((h, i) => {
+        const x = padding.left + (i / 23) * chartW;
+        const y = padding.top + chartH - (counts[i] / maxCount) * chartH;
+        return { x, y, h, count: counts[i] };
+      });
+
+      // Create smooth curve path using cubic bezier
+      const tension = 0.3;
+      let linePath = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        const p0 = points[i - 2] || points[0];
+        const p1 = points[i - 1];
+        const p2 = points[i];
+        const p3 = points[i + 1] || points[points.length - 1];
+        const cp1x = p1.x + (p2.x - p0.x) * tension;
+        const cp1y = p1.y + (p2.y - p0.y) * tension;
+        const cp2x = p2.x - (p3.x - p1.x) * tension;
+        const cp2y = p2.y - (p3.y - p1.y) * tension;
+        linePath += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+      }
+      const areaPath = linePath + ` L ${points[23].x} ${padding.top + chartH} L ${padding.left} ${padding.top + chartH} Z`;
+
+      container.innerHTML = `
+        <svg class="hour-chart" viewBox="0 0 ${width} ${height}">
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#D97706" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#D97706" stop-opacity="0.05"/>
+            </linearGradient>
+          </defs>
+          <path class="area" d="${areaPath}"/>
+          <path class="line" d="${linePath}"/>
+          ${[0, 6, 12, 18].map(h => {
+            const x = padding.left + (h / 23) * chartW;
+            return `<text class="axis" x="${x}" y="${height - 5}" text-anchor="middle">${h}</text>`;
+          }).join('')}
+          <text class="axis" x="${width - padding.right}" y="${height - 5}" text-anchor="end">23</text>
+        </svg>
+      `;
+    }
+
+    function renderModelList(modelUsage) {
+      const container = document.getElementById('modelList');
+      const entries = Object.entries(modelUsage);
+
+      container.innerHTML = entries.map(([model, usage]) => {
+        const total = (usage.inputTokens || 0) + (usage.outputTokens || 0);
+        return `
+          <div class="model-item">
+            <span class="model-name">${getModelShortName(model)}</span>
+            <span class="model-tokens">${formatNumber(total)} tokens</span>
+          </div>
+        `;
+      }).join('');
+    }
+
     loadStats();
   </script>
 </body>
