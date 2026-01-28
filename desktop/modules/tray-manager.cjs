@@ -103,7 +103,7 @@ class TrayManager {
     // Create new stats window (frameless like monitor window)
     this.statsWindow = new BrowserWindow({
       width: 640,
-      height: 480,
+      height: 475,
       frame: false,
       transparent: true,
       resizable: false,
