@@ -46,6 +46,7 @@ open simulator/index.html
 - **Desktop**: `main.js` (server/tray), `multi-window-manager.cjs` (window management), `index.html` (renderer)
 - **Shared**: `desktop/shared/` folder (config, character, animation, effects)
 - **Config Data**: `desktop/shared/data/` folder (JSON files - single source of truth)
+  - `constants.json`: Window dimensions, animation settings, limits
   - `states.json`: State colors, text, eyeType definitions
   - `characters.json`: Character body/eyes/limbs configuration
   - `texts.json`: Thinking/planning/tool status texts

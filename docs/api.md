@@ -8,6 +8,8 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 |-------|-------|-------------|
 | Payload size | 10KB | Maximum request body size |
 | Rate limit | 100 req/min | Per IP address |
+| Request timeout | 30 sec | Prevents Slowloris attacks |
+| CORS | localhost only | Only allows localhost origins |
 
 ### Input Validation
 
