@@ -132,7 +132,7 @@ python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
 - **System Tray**: Quick access from menubar/taskbar
 - **Draggable**: Move window anywhere on screen
 - **Snap to corner**: Auto-snaps to screen corners (30px threshold)
-- **Click to focus terminal**: Click window to switch to iTerm2 tab (macOS only)
+- **Click to focus terminal**: Click window to switch to iTerm2/Ghostty tab (macOS only)
 
 ### Always on Top Modes
 

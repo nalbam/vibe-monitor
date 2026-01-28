@@ -64,7 +64,7 @@ curl -X POST http://127.0.0.1:19280/status \
 | `model` | string | Model name (e.g., `opus`, `sonnet`) |
 | `memory` | string | Memory usage (e.g., `45%`) |
 | `character` | string | `clawd` or `kiro` |
-| `terminalId` | string | iTerm2 session ID for click-to-focus |
+| `terminalId` | string | Terminal ID for click-to-focus (iTerm2 session ID or Ghostty PID) |
 
 **Response:**
 ```json
