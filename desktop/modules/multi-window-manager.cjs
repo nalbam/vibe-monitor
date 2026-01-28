@@ -507,7 +507,9 @@ class MultiWindowManager {
   }
 
   /**
-   * Update state for a project (immutable update)
+   * Update state for a project
+   * Note: Entry object is mutated to preserve event handler closure references.
+   * The state property is replaced with a new object for partial immutability.
    * @param {string} projectId
    * @param {Object} newState
    * @returns {boolean} - true if updated
@@ -518,12 +520,8 @@ class MultiWindowManager {
       return false;
     }
 
-    // Create new entry with updated state (immutable)
-    const updatedEntry = {
-      ...entry,
-      state: { ...newState }
-    };
-    this.windows.set(projectId, updatedEntry);
+    // Mutate entry's state property (entry object must be preserved for event handler closures)
+    entry.state = { ...newState };
     return true;
   }
 
