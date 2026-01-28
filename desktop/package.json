@@ -55,6 +55,7 @@
     "main.js",
     "preload.js",
     "index.html",
+    "stats.html",
     "renderer.js",
     "styles.css",
     "assets/",
