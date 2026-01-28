@@ -6,7 +6,7 @@ const { VALID_STATES, CHARACTER_NAMES } = require('../shared/config.cjs');
 
 // Validation limits
 const PROJECT_MAX_LENGTH = 100;
-const MEMORY_PATTERN = /^(\d{1,3})%$/;
+const MEMORY_PATTERN = /^(100|[1-9]?\d)%$/;  // 0-100 only
 
 /**
  * Validate state value
@@ -68,13 +68,8 @@ function validateMemory(memory) {
   if (typeof memory !== 'string') {
     return { valid: false, error: 'Memory must be a string' };
   }
-  const match = memory.match(MEMORY_PATTERN);
-  if (!match) {
-    return { valid: false, error: 'Memory must be in format "N%"' };
-  }
-  const value = parseInt(match[1], 10);
-  if (value < 0 || value > 100) {
-    return { valid: false, error: 'Memory percentage must be 0-100' };
+  if (!MEMORY_PATTERN.test(memory)) {
+    return { valid: false, error: 'Memory must be in format "N%" where N is 0-100' };
   }
   return { valid: true, error: null };
 }

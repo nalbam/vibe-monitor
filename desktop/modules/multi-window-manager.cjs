@@ -12,6 +12,7 @@ const {
   WINDOW_HEIGHT,
   WINDOW_GAP,
   MAX_WINDOWS,
+  MAX_PROJECT_LIST,
   SNAP_THRESHOLD,
   SNAP_DEBOUNCE,
   LOCK_MODES,
@@ -108,13 +109,27 @@ class MultiWindowManager {
 
   /**
    * Add project to the project list (persisted)
+   * Uses LRU (Least Recently Used) strategy to limit list size
    * @param {string} project
    */
   addProjectToList(project) {
-    if (project && !this.projectList.includes(project)) {
-      this.projectList.push(project);
-      this.store.set('projectList', this.projectList);
+    if (!project) return;
+
+    // Remove if already exists (will be re-added at end for LRU)
+    const existingIndex = this.projectList.indexOf(project);
+    if (existingIndex !== -1) {
+      this.projectList.splice(existingIndex, 1);
     }
+
+    // Add to end (most recently used)
+    this.projectList.push(project);
+
+    // Enforce max limit (remove oldest entries)
+    while (this.projectList.length > MAX_PROJECT_LIST) {
+      this.projectList.shift();
+    }
+
+    this.store.set('projectList', this.projectList);
   }
 
   /**
@@ -415,7 +430,7 @@ class MultiWindowManager {
     // Collect all windows with projectId and state
     const windowsList = [];
     for (const [projectId, entry] of this.windows) {
-      if (entry.window && !entry.window.isDestroyed()) {
+      if (this.isWindowValid(entry)) {
         const state = entry.state ? entry.state.state : 'idle';
         const isActive = ACTIVE_STATES.includes(state);
         windowsList.push({ projectId, entry, isActive });
@@ -509,6 +524,15 @@ class MultiWindowManager {
   // ========== Utility Methods ==========
 
   /**
+   * Check if a window entry is valid (exists and not destroyed)
+   * @param {Object} entry - Window entry from the Map
+   * @returns {boolean}
+   */
+  isWindowValid(entry) {
+    return this.isWindowValid(entry);
+  }
+
+  /**
    * Get window by project ID
    * @param {string} projectId
    * @returns {BrowserWindow|null}
@@ -566,7 +590,7 @@ class MultiWindowManager {
    */
   sendToWindow(projectId, channel, data) {
     const entry = this.windows.get(projectId);
-    if (entry && entry.window && !entry.window.isDestroyed() && !entry.window.webContents.isDestroyed()) {
+    if (this.isWindowValid(entry) && !entry.window.webContents.isDestroyed()) {
       entry.window.webContents.send(channel, data);
       return true;
     }
@@ -580,7 +604,7 @@ class MultiWindowManager {
    */
   closeWindow(projectId) {
     const entry = this.windows.get(projectId);
-    if (entry && entry.window && !entry.window.isDestroyed()) {
+    if (this.isWindowValid(entry)) {
       entry.window.close();
       return true;
     }
@@ -619,7 +643,7 @@ class MultiWindowManager {
    */
   showWindow(projectId) {
     const entry = this.windows.get(projectId);
-    if (entry && entry.window && !entry.window.isDestroyed()) {
+    if (this.isWindowValid(entry)) {
       entry.window.showInactive();
       return true;
     }
@@ -632,8 +656,8 @@ class MultiWindowManager {
    */
   showAllWindows() {
     let count = 0;
-    for (const [projectId, entry] of this.windows) {
-      if (entry.window && !entry.window.isDestroyed()) {
+    for (const [, entry] of this.windows) {
+      if (this.isWindowValid(entry)) {
         entry.window.showInactive();
         count++;
       }
@@ -648,7 +672,7 @@ class MultiWindowManager {
    */
   hideWindow(projectId) {
     const entry = this.windows.get(projectId);
-    if (entry && entry.window && !entry.window.isDestroyed()) {
+    if (this.isWindowValid(entry)) {
       entry.window.hide();
       return true;
     }
@@ -716,7 +740,7 @@ class MultiWindowManager {
 
     // Update all windows based on new mode
     for (const [, entry] of this.windows) {
-      if (entry.window && !entry.window.isDestroyed()) {
+      if (this.isWindowValid(entry)) {
         const state = entry.state ? entry.state.state : null;
         const shouldBeOnTop = this.shouldBeAlwaysOnTop(state);
         entry.window.setAlwaysOnTop(shouldBeOnTop, ALWAYS_ON_TOP_LEVEL);
@@ -771,7 +795,7 @@ class MultiWindowManager {
         const timer = setTimeout(() => {
           this.alwaysOnTopTimers.delete(projectId);
           // Re-check window still exists
-          if (entry.window && !entry.window.isDestroyed()) {
+          if (this.isWindowValid(entry)) {
             entry.window.setAlwaysOnTop(false, ALWAYS_ON_TOP_LEVEL);
           }
         }, ALWAYS_ON_TOP_GRACE_PERIOD);
@@ -882,7 +906,7 @@ class MultiWindowManager {
 
     const windowsInfo = [];
     for (const [projectId, entry] of this.windows) {
-      if (entry.window && !entry.window.isDestroyed()) {
+      if (this.isWindowValid(entry)) {
         windowsInfo.push({
           projectId,
           bounds: entry.window.getBounds(),

@@ -7,7 +7,7 @@ const { createCanvas } = require('canvas');
 const {
   STATE_COLORS, CHARACTER_CONFIG, DEFAULT_CHARACTER,
   HTTP_PORT, LOCK_MODES, ALWAYS_ON_TOP_MODES,
-  VALID_STATES, CHARACTER_NAMES
+  VALID_STATES, CHARACTER_NAMES, TRAY_ICON_SIZE
 } = require('../shared/config.cjs');
 
 const COLOR_EYE = '#000000';
@@ -26,7 +26,7 @@ function createTrayIcon(state, character = 'clawd') {
     return trayIconCache.get(cacheKey);
   }
 
-  const size = 22;
+  const size = TRAY_ICON_SIZE;
   const canvas = createCanvas(size, size);
   const ctx = canvas.getContext('2d');
 
@@ -346,7 +346,7 @@ class TrayManager {
   showContextMenu(sender) {
     const contextMenu = Menu.buildFromTemplate(this.buildMenuTemplate());
     const win = BrowserWindow.fromWebContents(sender);
-    if (win) {
+    if (win && !win.isDestroyed()) {
       contextMenu.popup({ window: win });
     } else {
       // Fallback: popup without specific window

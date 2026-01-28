@@ -40,7 +40,11 @@ class HttpServer {
 
   stop() {
     if (this.server) {
-      this.server.close();
+      this.server.close((err) => {
+        if (err) {
+          console.error('HTTP server close error:', err.message);
+        }
+      });
     }
   }
 

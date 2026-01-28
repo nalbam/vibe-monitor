@@ -27,7 +27,6 @@ let currentModel = '-';
 let currentMemory = '-';
 let animFrame = 0;
 let blinkFrame = 0;
-let lastActivityTime = Date.now();
 
 // Canvas
 let canvas, ctx;
@@ -103,7 +102,6 @@ async function init() {
       if (data.tool !== undefined) currentTool = data.tool || '-';
       if (data.model !== undefined) currentModel = data.model || '-';
       if (data.memory !== undefined) currentMemory = data.memory || '-';
-      lastActivityTime = Date.now();
 
       // Reset blinkFrame when transitioning to idle state for consistent blink timing
       if (currentState === 'idle' && prevState !== 'idle') {

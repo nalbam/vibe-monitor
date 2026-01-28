@@ -18,6 +18,7 @@ const SNAP_THRESHOLD = 30;   // pixels from edge to trigger snap
 const SNAP_DEBOUNCE = 150;   // milliseconds
 const WINDOW_GAP = 10;       // Gap between windows (px)
 const MAX_WINDOWS = 5;       // Maximum simultaneous windows
+const MAX_PROJECT_LIST = 10; // Maximum projects in history (LRU cleanup)
 
 // =============================================================================
 // Timeouts (State Transitions)
@@ -26,6 +27,11 @@ const IDLE_TIMEOUT = 60 * 1000;                  // 1 minute (start/done -> idle
 const SLEEP_TIMEOUT = 5 * 60 * 1000;             // 5 minutes (idle -> sleep)
 const WINDOW_CLOSE_TIMEOUT = 10 * 60 * 1000;     // 10 minutes (sleep -> close window)
 const ALWAYS_ON_TOP_GRACE_PERIOD = 10 * 1000;    // 10 seconds (grace period before disabling always on top)
+
+// =============================================================================
+// Tray Icon
+// =============================================================================
+const TRAY_ICON_SIZE = 22;
 
 // =============================================================================
 // Character Settings
@@ -107,12 +113,16 @@ module.exports = {
   SNAP_DEBOUNCE,
   WINDOW_GAP,
   MAX_WINDOWS,
+  MAX_PROJECT_LIST,
 
   // Timeouts
   IDLE_TIMEOUT,
   SLEEP_TIMEOUT,
   WINDOW_CLOSE_TIMEOUT,
   ALWAYS_ON_TOP_GRACE_PERIOD,
+
+  // Tray Icon
+  TRAY_ICON_SIZE,
 
   // Character Settings
   DEFAULT_CHARACTER,

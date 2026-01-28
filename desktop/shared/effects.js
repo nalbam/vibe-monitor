@@ -237,7 +237,7 @@ function pseudoRandom(seed) {
 }
 
 // Draw matrix background effect (full area, movie style)
-export function drawMatrixBackground(animFrame, drawRect, size = 64, body = null) {
+export function drawMatrixBackground(animFrame, drawRect, size = 64, _body = null) {
   // Draw streams across entire area (character will be drawn on top)
   const streamCount = Math.floor(size / MATRIX_COLUMN_WIDTH);
   for (let i = 0; i < streamCount; i++) {

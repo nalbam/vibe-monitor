@@ -10,8 +10,8 @@
  */
 function setCorsHeaders(res, req) {
   const origin = req?.headers?.origin || '';
-  // Allow localhost origins only (with various port numbers)
-  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  // Allow localhost origins only (IPv4, IPv6, with various port numbers)
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
 
   if (isLocalhost) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -72,6 +72,7 @@ function parseJsonBody(req, maxSize) {
         const data = JSON.parse(body);
         resolve({ data, error: null, statusCode: null });
       } catch (e) {
+        console.error('JSON parse error:', e.message);
         resolve({ data: null, error: 'Invalid JSON', statusCode: 400 });
       }
     });

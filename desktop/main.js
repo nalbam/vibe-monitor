@@ -8,7 +8,7 @@
  * - HttpServer: HTTP API server
  */
 
-const { app, ipcMain, BrowserWindow, Menu, dialog } = require('electron');
+const { app, ipcMain, BrowserWindow, dialog } = require('electron');
 const { exec } = require('child_process');
 
 // Modules
@@ -183,7 +183,7 @@ app.whenReady().then(() => {
     if (err.code === 'EADDRINUSE') {
       dialog.showErrorBox(
         'Vibe Monitor - Port Conflict',
-        `Port 19280 is already in use.\nAnother instance may be running.\n\nThe app will continue but HTTP API won't work.`
+        'Port 19280 is already in use.\nAnother instance may be running.\n\nThe app will continue but HTTP API won\'t work.'
       );
     }
   };
