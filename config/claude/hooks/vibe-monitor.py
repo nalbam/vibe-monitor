@@ -136,12 +136,15 @@ def build_payload(state, tool, project):
 
     # Terminal session ID (iTerm2 or Ghostty)
     terminal_id = ""
-    if os.environ.get("ITERM_SESSION_ID"):
+    iterm_session = os.environ.get("ITERM_SESSION_ID")
+    ghostty_pid = os.environ.get("GHOSTTY_PID")
+    
+    if iterm_session:
         # iTerm2 session ID format: w0t4p0:UUID
-        terminal_id = "iterm2:" + os.environ.get("ITERM_SESSION_ID", "")
-    elif os.environ.get("GHOSTTY_PID"):
+        terminal_id = "iterm2:" + iterm_session
+    elif ghostty_pid:
         # Ghostty process ID
-        terminal_id = "ghostty:" + os.environ.get("GHOSTTY_PID", "")
+        terminal_id = "ghostty:" + ghostty_pid
 
     return json.dumps({
         "state": state,

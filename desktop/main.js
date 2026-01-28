@@ -180,23 +180,12 @@ ipcMain.handle('focus-terminal', async (event) => {
       return { success: false, reason: 'invalid-ghostty-pid' };
     }
 
-    // AppleScript to activate Ghostty and focus the window/tab with the given PID
+    // For Ghostty, we can only activate the application
+    // Ghostty doesn't expose session/PID information via AppleScript
+    // so we can't programmatically switch to a specific tab like iTerm2
     const script = `
       tell application "Ghostty"
         activate
-        set targetPID to ${pid}
-        repeat with aWindow in windows
-          repeat with aTab in tabs of aWindow
-            -- Get the tty for this tab (Ghostty specific)
-            try
-              -- Focus the tab to check if it's the right one
-              -- Ghostty doesn't expose PID via AppleScript, so we'll just activate the app
-              -- and let the user manually navigate if needed
-              return "activated"
-            end try
-          end repeat
-        end repeat
-        return "activated"
       end tell
     `;
 
@@ -205,23 +194,9 @@ ipcMain.handle('focus-terminal', async (event) => {
         if (error) {
           resolve({ success: false, reason: 'applescript-error', error: error.message });
         } else {
-          // For Ghostty, we can only activate the app, not switch to specific tab via AppleScript
-          // Alternative: Use Ghostty CLI if available
-          exec('which ghostty', (err, ghosttyPath) => {
-            if (!err && ghosttyPath.trim()) {
-              // Try using Ghostty CLI to focus the window
-              exec(`ghostty +focus-pid ${pid}`, (cliErr) => {
-                if (cliErr) {
-                  // CLI command not supported, just return activated
-                  resolve({ success: true, reason: 'activated', note: 'app-activated-only' });
-                } else {
-                  resolve({ success: true, reason: 'ok' });
-                }
-              });
-            } else {
-              resolve({ success: true, reason: 'activated', note: 'app-activated-only' });
-            }
-          });
+          // Successfully activated Ghostty app
+          // Note: User will need to manually navigate to the correct tab
+          resolve({ success: true, reason: 'activated', note: 'app-activated-only' });
         }
       });
     });
