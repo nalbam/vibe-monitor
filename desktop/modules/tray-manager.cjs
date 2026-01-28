@@ -6,7 +6,8 @@ const { Tray, Menu, nativeImage, BrowserWindow } = require('electron');
 const { createCanvas } = require('canvas');
 const {
   STATE_COLORS, CHARACTER_CONFIG, DEFAULT_CHARACTER,
-  HTTP_PORT, LOCK_MODES, ALWAYS_ON_TOP_MODES
+  HTTP_PORT, LOCK_MODES, ALWAYS_ON_TOP_MODES,
+  VALID_STATES, CHARACTER_NAMES
 } = require('../shared/config.cjs');
 
 const COLOR_EYE = '#000000';
@@ -134,12 +135,44 @@ class TrayManager {
 
     const items = projectIds.map(projectId => {
       const state = this.windowManager.getState(projectId);
-      const stateLabel = state ? state.state : 'unknown';
+      const currentState = state ? state.state : 'idle';
+      const currentCharacter = state ? state.character : DEFAULT_CHARACTER;
       return {
-        label: `${projectId} (${stateLabel})`,
+        label: `${projectId} (${currentState})`,
         submenu: [
           { label: 'Show', click: () => this.windowManager.showWindow(projectId) },
-          { label: 'Close', click: () => this.windowManager.closeWindow(projectId) }
+          { label: 'Close', click: () => this.windowManager.closeWindow(projectId) },
+          { type: 'separator' },
+          {
+            label: 'State',
+            submenu: VALID_STATES.map(s => ({
+              label: s,
+              type: 'radio',
+              checked: currentState === s,
+              click: () => {
+                const newState = { ...state, state: s };
+                this.windowManager.updateState(projectId, newState);
+                this.windowManager.sendToWindow(projectId, 'state-update', newState);
+                this.updateMenu();
+                this.updateIcon();
+              }
+            }))
+          },
+          {
+            label: 'Character',
+            submenu: CHARACTER_NAMES.map(c => ({
+              label: c,
+              type: 'radio',
+              checked: currentCharacter === c,
+              click: () => {
+                const newState = { ...state, character: c };
+                this.windowManager.updateState(projectId, newState);
+                this.windowManager.sendToWindow(projectId, 'state-update', newState);
+                this.updateMenu();
+                this.updateIcon();
+              }
+            }))
+          }
         ]
       };
     });
