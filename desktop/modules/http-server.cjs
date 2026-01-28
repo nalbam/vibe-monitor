@@ -5,13 +5,9 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
-const { HTTP_PORT, MAX_PAYLOAD_SIZE, MAX_WINDOWS } = require('../shared/config.cjs');
+const { HTTP_PORT, MAX_PAYLOAD_SIZE, MAX_WINDOWS, STATS_CACHE_PATH } = require('../shared/config.cjs');
 const { setCorsHeaders, sendJson, sendError, parseJsonBody } = require('./http-utils.cjs');
 const { validateStatusPayload } = require('./validators.cjs');
-
-// Stats cache file path
-const STATS_CACHE_PATH = path.join(os.homedir(), '.claude', 'stats-cache.json');
 
 // Rate limiting configuration
 const RATE_LIMIT = 100;       // Max requests per window

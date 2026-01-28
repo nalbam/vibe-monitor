@@ -5,12 +5,20 @@
  * Constants are in constants.cjs - re-exported here for convenience
  */
 
+const path = require('path');
+const os = require('os');
+
 // JSON require (CommonJS) - Single source of truth
 const states = require('./data/states.json');
 const characters = require('./data/characters.json');
 
 // Re-export all constants for backward compatibility
 const constants = require('./constants.cjs');
+
+// =============================================================================
+// Paths
+// =============================================================================
+const STATS_CACHE_PATH = path.join(os.homedir(), '.claude', 'stats-cache.json');
 
 // =============================================================================
 // State Data (from JSON)
@@ -31,6 +39,9 @@ const CHARACTER_NAMES = Object.keys(characters);
 module.exports = {
   // Re-export all constants
   ...constants,
+
+  // Paths
+  STATS_CACHE_PATH,
 
   // State data
   states,

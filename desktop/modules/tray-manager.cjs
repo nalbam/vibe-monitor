@@ -4,10 +4,12 @@
 
 const { Tray, Menu, nativeImage, BrowserWindow } = require('electron');
 const { createCanvas } = require('canvas');
+const fs = require('fs');
 const {
   STATE_COLORS, CHARACTER_CONFIG, DEFAULT_CHARACTER,
   HTTP_PORT, LOCK_MODES, ALWAYS_ON_TOP_MODES,
-  VALID_STATES, CHARACTER_NAMES, TRAY_ICON_SIZE
+  VALID_STATES, CHARACTER_NAMES, TRAY_ICON_SIZE,
+  STATS_CACHE_PATH
 } = require('../shared/config.cjs');
 
 const COLOR_EYE = '#000000';
@@ -365,6 +367,7 @@ class TrayManager {
       { type: 'separator' },
       {
         label: 'Claude Stats',
+        enabled: fs.existsSync(STATS_CACHE_PATH),
         click: () => this.openStatsWindow()
       },
       { type: 'separator' },
