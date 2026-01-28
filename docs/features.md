@@ -141,7 +141,7 @@ python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
 | `all` | All windows stay on top regardless of state |
 | `disabled` | No windows stay on top |
 
-When `active-only` is selected, inactive states (start, idle, done, sleep) disable always on top after a 1-minute grace period to reduce screen obstruction.
+When `active-only` is selected, inactive states (start, idle, done, sleep) disable always on top after a 10-second grace period to reduce screen obstruction.
 
 Change via system tray menu: Always on Top → Select mode
 
