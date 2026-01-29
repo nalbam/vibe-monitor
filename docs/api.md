@@ -39,6 +39,8 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | POST /lock, /unlock | ✓ | ✓ |
 | GET/POST /lock-mode | ✓ | ✓ |
 | GET/POST /window-mode | ✓ | - |
+| GET /stats | ✓ | - |
+| GET /stats/data | ✓ | - |
 | POST /reboot | - | ✓ |
 
 ## Status
@@ -224,6 +226,36 @@ Set lock mode (`first-project` or `on-thinking`).
 curl -X POST http://127.0.0.1:19280/lock-mode \
   -H "Content-Type: application/json" \
   -d '{"mode":"first-project"}'
+```
+
+---
+
+## Statistics (Desktop only)
+
+### GET /stats
+
+Serve the stats dashboard HTML page.
+
+```bash
+# Open in browser
+open http://127.0.0.1:19280/stats
+```
+
+### GET /stats/data
+
+Get stats data from `~/.claude/stats-cache.json`.
+
+```bash
+curl http://127.0.0.1:19280/stats/data
+```
+
+**Response:**
+```json
+{
+  "sessions": [...],
+  "totalTokens": 12345,
+  "lastUpdated": "2025-01-29T12:00:00Z"
+}
 ```
 
 ---

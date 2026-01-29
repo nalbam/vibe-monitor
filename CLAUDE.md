@@ -98,6 +98,8 @@ Two modes available (`multi` or `single`):
 | `GET /lock-mode` | Get current lock mode |
 | `POST /lock-mode` | Set lock mode |
 | `GET /debug` | Window/display debug info (Desktop only) |
+| `GET /stats` | Stats dashboard page (Desktop only) |
+| `GET /stats/data` | Stats data from cache (Desktop only) |
 | `POST /quit` | Quit application (Desktop only) |
 | `POST /reboot` | Reboot device (ESP32 only) |
 
