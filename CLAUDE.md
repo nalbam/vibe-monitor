@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Real-time status monitor for AI coding assistants (Claude Code, Kiro IDE/CLI) with pixel art character.
 
 **Platforms:**
-- Desktop App (Electron) - Primary, recommended for daily use
-- ESP32 Hardware (172×320 LCD) - Dedicated display device
+- ESP32 Hardware (172×320 LCD) - Primary, always-on desk companion
+- Desktop App (Electron) - Alternative for non-hardware users
 - Web Simulator - Browser-based testing/debugging only (not for production)
 
 ## Development Environment

@@ -29,9 +29,9 @@ See at a glance what your AI coding assistant is doing — thinking, writing cod
 
 | Platform | Description | Best For |
 |----------|-------------|----------|
-| **Desktop App** | Electron app with system tray | Daily use, always-visible monitoring |
+| **ESP32 Hardware** | Dedicated LCD display (172×320) | Primary, always-on desk companion |
+| **Desktop App** | Electron app with system tray | Alternative for non-hardware users |
 | **Web Simulator** | Browser-based preview | Testing, no installation |
-| **ESP32 Hardware** | Dedicated LCD display | Hardware enthusiasts |
 
 ## Preview
 
