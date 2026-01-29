@@ -647,28 +647,29 @@ void updateAnimation() {
     lastCharY = newCharY;
   }
 
-  // State-specific animations (only redraw if needed)
+  // State-specific animations (only redraw when animation frame changes)
   if (currentState == STATE_THINKING || currentState == STATE_PLANNING) {
-    // Update loading dots (slow) and thinking animation
+    // Update loading dots (slow)
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);
-    if (!positionChanged) {
-      // Only redraw character for animation if position didn't change
+    // Thought bubble changes every 12 frames - only redraw then
+    if (!positionChanged && (animFrame % 12 == 0)) {
       drawCharacter(tft, newCharX, newCharY, EYE_THINKING, bgColor, character);
     }
   } else if (currentState == STATE_WORKING) {
     // Update loading dots and matrix effect
     drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);
-    if (!positionChanged) {
+    // Matrix rain needs frequent updates, but limit to every 2 frames
+    if (!positionChanged && (animFrame % 2 == 0)) {
       drawCharacter(tft, newCharX, newCharY, EYE_FOCUSED, bgColor, character);
     }
   } else if (currentState == STATE_START) {
-    // Update sparkle animation (redraw for sparkle effect)
-    if (!positionChanged) {
+    // Sparkle changes every 4 frames - only redraw then
+    if (!positionChanged && (animFrame % 4 == 0)) {
       drawCharacter(tft, newCharX, newCharY, EYE_SPARKLE, bgColor, character);
     }
   } else if (currentState == STATE_SLEEP) {
-    // Update Zzz animation (redraw for blink effect)
-    if (!positionChanged) {
+    // Zzz changes every 20 frames - only redraw then
+    if (!positionChanged && (animFrame % 20 == 0)) {
       drawCharacter(tft, newCharX, newCharY, EYE_SLEEP, bgColor, character);
     }
   }
