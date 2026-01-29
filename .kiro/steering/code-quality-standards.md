@@ -38,7 +38,7 @@ const COLOR_BG_WORKING = '#0066CC';
 
 #### 3. 함수 구조
 ```javascript
-// ✅ 단일 책임 원칙
+// ✅ 단일 책임 원칙 (SRP)
 function createTrayIcon(state, character = 'clawd') {
   const cacheKey = `${state}-${character}`;
 
@@ -67,6 +67,65 @@ function updateState(data) {
   } catch (error) {
     console.error('State update failed:', error);
   }
+}
+
+// ✅ 불변성 유지 (Immutability)
+function updateWindowState(projectId, newState) {
+  const entry = this.windows.get(projectId);
+  if (!entry) return false;
+
+  // 새 객체 생성으로 불변성 유지
+  entry.state = { ...newState };
+  return true;
+}
+
+// ✅ 조기 반환 (Early Return)
+function validatePayload(data) {
+  if (!data) return { valid: false, error: 'No data' };
+  if (!data.state) return { valid: false, error: 'State required' };
+  if (!VALID_STATES.includes(data.state)) {
+    return { valid: false, error: 'Invalid state' };
+  }
+  return { valid: true, data };
+}
+```
+
+#### 4. 모듈 패턴
+```javascript
+// ✅ 클래스 기반 모듈 (CommonJS)
+class StateManager {
+  constructor() {
+    this.stateTimeoutTimers = new Map();
+    this.windowCloseTimers = new Map();
+    this.onStateTimeout = null;
+    this.onWindowCloseTimeout = null;
+  }
+
+  clearStateTimeout(projectId) {
+    const timer = this.stateTimeoutTimers.get(projectId);
+    if (timer) {
+      clearTimeout(timer);
+      this.stateTimeoutTimers.delete(projectId);
+    }
+  }
+
+  cleanup() {
+    for (const [, timer] of this.stateTimeoutTimers) {
+      clearTimeout(timer);
+    }
+    this.stateTimeoutTimers.clear();
+  }
+}
+
+module.exports = { StateManager };
+
+// ✅ ES Module 내보내기
+export function drawCharacter(eyeType, currentState, currentCharacter, animFrame) {
+  // 렌더링 로직
+}
+
+export function initRenderer(canvasCtx) {
+  // 초기화 로직
 }
 ```
 
@@ -293,6 +352,82 @@ app.on('before-quit', () => {
   // 캐시 정리
   trayIconCache.clear();
 });
+
+// ✅ 타이머 정리
+class StateManager {
+  cleanupProject(projectId) {
+    this.clearStateTimeout(projectId);
+    this.clearWindowCloseTimer(projectId);
+  }
+
+  cleanup() {
+    // 모든 타이머 정리
+    for (const [, timer] of this.stateTimeoutTimers) {
+      clearTimeout(timer);
+    }
+    this.stateTimeoutTimers.clear();
+
+    for (const [, timer] of this.windowCloseTimers) {
+      clearTimeout(timer);
+    }
+    this.windowCloseTimers.clear();
+  }
+}
+
+// ✅ 윈도우 재사용 (단일 모드)
+createWindow(projectId) {
+  // 기존 윈도우 재사용
+  if (this.windows.size > 0) {
+    const [oldProjectId, entry] = this.windows.entries().next().value;
+
+    // 타이머 정리
+    this.clearAlwaysOnTopTimer(oldProjectId);
+    const snapTimer = this.snapTimers.get(oldProjectId);
+    if (snapTimer) {
+      clearTimeout(snapTimer);
+      this.snapTimers.delete(oldProjectId);
+    }
+
+    // 윈도우 재사용
+    this.windows.delete(oldProjectId);
+    this.windows.set(projectId, entry);
+    entry.currentProjectId = projectId;
+    entry.state = { project: projectId };
+
+    return { window: entry.window, switchedProject: oldProjectId };
+  }
+}
+```
+
+### 4. Rate Limiting
+```javascript
+// ✅ IP 기반 Rate Limiting
+class HttpServer {
+  constructor() {
+    this.requestCounts = new Map();  // IP -> { count, resetTime }
+  }
+
+  checkRateLimit(ip) {
+    const now = Date.now();
+    const record = this.requestCounts.get(ip);
+
+    if (!record || now > record.resetTime) {
+      // 새 윈도우 또는 만료 - 카운터 리셋
+      this.requestCounts.set(ip, {
+        count: 1,
+        resetTime: now + RATE_WINDOW_MS
+      });
+      return true;
+    }
+
+    if (record.count >= RATE_LIMIT) {
+      return false;  // Rate limited
+    }
+
+    record.count++;
+    return true;
+  }
+}
 ```
 
 ## 테스트 가능한 코드 작성
@@ -338,6 +473,72 @@ function createHttpServer(port, updateStateCallback) {
 
 // 사용
 const server = createHttpServer(HTTP_PORT, updateState);
+
+// ✅ 콜백 패턴으로 모듈 간 결합도 낮추기
+class StateManager {
+  constructor() {
+    this.onStateTimeout = null;      // 콜백
+    this.onWindowCloseTimeout = null; // 콜백
+  }
+}
+
+// main.js에서 콜백 설정
+stateManager.onStateTimeout = (projectId, newState) => {
+  const existingState = windowManager.getState(projectId);
+  if (!existingState) return;
+
+  const stateData = { ...existingState, state: newState };
+  windowManager.updateState(projectId, stateData);
+  windowManager.sendToWindow(projectId, 'state-update', stateData);
+};
+```
+
+### 3. 입력 검증
+```javascript
+// ✅ 페이로드 검증 함수
+function validateStatusPayload(data) {
+  if (!data || typeof data !== 'object') {
+    return { valid: false, error: 'Invalid data format' };
+  }
+
+  // 필드별 검증
+  if (data.project && data.project.length > 100) {
+    return { valid: false, error: 'Project name too long' };
+  }
+
+  if (data.tool && data.tool.length > 50) {
+    return { valid: false, error: 'Tool name too long' };
+  }
+
+  if (data.memory && !/^\d+%$/.test(data.memory)) {
+    return { valid: false, error: 'Invalid memory format' };
+  }
+
+  if (data.state && !VALID_STATES.includes(data.state)) {
+    return { valid: false, error: 'Invalid state' };
+  }
+
+  return { valid: true };
+}
+
+// ✅ 터미널 ID 검증 (보안)
+function validateTerminalId(terminalId) {
+  const parts = terminalId.split(':');
+  if (parts.length < 2) return false;
+
+  const terminalType = parts[0];
+
+  if (terminalType === 'iterm2') {
+    const uuid = parts.length === 3 ? parts[2] : parts[1];
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return UUID_REGEX.test(uuid);
+  } else if (terminalType === 'ghostty') {
+    const pid = parts[1];
+    return /^\d+$/.test(pid);
+  }
+
+  return false;
+}
 ```
 
 ## 문서화 표준
@@ -376,11 +577,198 @@ int getFloatOffsetX() {
  *   "event": "PreToolUse",   // 선택: 이벤트 이름
  *   "tool": "Bash",          // 선택: 도구 이름
  *   "project": "my-project", // 선택: 프로젝트 이름
- *   "character": "clawd"     // 선택: 캐릭터
+ *   "character": "clawd",    // 선택: 캐릭터
+ *   "model": "opus",         // 선택: 모델 이름
+ *   "memory": "45%",         // 선택: 메모리 사용량
+ *   "terminalId": "iterm2:w0t4p0:UUID" // 선택: 터미널 ID
  * }
  *
- * Response: { "success": true, "state": "working" }
+ * Response: { "success": true, "state": "working", "windowCount": 1 }
  */
+```
+
+### 4. 모듈 문서화
+```javascript
+/**
+ * Multi-window management for Vibe Monitor
+ *
+ * Manages multiple windows, one per project
+ * Supports both multi-window and single-window modes
+ *
+ * Window Modes:
+ * - multi: One window per project (max 5)
+ * - single: One window with project lock support
+ *
+ * Lock Modes (single mode only):
+ * - first-project: First incoming project is automatically locked
+ * - on-thinking: Lock when entering thinking state
+ *
+ * Always on Top Modes:
+ * - active-only: Only active states stay on top (default)
+ * - all: All windows stay on top
+ * - disabled: No windows stay on top
+ */
+class MultiWindowManager {
+  // ...
+}
+```
+
+## 보안 고려사항
+
+### 1. 입력 검증 및 살균
+```javascript
+// ✅ UUID 형식 검증 (Command Injection 방지)
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if (!UUID_REGEX.test(uuid)) {
+  return { success: false, reason: 'invalid-uuid-format' };
+}
+
+// ✅ AppleScript 문자열 이스케이프
+const script = `tell application "iTerm2"
+  activate
+  // ...
+end tell`;
+exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, callback);
+
+// ✅ 페이로드 크기 제한
+const MAX_PAYLOAD_SIZE = 10 * 1024; // 10KB
+
+async function parseJsonBody(req, maxSize) {
+  let body = '';
+  let size = 0;
+
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > maxSize) {
+      return { error: 'Payload too large', statusCode: 413 };
+    }
+    body += chunk;
+  }
+
+  try {
+    const data = JSON.parse(body);
+    return { data };
+  } catch (e) {
+    return { error: 'Invalid JSON', statusCode: 400 };
+  }
+}
+```
+
+### 2. CORS 및 Rate Limiting
+```javascript
+// ✅ CORS 헤더 (localhost만 허용)
+function setCorsHeaders(res, req) {
+  const origin = req.headers.origin;
+  if (origin && origin.startsWith('http://localhost')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:19280');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+// ✅ Rate Limiting
+const RATE_LIMIT = 100;       // Max requests per window
+const RATE_WINDOW_MS = 60000; // 1 minute
+
+if (!this.checkRateLimit(ip)) {
+  sendError(res, 429, 'Too many requests');
+  return;
+}
+```
+
+### 3. 리소스 제한
+```javascript
+// ✅ 최대 윈도우 수 제한
+const MAX_WINDOWS = 5;
+
+if (this.windows.size >= MAX_WINDOWS) {
+  return { window: null, blocked: false };
+}
+
+// ✅ 프로젝트 목록 크기 제한 (LRU)
+const MAX_PROJECT_LIST = 20;
+
+addProjectToList(project) {
+  // LRU 방식으로 관리
+  const existingIndex = this.projectList.indexOf(project);
+  if (existingIndex !== -1) {
+    this.projectList.splice(existingIndex, 1);
+  }
+
+  this.projectList.push(project);
+
+  // 최대 크기 제한
+  while (this.projectList.length > MAX_PROJECT_LIST) {
+    this.projectList.shift();
+  }
+}
+```
+
+## 테스트 작성 가이드
+
+### 1. 단위 테스트
+```javascript
+// ✅ Jest 테스트 예제
+describe('validators', () => {
+  describe('validateStatusPayload', () => {
+    it('should accept valid payload', () => {
+      const payload = {
+        state: 'working',
+        project: 'test',
+        tool: 'Bash'
+      };
+      const result = validateStatusPayload(payload);
+      expect(result.valid).toBe(true);
+    });
+
+    it('should reject invalid state', () => {
+      const payload = { state: 'invalid' };
+      const result = validateStatusPayload(payload);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('Invalid state');
+    });
+
+    it('should reject too long project name', () => {
+      const payload = {
+        state: 'working',
+        project: 'a'.repeat(101)
+      };
+      const result = validateStatusPayload(payload);
+      expect(result.valid).toBe(false);
+    });
+  });
+});
+```
+
+### 2. 통합 테스트
+```javascript
+// ✅ HTTP API 테스트
+describe('HTTP Server', () => {
+  let server;
+
+  beforeAll(() => {
+    server = new HttpServer(stateManager, windowManager, app);
+    server.start();
+  });
+
+  afterAll(() => {
+    server.stop();
+  });
+
+  it('should update status', async () => {
+    const response = await fetch('http://127.0.0.1:19280/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: 'working', project: 'test' })
+    });
+
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.state).toBe('working');
+  });
+});
 ```
 
 이러한 표준을 따라 일관성 있고 유지보수 가능한 코드를 작성하세요.
