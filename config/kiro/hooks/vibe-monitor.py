@@ -4,6 +4,7 @@ Vibe Monitor Hook for Kiro IDE
 Desktop App + ESP32 (USB Serial / HTTP)
 """
 
+import glob
 import json
 import os
 import sys
@@ -51,6 +52,25 @@ def debug_log(msg):
     """Print debug message to stderr."""
     if DEBUG:
         print(f"[DEBUG] {msg}", file=sys.stderr)
+
+def resolve_serial_port(port_pattern):
+    """Resolve serial port pattern with wildcard support.
+
+    If port_pattern contains '*', use glob to find the first matching device.
+    Returns the resolved port path or None if not found.
+    """
+    if not port_pattern:
+        return None
+
+    if '*' in port_pattern:
+        matches = sorted(glob.glob(port_pattern))
+        if matches:
+            debug_log(f"Found serial ports: {matches}, using: {matches[0]}")
+            return matches[0]
+        debug_log(f"No serial port found matching: {port_pattern}")
+        return None
+
+    return port_pattern
 
 # ============================================================================
 # State Functions
@@ -249,13 +269,17 @@ def send_to_all(payload, is_start=False):
         else:
             debug_log("Desktop App failed")
 
-    # Send to ESP32 USB Serial
+    # Send to ESP32 USB Serial (supports wildcard patterns like /dev/cu.usbmodem*)
     if serial_port:
-        debug_log(f"Trying USB serial: {serial_port}")
-        if send_serial(serial_port, payload):
-            debug_log("Sent via USB serial")
+        resolved_port = resolve_serial_port(serial_port)
+        if resolved_port:
+            debug_log(f"Trying USB serial: {resolved_port}")
+            if send_serial(resolved_port, payload):
+                debug_log("Sent via USB serial")
+            else:
+                debug_log("USB serial failed")
         else:
-            debug_log("USB serial failed")
+            debug_log(f"No serial port found for pattern: {serial_port}")
 
     # Send to ESP32 HTTP
     if esp32_url:
