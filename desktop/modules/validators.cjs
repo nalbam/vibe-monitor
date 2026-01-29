@@ -8,7 +8,6 @@ const { VALID_STATES, CHARACTER_NAMES } = require('../shared/config.cjs');
 const PROJECT_MAX_LENGTH = 100;
 const TOOL_MAX_LENGTH = 50;
 const MODEL_MAX_LENGTH = 50;
-const EVENT_MAX_LENGTH = 50;
 const MEMORY_PATTERN = /^(100|[1-9]?\d)%$/;  // 0-100 only
 
 /**
@@ -114,24 +113,6 @@ function validateModel(model) {
 }
 
 /**
- * Validate event name
- * @param {string} event
- * @returns {{valid: boolean, error: string|null}}
- */
-function validateEvent(event) {
-  if (event === undefined || event === '') {
-    return { valid: true, error: null };
-  }
-  if (typeof event !== 'string') {
-    return { valid: false, error: 'Event must be a string' };
-  }
-  if (event.length > EVENT_MAX_LENGTH) {
-    return { valid: false, error: `Event name exceeds ${EVENT_MAX_LENGTH} characters` };
-  }
-  return { valid: true, error: null };
-}
-
-/**
  * Validate status payload
  * @param {object} data
  * @returns {{valid: boolean, error: string|null}}
@@ -155,9 +136,6 @@ function validateStatusPayload(data) {
   const modelResult = validateModel(data.model);
   if (!modelResult.valid) return modelResult;
 
-  const eventResult = validateEvent(data.event);
-  if (!eventResult.valid) return eventResult;
-
   return { valid: true, error: null };
 }
 
@@ -168,6 +146,5 @@ module.exports = {
   validateMemory,
   validateTool,
   validateModel,
-  validateEvent,
   validateStatusPayload
 };

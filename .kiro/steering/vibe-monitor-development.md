@@ -264,7 +264,6 @@ curl -X POST http://127.0.0.1:19280/status \
   -H "Content-Type: application/json" \
   -d '{
     "state": "working",
-    "event": "PreToolUse",
     "tool": "Bash",
     "project": "my-project",
     "model": "opus",
@@ -376,8 +375,7 @@ echo '{"hook_event_name":"SessionStart","cwd":"/path/to/project"}' | \
   python3 ~/.claude/hooks/vibe-monitor.py
 
 # Kiro 훅 테스트
-echo '{"event":"promptSubmit","cwd":"/path/to/project"}' | \
-  python3 ~/.kiro/hooks/vibe-monitor.py
+python3 ~/.kiro/hooks/vibe-monitor.py promptSubmit
 
 # 디버그 모드
 DEBUG=1 python3 ~/.claude/hooks/vibe-monitor.py
@@ -470,8 +468,7 @@ echo '{"hook_event_name":"SessionStart","cwd":"/path/to/project"}' | \
   DEBUG=1 python3 ~/.claude/hooks/vibe-monitor.py
 
 # 훅 스크립트 디버그 (Kiro)
-echo '{"event":"promptSubmit","cwd":"/path/to/project"}' | \
-  DEBUG=1 python3 ~/.kiro/hooks/vibe-monitor.py
+DEBUG=1 python3 ~/.kiro/hooks/vibe-monitor.py promptSubmit
 
 # ESP32 시리얼 모니터
 screen /dev/cu.usbmodem1101 115200

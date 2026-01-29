@@ -57,7 +57,7 @@ open simulator/index.html
 - **Animation**: `animFrame % N` approach (100ms tick)
 - **Floating**: Cosine/Sine wave offset (X: ±3px, Y: ±5px, ~3.2s cycle)
 - **Working text**: Tool-based random selection via `getWorkingText(tool)`
-- **JSON fields**: `{"state", "event", "tool", "project", "model", "memory", "character", "terminalId"}`
+- **JSON fields**: `{"state", "tool", "project", "model", "memory", "character", "terminalId"}`
 - **Characters**: `clawd` (orange), `kiro` (white ghost)
 - **Memory hidden on start**: Memory not displayed during `start` state
 - **Project change resets**: Model/memory cleared when project changes

@@ -22,7 +22,7 @@ Claude Code uses **hooks** and **statusline** to send data to Vibe Monitor.
 
 | Source | Data Provided | JSON Fields |
 |--------|---------------|-------------|
-| **Hook** | state, event, tool, project | `.hook_event_name`, `.tool_name`, `.cwd` |
+| **Hook** | state, tool, project | `.hook_event_name`, `.tool_name`, `.cwd` |
 | **Statusline** | model, memory | `.model.display_name`, `.context_window.used_percentage` |
 
 ### 1. Copy scripts

@@ -18,7 +18,6 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | `project` | 100 chars | String |
 | `tool` | 50 chars | String |
 | `model` | 50 chars | String |
-| `event` | 50 chars | String |
 | `memory` | - | `N%` where N is 0-100 |
 | `state` | - | One of valid states |
 | `character` | - | `clawd` or `kiro` |
@@ -60,7 +59,6 @@ curl -X POST http://127.0.0.1:19280/status \
 | Field | Type | Description |
 |-------|------|-------------|
 | `state` | string | `start`, `idle`, `thinking`, `planning`, `working`, `notification`, `done`, `sleep` |
-| `event` | string | `SessionStart`, `PreToolUse`, `Stop`, etc. |
 | `tool` | string | Tool name (e.g., `Bash`, `Read`, `Edit`) |
 | `project` | string | Project name |
 | `model` | string | Model name (e.g., `opus`, `sonnet`) |

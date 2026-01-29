@@ -574,7 +574,6 @@ int getFloatOffsetX() {
  * Request Body:
  * {
  *   "state": "working",      // 필수: 상태
- *   "event": "PreToolUse",   // 선택: 이벤트 이름
  *   "tool": "Bash",          // 선택: 도구 이름
  *   "project": "my-project", // 선택: 프로젝트 이름
  *   "character": "clawd",    // 선택: 캐릭터
