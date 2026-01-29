@@ -5,7 +5,7 @@
 - [Integration Guide](integration.md) - Claude Code & Kiro setup (manual)
 - [Features](features.md) - States, animations, window modes, project lock
 - [HTTP API Reference](api.md) - All API endpoints
-- [ESP32 Setup](esp32.md) - Hardware setup (experimental)
+- [ESP32 Setup](esp32.md) - Hardware setup
 
 ## Quick Links
 

@@ -1,6 +1,4 @@
-# ESP32 Setup (Experimental)
-
-> **Warning:** ESP32 hardware support is experimental and not fully tested.
+# ESP32 Setup
 
 ## Hardware
 

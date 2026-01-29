@@ -31,7 +31,7 @@ See at a glance what your AI coding assistant is doing — thinking, writing cod
 |----------|-------------|----------|
 | **Desktop App** | Electron app with system tray | Daily use, always-visible monitoring |
 | **Web Simulator** | Browser-based preview | Testing, no installation |
-| **ESP32 Hardware** | Dedicated LCD display (experimental) | Hardware enthusiasts |
+| **ESP32 Hardware** | Dedicated LCD display | Hardware enthusiasts |
 
 ## Preview
 
@@ -176,7 +176,7 @@ See [Features](docs/features.md) for lock modes and CLI commands.
 - **Snap to corner** - Auto-snaps near screen edges
 - **Click to focus** - Switch to iTerm2/Ghostty tab (macOS)
 
-## ESP32 (Experimental)
+## ESP32 Hardware
 
 See [ESP32 Setup](docs/esp32.md) for hardware setup instructions.
 
