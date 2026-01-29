@@ -164,6 +164,14 @@ enum EyeType {
 // Animation frame counter
 extern int animFrame;
 
+// Forward declarations for functions called before definition
+void drawMatrixBackground(TFT_eSPI &tft, int x, int y, int frame, int size, int bodyX, int bodyY, int bodyW, int bodyH);
+void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeometry* character);
+void drawQuestionMark(TFT_eSPI &tft, int x, int y);
+void drawSparkle(TFT_eSPI &tft, int x, int y, uint16_t sparkleColor);
+void drawThoughtBubble(TFT_eSPI &tft, int x, int y, int frame, uint16_t color);
+void drawZzz(TFT_eSPI &tft, int x, int y, int frame, uint16_t color);
+
 // Thinking state texts (random selection)
 const char* THINKING_TEXTS[] = {"Thinking", "Hmm...", "Let me see"};
 

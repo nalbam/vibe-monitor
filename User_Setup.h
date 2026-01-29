@@ -25,6 +25,10 @@
 #define TFT_RST  21
 #define TFT_BL   22  // Backlight
 
+// ESP32-C6 specific settings
+// ESP32-C6 uses FSPI (SPI2) as the general purpose SPI
+#define USE_FSPI_PORT
+
 // SPI settings
 #define SPI_FREQUENCY  40000000
 #define SPI_READ_FREQUENCY  20000000

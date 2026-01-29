@@ -6,7 +6,8 @@
  * USB Serial + HTTP support
  */
 
-#include <TFT_eSPI.h>
+// Use LovyanGFX instead of TFT_eSPI for ESP32-C6 compatibility
+#include "TFT_Compat.h"
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include "sprites.h"
@@ -24,7 +25,7 @@ const char* password = WIFI_PASSWORD;
 WebServer server(80);
 #endif
 
-TFT_eSPI tft = TFT_eSPI();
+// tft instance is defined in TFT_Compat.h
 
 // Screen size
 #define SCREEN_WIDTH  172
