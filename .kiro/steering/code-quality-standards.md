@@ -295,8 +295,8 @@ send_serial() {
 }
 
 # ✅ 조건부 실행
-if [ -n "${VIBE_MONITOR_URL}" ]; then
-  if send_http "${VIBE_MONITOR_URL}" "$payload"; then
+if [ -n "${VIBEMON_DESKTOP_URL}" ]; then
+  if send_http "${VIBEMON_DESKTOP_URL}" "$payload"; then
     debug_log "Sent to Desktop App"
   else
     debug_log "Desktop App failed"

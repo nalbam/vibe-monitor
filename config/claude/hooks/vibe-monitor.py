@@ -100,7 +100,7 @@ def parse_json_field(data, field, default=""):
 
 def get_cache_path():
     """Get the cache file path."""
-    cache_path = os.environ.get("VIBE_MONITOR_CACHE", "~/.claude/statusline-cache.json")
+    cache_path = os.environ.get("VIBEMON_CACHE_PATH", "~/.claude/statusline-cache.json")
     return os.path.expanduser(cache_path)
 
 def get_project_name(cwd, transcript_path):
@@ -264,9 +264,9 @@ def launch_desktop():
 
 def send_lock(project):
     """Lock the monitor to a specific project."""
-    url = os.environ.get("VIBE_MONITOR_URL")
+    url = os.environ.get("VIBEMON_DESKTOP_URL")
     if not url:
-        debug_log("VIBE_MONITOR_URL not set")
+        debug_log("VIBEMON_DESKTOP_URL not set")
         return False
 
     debug_log(f"Locking project: {project}")
@@ -285,9 +285,9 @@ def send_lock(project):
 
 def send_unlock():
     """Unlock the monitor."""
-    url = os.environ.get("VIBE_MONITOR_URL")
+    url = os.environ.get("VIBEMON_DESKTOP_URL")
     if not url:
-        debug_log("VIBE_MONITOR_URL not set")
+        debug_log("VIBEMON_DESKTOP_URL not set")
         return False
 
     debug_log("Unlocking")
@@ -300,9 +300,9 @@ def send_unlock():
 
 def get_status():
     """Get current status from monitor."""
-    url = os.environ.get("VIBE_MONITOR_URL")
+    url = os.environ.get("VIBEMON_DESKTOP_URL")
     if not url:
-        debug_log("VIBE_MONITOR_URL not set")
+        debug_log("VIBEMON_DESKTOP_URL not set")
         return False
 
     try:
@@ -314,9 +314,9 @@ def get_status():
 
 def get_lock_mode():
     """Get current lock mode from monitor."""
-    url = os.environ.get("VIBE_MONITOR_URL")
+    url = os.environ.get("VIBEMON_DESKTOP_URL")
     if not url:
-        debug_log("VIBE_MONITOR_URL not set")
+        debug_log("VIBEMON_DESKTOP_URL not set")
         return False
 
     try:
@@ -328,9 +328,9 @@ def get_lock_mode():
 
 def set_lock_mode(mode):
     """Set lock mode on monitor."""
-    url = os.environ.get("VIBE_MONITOR_URL")
+    url = os.environ.get("VIBEMON_DESKTOP_URL")
     if not url:
-        debug_log("VIBE_MONITOR_URL not set")
+        debug_log("VIBEMON_DESKTOP_URL not set")
         return False
 
     valid_modes = ["first-project", "on-thinking"]
@@ -359,9 +359,9 @@ def set_lock_mode(mode):
 
 def send_to_all(payload, is_start=False):
     """Send payload to all configured targets."""
-    url = os.environ.get("VIBE_MONITOR_URL")
-    serial_port = os.environ.get("ESP32_SERIAL_PORT")
-    esp32_url = os.environ.get("ESP32_HTTP_URL")
+    url = os.environ.get("VIBEMON_DESKTOP_URL")
+    serial_port = os.environ.get("VIBEMON_SERIAL_PORT")
+    esp32_url = os.environ.get("VIBEMON_ESP32_URL")
 
     # Launch Desktop App if not running (on start)
     if url and is_start:

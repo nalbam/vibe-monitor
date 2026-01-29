@@ -288,8 +288,8 @@ debug_log() {
 # ✅ 환경 정보 수집
 collect_debug_info() {
   debug_log "Environment:"
-  debug_log "  VIBE_MONITOR_URL: ${VIBE_MONITOR_URL:-unset}"
-  debug_log "  ESP32_SERIAL_PORT: ${ESP32_SERIAL_PORT:-unset}"
+  debug_log "  VIBEMON_DESKTOP_URL: ${VIBEMON_DESKTOP_URL:-unset}"
+  debug_log "  VIBEMON_SERIAL_PORT: ${VIBEMON_SERIAL_PORT:-unset}"
   debug_log "  PWD: $PWD"
   debug_log "  Script: ${BASH_SOURCE[0]}"
 }

@@ -51,20 +51,20 @@ Edit `~/.claude/.env.local`:
 
 # Cache file for project metadata (model, memory)
 # Default: ~/.claude/statusline-cache.json
-export VIBE_MONITOR_CACHE=""
+export VIBEMON_CACHE_PATH=""
 
 # Desktop App URL (auto-launches via npx if not running)
 # e.g., http://127.0.0.1:19280
-export VIBE_MONITOR_URL="http://127.0.0.1:19280"
+export VIBEMON_DESKTOP_URL="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 # e.g., /dev/cu.usbserial-0001, /dev/ttyUSB0
 # Check with: ls /dev/cu.* or ls /dev/tty*
-export ESP32_SERIAL_PORT=""
+export VIBEMON_SERIAL_PORT=""
 
 # ESP32 HTTP URL (optional)
 # e.g., http://192.168.1.100
-export ESP32_HTTP_URL=""
+export VIBEMON_ESP32_URL=""
 ```
 
 ### 3. Register in `~/.claude/settings.json`
@@ -140,10 +140,10 @@ Edit `~/.kiro/.env.local`:
 
 ```bash
 # Desktop App URL (auto-launches via npx if not running)
-export VIBE_MONITOR_URL="http://127.0.0.1:19280"
+export VIBEMON_DESKTOP_URL="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
-# export ESP32_SERIAL_PORT="/dev/cu.usbmodem1101"
+# export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem1101"
 ```
 
 ### Kiro Hook Events
@@ -161,9 +161,9 @@ export VIBE_MONITOR_URL="http://127.0.0.1:19280"
 ## Hook Priority
 
 The hook sends status updates in order:
-1. **Desktop App** - if `VIBE_MONITOR_URL` is set
-2. **ESP32 USB Serial** - if `ESP32_SERIAL_PORT` is set
-3. **ESP32 HTTP** - if `ESP32_HTTP_URL` is set
+1. **Desktop App** - if `VIBEMON_DESKTOP_URL` is set
+2. **ESP32 USB Serial** - if `VIBEMON_SERIAL_PORT` is set
+3. **ESP32 HTTP** - if `VIBEMON_ESP32_URL` is set
 
 ---
 

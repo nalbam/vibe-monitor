@@ -188,7 +188,7 @@ def get_context_usage(input_data):
 
 def get_cache_path():
     """Get the cache file path."""
-    cache_path = os.environ.get("VIBE_MONITOR_CACHE", "~/.claude/statusline-cache.json")
+    cache_path = os.environ.get("VIBEMON_CACHE_PATH", "~/.claude/statusline-cache.json")
     return os.path.expanduser(cache_path)
 
 def save_to_cache(project, model, memory):
