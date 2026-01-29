@@ -282,6 +282,19 @@ Get display and window debug information.
 curl http://127.0.0.1:19280/debug
 ```
 
+**Response:**
+```json
+{
+  "primaryDisplay": {"bounds": {"x": 0, "y": 0, "width": 1920, "height": 1080}, "workArea": {...}},
+  "allDisplays": [...],
+  "windows": [{"project": "my-project", "bounds": {...}, "isVisible": true}],
+  "windowCount": 1,
+  "maxWindows": 5,
+  "alwaysOnTopMode": "active-only",
+  "platform": "darwin"
+}
+```
+
 ### POST /quit (Desktop only)
 
 Quit the application.
@@ -296,4 +309,24 @@ Reboot the ESP32 device.
 
 ```bash
 curl -X POST http://192.168.1.100/reboot
+```
+
+---
+
+## HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Success |
+| `400` | Bad request (validation error) |
+| `404` | Not found |
+| `408` | Request timeout |
+| `413` | Payload too large (>10KB) |
+| `429` | Too many requests (rate limited) |
+| `500` | Internal server error |
+
+### Error Response Format
+
+```json
+{"error": "Error message description"}
 ```
