@@ -59,11 +59,11 @@ def debug_log(msg):
 def get_state(event_type):
     """Map event type to state."""
     state_map = {
-        "promptSubmit": "thinking",
-        "fileCreated": "working",
-        "fileEdited": "working",
-        "fileDeleted": "working",
         "agentStop": "done",
+        "fileCreated": "working",
+        "fileDeleted": "working",
+        "fileEdited": "working",
+        "promptSubmit": "thinking",
     }
     return state_map.get(event_type, "working")
 
