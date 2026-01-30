@@ -4,65 +4,78 @@ Claude Code Statusline Hook
 Displays status line and sends context usage to VibeMon
 """
 
+from __future__ import annotations
+
+import fcntl
 import json
 import os
 import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 # ============================================================================
 # Environment Loading
 # ============================================================================
 
-def load_env():
+def load_env() -> None:
     """Load environment variables from .env.local file."""
     env_file = Path.home() / ".claude" / ".env.local"
-    if env_file.exists():
-        with open(env_file) as f:
-            for line in f:
-                line = line.strip()
-                # Skip comments and empty lines
-                if not line or line.startswith("#"):
-                    continue
-                # Remove 'export ' prefix if present
-                if line.startswith("export "):
-                    line = line[7:]
-                if "=" in line:
-                    key, _, value = line.partition("=")
-                    # Remove quotes if present
-                    value = value.strip().strip('"').strip("'")
-                    # Expand ~ to home directory
-                    if value.startswith("~"):
-                        value = str(Path.home()) + value[1:]
-                    os.environ.setdefault(key.strip(), value)
+    if not env_file.exists():
+        return
+
+    with open(env_file) as f:
+        for line in f:
+            line = line.strip()
+            # Skip comments and empty lines
+            if not line or line.startswith("#"):
+                continue
+            # Remove 'export ' prefix if present
+            if line.startswith("export "):
+                line = line[7:]
+            if "=" in line:
+                key, _, value = line.partition("=")
+                # Remove quotes if present
+                value = value.strip().strip('"').strip("'")
+                # Expand ~ to home directory
+                if value.startswith("~"):
+                    value = str(Path.home()) + value[1:]
+                os.environ.setdefault(key.strip(), value)
 
 load_env()
 
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 VIBE_MONITOR_MAX_PROJECTS = 10
 
+# Lock file timeout constants
+LOCK_TIMEOUT_SECONDS = 5
+LOCK_RETRY_INTERVAL = 0.05
+
 # ============================================================================
 # Utility Functions
 # ============================================================================
 
-def read_input():
+def read_input() -> str:
     """Read input from stdin."""
     return sys.stdin.read()
 
-def parse_json_field(data, field, default=""):
-    """Parse a field from JSON data safely."""
+def parse_json(data: str) -> dict[str, Any]:
+    """Parse JSON string to dictionary."""
     try:
-        obj = json.loads(data) if isinstance(data, str) else data
-        keys = field.strip(".").split(".")
-        for key in keys:
-            if isinstance(obj, dict):
-                obj = obj.get(key, default)
-            else:
-                return default
-        return obj if obj is not None else default
+        return json.loads(data)
     except (json.JSONDecodeError, TypeError):
-        return default
+        return {}
+
+def get_nested_value(obj: dict[str, Any], field: str, default: Any = "") -> Any:
+    """Get nested value from dictionary using dot notation."""
+    keys = field.strip(".").split(".")
+    for key in keys:
+        if isinstance(obj, dict):
+            obj = obj.get(key, default)
+        else:
+            return default
+    return obj if obj is not None else default
 
 # ============================================================================
 # Git Functions
@@ -90,7 +103,7 @@ BRANCH_EMOJIS = {
     "exp": "🧪",
 }
 
-def get_branch_emoji(branch):
+def get_branch_emoji(branch: str) -> str:
     """Get emoji for branch based on name or prefix."""
     if not branch:
         return "🌿"
@@ -102,22 +115,29 @@ def get_branch_emoji(branch):
         return BRANCH_EMOJIS[branch_lower]
 
     # Check prefix match (feature/xxx, fix/xxx, etc.)
-    prefix = branch_lower.split("/")[0] if "/" in branch_lower else ""
-    if prefix in BRANCH_EMOJIS:
-        return BRANCH_EMOJIS[prefix]
+    if "/" in branch_lower:
+        prefix = branch_lower.split("/", 1)[0]
+        if prefix in BRANCH_EMOJIS:
+            return BRANCH_EMOJIS[prefix]
 
     # Default emoji
     return "🌿"
 
-def get_git_info(directory):
-    """Get git branch and status information."""
+def get_git_info(directory: str) -> str:
+    """Get git branch and status information.
+
+    Optimized to use single git command with status --porcelain --branch
+    which provides both branch name and change status in one call.
+    """
     if not directory:
         return ""
 
     try:
-        # Check if directory is a git repo
+        # Single git command: get branch and status in one call
+        # --porcelain=v1 --branch gives: "## branch...tracking" as first line
+        # followed by changed files (if any)
         result = subprocess.run(
-            ["git", "-C", directory, "rev-parse", "--git-dir"],
+            ["git", "-C", directory, "status", "--porcelain=v1", "--branch"],
             capture_output=True,
             text=True,
             timeout=2
@@ -125,29 +145,29 @@ def get_git_info(directory):
         if result.returncode != 0:
             return ""
 
-        # Get current branch
-        result = subprocess.run(
-            ["git", "-C", directory, "branch", "--show-current"],
-            capture_output=True,
-            text=True,
-            timeout=2
-        )
-        branch = result.stdout.strip()
-        if not branch:
+        lines = result.stdout.splitlines()
+        if not lines:
             return ""
 
-        # Check for uncommitted changes
-        result = subprocess.run(
-            ["git", "-C", directory, "diff-index", "--quiet", "HEAD", "--"],
-            capture_output=True,
-            timeout=2
-        )
-        has_changes = result.returncode != 0
+        # Parse branch from first line: "## branch" or "## branch...origin/branch"
+        header = lines[0]
+        if not header.startswith("## "):
+            return ""
+
+        branch_part = header[3:]  # Remove "## "
+        # Handle "branch...origin/branch [ahead 1]" format
+        branch = branch_part.split("...")[0].split()[0]
+
+        if not branch or branch == "HEAD":
+            # Detached HEAD state
+            return ""
+
+        # Check if there are any changes (lines after the header)
+        has_changes = len(lines) > 1
 
         if has_changes:
             return f" git:({branch} *)"
-        else:
-            return f" git:({branch})"
+        return f" git:({branch})"
 
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return ""
@@ -156,27 +176,44 @@ def get_git_info(directory):
 # Context Window Functions
 # ============================================================================
 
-def get_context_usage(input_data):
-    """Calculate context window usage percentage."""
-    # Try pre-calculated percentage first
-    used_pct = parse_json_field(input_data, "context_window.used_percentage", 0)
+def get_context_usage(data: dict[str, Any]) -> str:
+    """Calculate context window usage percentage.
 
-    if used_pct and used_pct != "null" and float(used_pct) > 0:
-        return f"{int(float(used_pct))}%"
+    Args:
+        data: Pre-parsed JSON dictionary
+    """
+    context_window = data.get("context_window", {})
+    if not isinstance(context_window, dict):
+        return ""
+
+    # Try pre-calculated percentage first
+    used_pct = context_window.get("used_percentage", 0)
+
+    if used_pct and used_pct != "null":
+        try:
+            pct = float(used_pct)
+            if pct > 0:
+                return f"{int(pct)}%"
+        except (ValueError, TypeError):
+            pass
 
     # Fallback: calculate from current_usage
-    context_size = parse_json_field(input_data, "context_window.context_window_size", 0)
-
     try:
-        context_size = int(context_size)
-        if context_size > 0:
-            input_tokens = int(parse_json_field(input_data, "context_window.current_usage.input_tokens", 0) or 0)
-            cache_creation = int(parse_json_field(input_data, "context_window.current_usage.cache_creation_input_tokens", 0) or 0)
-            cache_read = int(parse_json_field(input_data, "context_window.current_usage.cache_read_input_tokens", 0) or 0)
+        context_size = int(context_window.get("context_window_size", 0) or 0)
+        if context_size <= 0:
+            return ""
 
-            current_tokens = input_tokens + cache_creation + cache_read
-            if current_tokens > 0:
-                return f"{current_tokens * 100 // context_size}%"
+        current_usage = context_window.get("current_usage", {})
+        if not isinstance(current_usage, dict):
+            return ""
+
+        input_tokens = int(current_usage.get("input_tokens", 0) or 0)
+        cache_creation = int(current_usage.get("cache_creation_input_tokens", 0) or 0)
+        cache_read = int(current_usage.get("cache_read_input_tokens", 0) or 0)
+
+        current_tokens = input_tokens + cache_creation + cache_read
+        if current_tokens > 0:
+            return f"{current_tokens * 100 // context_size}%"
     except (ValueError, TypeError):
         pass
 
@@ -186,13 +223,16 @@ def get_context_usage(input_data):
 # VibeMon Cache Functions
 # ============================================================================
 
-def get_cache_path():
+def get_cache_path() -> str:
     """Get the cache file path."""
     cache_path = os.environ.get("VIBEMON_CACHE_PATH", "~/.claude/statusline-cache.json")
     return os.path.expanduser(cache_path)
 
-def save_to_cache(project, model, memory):
-    """Save project metadata to cache file."""
+def save_to_cache(project: str, model: str, memory: str) -> None:
+    """Save project metadata to cache file.
+
+    Uses fcntl for proper file locking to avoid race conditions.
+    """
     if not project:
         return
 
@@ -204,20 +244,25 @@ def save_to_cache(project, model, memory):
 
     lockfile = f"{cache_path}.lock"
     timestamp = int(time.time())
-
-    # Simple file-based locking
-    wait_count = 0
-    while os.path.exists(lockfile) and wait_count < 50:
-        time.sleep(0.1)
-        wait_count += 1
+    lock_fd = None
 
     try:
-        # Create lock file
-        with open(lockfile, "w") as f:
-            f.write(str(os.getpid()))
+        # Use fcntl for proper file locking (atomic, no race condition)
+        lock_fd = os.open(lockfile, os.O_CREAT | os.O_WRONLY, 0o644)
+
+        # Try to acquire lock with timeout
+        start_time = time.monotonic()
+        while True:
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break  # Lock acquired
+            except (IOError, OSError):
+                if time.monotonic() - start_time > LOCK_TIMEOUT_SECONDS:
+                    return  # Timeout - skip cache update
+                time.sleep(LOCK_RETRY_INTERVAL)
 
         # Read existing cache or create empty object
-        cache = {}
+        cache: dict[str, Any] = {}
         if os.path.exists(cache_path):
             try:
                 with open(cache_path) as f:
@@ -228,7 +273,11 @@ def save_to_cache(project, model, memory):
         # If new project and cache is full, remove oldest to make room
         if project not in cache and len(cache) >= VIBE_MONITOR_MAX_PROJECTS:
             # Sort by timestamp and remove oldest
-            sorted_items = sorted(cache.items(), key=lambda x: x[1].get("ts", 0), reverse=True)
+            sorted_items = sorted(
+                cache.items(),
+                key=lambda x: x[1].get("ts", 0) if isinstance(x[1], dict) else 0,
+                reverse=True
+            )
             cache = dict(sorted_items[:VIBE_MONITOR_MAX_PROJECTS - 1])
 
         # Update cache with new project data
@@ -242,16 +291,17 @@ def save_to_cache(project, model, memory):
         tmpfile = f"{cache_path}.tmp.{os.getpid()}"
         with open(tmpfile, "w") as f:
             json.dump(cache, f)
-        os.rename(tmpfile, cache_path)
+        os.replace(tmpfile, cache_path)  # os.replace is atomic on POSIX
 
     except (IOError, OSError):
         pass
     finally:
-        # Remove lock file
-        try:
-            os.remove(lockfile)
-        except OSError:
-            pass
+        if lock_fd is not None:
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
+                os.close(lock_fd)
+            except OSError:
+                pass
 
 # ============================================================================
 # ANSI Colors
@@ -272,47 +322,46 @@ C_ORANGE = "\033[38;5;208m"
 # Formatting Functions
 # ============================================================================
 
-def format_number(num):
+def format_number(num: int | float | str | None) -> str:
     """Format number with K/M suffix."""
-    if not num or num == "null" or num == 0:
+    if num is None or num == "null" or num == 0:
         return "0"
 
     try:
-        num = float(num)
-        int_num = int(num)
+        num_float = float(num)
+        int_num = int(num_float)
 
-        if int_num >= 1000000:
-            return f"{num / 1000000:.1f}M"
-        elif int_num >= 1000:
-            return f"{num / 1000:.1f}K"
-        else:
-            return str(int_num)
+        if int_num >= 1_000_000:
+            return f"{num_float / 1_000_000:.1f}M"
+        if int_num >= 1_000:
+            return f"{num_float / 1_000:.1f}K"
+        return str(int_num)
     except (ValueError, TypeError):
         return "0"
 
-def format_duration(ms):
+
+def format_duration(ms: int | float | str | None) -> str:
     """Format duration in milliseconds to human readable format."""
-    if not ms or ms == "null" or ms == 0:
+    if ms is None or ms == "null" or ms == 0:
         return "0s"
 
     try:
         total_seconds = int(ms) // 1000
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
 
         if hours > 0:
             return f"{hours}h{minutes}m"
-        elif minutes > 0:
+        if minutes > 0:
             return f"{minutes}m{seconds}s"
-        else:
-            return f"{seconds}s"
+        return f"{seconds}s"
     except (ValueError, TypeError):
         return "0s"
 
-def format_cost(cost):
+
+def format_cost(cost: float | str | None) -> str:
     """Format cost in USD."""
-    if not cost or cost == "null":
+    if cost is None or cost == "null":
         return "$0.00"
 
     try:
@@ -324,16 +373,28 @@ def format_cost(cost):
 # Progress Bar Functions
 # ============================================================================
 
-def build_progress_bar(percent_str, width=10):
-    """Build a colored progress bar."""
-    # Remove % sign if present
-    percent_str = str(percent_str).rstrip("%")
+def build_progress_bar(percent_str: str | int | float, width: int = 10) -> str:
+    """Build a colored progress bar.
 
-    # Handle empty or invalid input
-    if not percent_str or not percent_str.isdigit():
+    Args:
+        percent_str: Percentage value (can be "85%", "85", 85, or 85.5)
+        width: Bar width in characters
+    """
+    # Remove % sign if present and convert to string
+    cleaned = str(percent_str).rstrip("%").strip()
+
+    if not cleaned:
         return ""
 
-    percent = int(percent_str)
+    # Parse as float first to handle "12.5", then convert to int
+    try:
+        percent = int(float(cleaned))
+    except (ValueError, TypeError):
+        return ""
+
+    # Clamp to valid range
+    percent = max(0, min(100, percent))
+
     filled = percent * width // 100
     empty = width - filled
 
@@ -355,12 +416,21 @@ def build_progress_bar(percent_str, width=10):
 # Statusline Output
 # ============================================================================
 
-def build_statusline(model, dir_name, git_info, context_usage,
-                     input_tokens, output_tokens, cost, duration,
-                     lines_added, lines_removed):
+def build_statusline(
+    model: str,
+    dir_name: str,
+    git_info: str,
+    context_usage: str,
+    input_tokens: int | str,
+    output_tokens: int | str,
+    cost: float | str,
+    duration: int | str,
+    lines_added: int | str,
+    lines_removed: int | str,
+) -> str:
     """Build the status line string."""
     SEP = " │ "
-    parts = []
+    parts: list[str] = []
 
     # Directory (📂 icon)
     parts.append(f"{C_BLUE}📂 {dir_name}{C_RESET}")
@@ -375,7 +445,7 @@ def build_statusline(model, dir_name, git_info, context_usage,
         parts.append(f"{C_GREEN}{emoji} {branch_info}{C_RESET}")
 
     # Model (🤖 icon) - remove "Claude " prefix
-    short_model = model.replace("Claude ", "") if model.startswith("Claude ") else model
+    short_model = model.removeprefix("Claude ")
     parts.append(f"{C_MAGENTA}🤖 {short_model}{C_RESET}")
 
     # Token usage (📥 in / 📤 out)
@@ -410,50 +480,97 @@ def build_statusline(model, dir_name, git_info, context_usage,
     return SEP.join(parts)
 
 # ============================================================================
+# Background Cache Save
+# ============================================================================
+
+def save_cache_background(project: str, model: str, memory: str) -> None:
+    """Save to cache in background process.
+
+    Uses fork on POSIX systems for efficiency, falls back to synchronous
+    save on Windows or if fork fails.
+    """
+    # Check if fork is available (not on Windows)
+    if not hasattr(os, "fork"):
+        save_to_cache(project, model, memory)
+        return
+
+    try:
+        pid = os.fork()
+        if pid == 0:
+            # Child process - save cache and exit
+            try:
+                save_to_cache(project, model, memory)
+            except Exception:
+                pass
+            os._exit(0)
+        # Parent process continues immediately
+    except OSError:
+        # Fork failed - save synchronously
+        save_to_cache(project, model, memory)
+
+
+# ============================================================================
 # Main
 # ============================================================================
 
-def main():
+def main() -> None:
     """Main entry point."""
-    input_data = read_input()
+    input_raw = read_input()
 
-    # Parse input fields
-    model_display = parse_json_field(input_data, "model.display_name", "Claude")
-    current_dir = parse_json_field(input_data, "workspace.current_dir", "")
+    # Parse JSON once and reuse
+    data = parse_json(input_raw)
 
+    # Extract model info
+    model_data = data.get("model", {})
+    model_display = model_data.get("display_name", "Claude") if isinstance(model_data, dict) else "Claude"
+
+    # Extract workspace info
+    workspace_data = data.get("workspace", {})
+    current_dir = workspace_data.get("current_dir", "") if isinstance(workspace_data, dict) else ""
     dir_name = os.path.basename(current_dir) if current_dir else ""
 
     # Get additional info
     git_info = get_git_info(current_dir)
-    context_usage = get_context_usage(input_data)
+    context_usage = get_context_usage(data)
 
-    # Parse token usage
-    input_tokens = parse_json_field(input_data, "context_window.total_input_tokens", 0)
-    output_tokens = parse_json_field(input_data, "context_window.total_output_tokens", 0)
+    # Extract context window data
+    context_window = data.get("context_window", {})
+    if isinstance(context_window, dict):
+        input_tokens = context_window.get("total_input_tokens", 0)
+        output_tokens = context_window.get("total_output_tokens", 0)
+    else:
+        input_tokens = output_tokens = 0
 
-    # Parse cost info
-    cost = parse_json_field(input_data, "cost.total_cost_usd", 0)
-    duration = parse_json_field(input_data, "cost.total_duration_ms", 0)
-    lines_added = parse_json_field(input_data, "cost.total_lines_added", 0)
-    lines_removed = parse_json_field(input_data, "cost.total_lines_removed", 0)
+    # Extract cost data
+    cost_data = data.get("cost", {})
+    if isinstance(cost_data, dict):
+        cost = cost_data.get("total_cost_usd", 0)
+        duration = cost_data.get("total_duration_ms", 0)
+        lines_added = cost_data.get("total_lines_added", 0)
+        lines_removed = cost_data.get("total_lines_removed", 0)
+    else:
+        cost = duration = lines_added = lines_removed = 0
 
-    # Save project metadata to cache (vibe-monitor.py will read this)
-    # Fork to background to avoid blocking
-    pid = os.fork()
-    if pid == 0:
-        # Child process
-        try:
-            save_to_cache(dir_name, model_display, context_usage)
-        except Exception:
-            pass
-        os._exit(0)
+    # Save project metadata to cache in background
+    save_cache_background(dir_name, model_display, context_usage)
 
     # Output statusline
-    print(build_statusline(
-        model_display, dir_name, git_info, context_usage,
-        input_tokens, output_tokens, cost, duration,
-        lines_added, lines_removed
-    ), end="")
+    print(
+        build_statusline(
+            model_display,
+            dir_name,
+            git_info,
+            context_usage,
+            input_tokens,
+            output_tokens,
+            cost,
+            duration,
+            lines_added,
+            lines_removed,
+        ),
+        end="",
+    )
+
 
 if __name__ == "__main__":
     main()
