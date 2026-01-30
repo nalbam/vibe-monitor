@@ -70,12 +70,12 @@ main.js                      # 오케스트레이터 - 모듈 연결 및 IPC 핸
 {
   "start": { "bgColor": "#00CCCC", "eyeType": "sparkle", "textColor": "#000000" },
   "idle": { "bgColor": "#00AA00", "eyeType": "normal", "textColor": "#FFFFFF" },
-  "thinking": { "bgColor": "#9966CC", "eyeType": "thinking", "textColor": "#FFFFFF" },
-  "planning": { "bgColor": "#00AAAA", "eyeType": "thinking", "textColor": "#FFFFFF" },
+  "thinking": { "bgColor": "#AA33BB", "eyeType": "thinking", "textColor": "#FFFFFF" },
+  "planning": { "bgColor": "#008888", "eyeType": "thinking", "textColor": "#FFFFFF" },
   "working": { "bgColor": "#0066CC", "eyeType": "focused", "textColor": "#FFFFFF" },
-  "notification": { "bgColor": "#FFAA00", "eyeType": "alert", "textColor": "#000000" },
+  "notification": { "bgColor": "#FFCC00", "eyeType": "alert", "textColor": "#000000" },
   "done": { "bgColor": "#00AA00", "eyeType": "happy", "textColor": "#FFFFFF" },
-  "sleep": { "bgColor": "#003366", "eyeType": "sleep", "textColor": "#666666" }
+  "sleep": { "bgColor": "#111144", "eyeType": "sleep", "textColor": "#FFFFFF" }
 }
 ```
 
