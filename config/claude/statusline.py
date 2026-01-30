@@ -225,18 +225,18 @@ def save_to_cache(project, model, memory):
             except (json.JSONDecodeError, IOError):
                 cache = {}
 
+        # If new project and cache is full, remove oldest to make room
+        if project not in cache and len(cache) >= VIBE_MONITOR_MAX_PROJECTS:
+            # Sort by timestamp and remove oldest
+            sorted_items = sorted(cache.items(), key=lambda x: x[1].get("ts", 0), reverse=True)
+            cache = dict(sorted_items[:VIBE_MONITOR_MAX_PROJECTS - 1])
+
         # Update cache with new project data
         cache[project] = {
             "model": model,
             "memory": memory,
             "ts": timestamp
         }
-
-        # Keep only the most recent N projects
-        if len(cache) > VIBE_MONITOR_MAX_PROJECTS:
-            # Sort by timestamp and keep only recent ones
-            sorted_items = sorted(cache.items(), key=lambda x: x[1].get("ts", 0), reverse=True)
-            cache = dict(sorted_items[:VIBE_MONITOR_MAX_PROJECTS])
 
         # Atomic write: write to temp file, then rename
         tmpfile = f"{cache_path}.tmp.{os.getpid()}"
