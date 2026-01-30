@@ -572,7 +572,7 @@ void drawStatus() {
   // Status text (color based on background)
   if (dirtyStatus || needsRedraw) {
     char statusText[32];
-    getStatusTextEnum(currentState, currentTool, statusText, sizeof(statusText));
+    getStatusTextEnum(currentState, statusText, sizeof(statusText));
 
     tft.setTextColor(textColor);
     tft.setTextSize(3);

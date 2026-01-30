@@ -164,7 +164,7 @@ bool isValidCharacter(String name) {
 
 // Background colors by state (RGB565)
 #define COLOR_BG_IDLE     0x0540  // #00AA00 Green
-#define COLOR_BG_THINKING 0x6199  // #6633CC Purple
+#define COLOR_BG_THINKING 0x99BF  // #9933FF Purple
 #define COLOR_BG_PLANNING 0x0451  // #008888 Teal
 #define COLOR_BG_WORKING  0x0339  // #0066CC Blue
 #define COLOR_BG_NOTIFY   0xFE60  // #FFCC00 Yellow
@@ -203,24 +203,6 @@ void drawQuestionMark(TFT_eSPI &tft, int x, int y);
 void drawSparkle(TFT_eSPI &tft, int x, int y, uint16_t sparkleColor);
 void drawThoughtBubble(TFT_eSPI &tft, int x, int y, int frame, uint16_t color);
 void drawZzz(TFT_eSPI &tft, int x, int y, int frame, uint16_t color);
-
-// Thinking state texts (random selection)
-const char* THINKING_TEXTS[] = {"Thinking", "Hmm...", "Pondering"};
-
-// Planning state texts (random selection)
-const char* PLANNING_TEXTS[] = {"Planning", "Design", "Drafting"};
-
-// Tool-based status texts for working state (max 8 chars)
-const char* BASH_TEXTS[] = {"Running", "Exec", "Process"};
-const char* READ_TEXTS[] = {"Reading", "Scanning", "Checking"};
-const char* EDIT_TEXTS[] = {"Editing", "Modify", "Fixing"};
-const char* WRITE_TEXTS[] = {"Writing", "Creating", "Saving"};
-const char* GREP_TEXTS[] = {"Search", "Finding", "Looking"};
-const char* GLOB_TEXTS[] = {"Scanning", "Browse", "Finding"};
-const char* TASK_TEXTS[] = {"Thinking", "Working", "Planning"};
-const char* WEBFETCH_TEXTS[] = {"Fetching", "Loading", "Getting"};
-const char* WEBSEARCH_TEXTS[] = {"Search", "Googling", "Looking"};
-const char* DEFAULT_TEXTS[] = {"Working", "Busy", "Coding"};
 
 /*
  * Character structure (128x128, scaled 2x from 64x64):
@@ -801,40 +783,9 @@ uint16_t getTextColorEnum(AppState state) {
   }
 }
 
-// Helper to lowercase a string in place
-void toLowerStr(char* str) {
-  for (int i = 0; str[i]; i++) {
-    if (str[i] >= 'A' && str[i] <= 'Z') {
-      str[i] = str[i] + 32;
-    }
-  }
-}
-
-// Get working text based on tool (writes to buffer, no String allocation)
-void getWorkingTextBuf(const char* tool, char* buf, size_t bufSize) {
-  int idx = random(3);
-  char toolLower[32];
-  strncpy(toolLower, tool, sizeof(toolLower) - 1);
-  toolLower[sizeof(toolLower) - 1] = '\0';
-  toLowerStr(toolLower);
-
-  const char* result = DEFAULT_TEXTS[idx];
-  if (strcmp(toolLower, "bash") == 0) result = BASH_TEXTS[idx];
-  else if (strcmp(toolLower, "read") == 0) result = READ_TEXTS[idx];
-  else if (strcmp(toolLower, "edit") == 0) result = EDIT_TEXTS[idx];
-  else if (strcmp(toolLower, "write") == 0) result = WRITE_TEXTS[idx];
-  else if (strcmp(toolLower, "grep") == 0) result = GREP_TEXTS[idx];
-  else if (strcmp(toolLower, "glob") == 0) result = GLOB_TEXTS[idx];
-  else if (strcmp(toolLower, "task") == 0) result = TASK_TEXTS[idx];
-  else if (strcmp(toolLower, "webfetch") == 0) result = WEBFETCH_TEXTS[idx];
-  else if (strcmp(toolLower, "websearch") == 0) result = WEBSEARCH_TEXTS[idx];
-
-  strncpy(buf, result, bufSize - 1);
-  buf[bufSize - 1] = '\0';
-}
-
 // Get status text for state (enum version, writes to buffer)
-void getStatusTextEnum(AppState state, const char* tool, char* buf, size_t bufSize) {
+// Uses fixed text (no random) to match Desktop states.json
+void getStatusTextEnum(AppState state, char* buf, size_t bufSize) {
   switch (state) {
     case STATE_START:
       strncpy(buf, "Hello!", bufSize - 1);
@@ -843,14 +794,14 @@ void getStatusTextEnum(AppState state, const char* tool, char* buf, size_t bufSi
       strncpy(buf, "Ready", bufSize - 1);
       break;
     case STATE_THINKING:
-      strncpy(buf, THINKING_TEXTS[random(3)], bufSize - 1);
+      strncpy(buf, "Thinking", bufSize - 1);
       break;
     case STATE_PLANNING:
-      strncpy(buf, PLANNING_TEXTS[random(3)], bufSize - 1);
+      strncpy(buf, "Planning", bufSize - 1);
       break;
     case STATE_WORKING:
-      getWorkingTextBuf(tool, buf, bufSize);
-      return;  // Already null-terminated
+      strncpy(buf, "Working", bufSize - 1);
+      break;
     case STATE_NOTIFICATION:
       strncpy(buf, "Input?", bufSize - 1);
       break;
@@ -892,26 +843,12 @@ EyeType getEyeType(String state) {
   return EYE_NORMAL;
 }
 
-String getWorkingText(String tool) {
-  char buf[32];
-  getWorkingTextBuf(tool.c_str(), buf, sizeof(buf));
-  return String(buf);
-}
-
-String getThinkingText() {
-  return THINKING_TEXTS[random(3)];
-}
-
-String getPlanningText() {
-  return PLANNING_TEXTS[random(3)];
-}
-
-String getStatusText(String state, String tool = "") {
+String getStatusText(String state) {
   if (state == "start") return "Hello!";
   if (state == "idle") return "Ready";
-  if (state == "thinking") return getThinkingText();
-  if (state == "planning") return getPlanningText();
-  if (state == "working") return getWorkingText(tool);
+  if (state == "thinking") return "Thinking";
+  if (state == "planning") return "Planning";
+  if (state == "working") return "Working";
   if (state == "notification") return "Input?";
   if (state == "done") return "Done!";
   if (state == "sleep") return "Zzz...";

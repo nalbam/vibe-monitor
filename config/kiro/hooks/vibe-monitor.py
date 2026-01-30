@@ -10,6 +10,7 @@ import os
 import sys
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.request import urlopen, Request
 from urllib.error import URLError
@@ -398,40 +399,59 @@ def launch_desktop():
         debug_log(f"Failed to launch Desktop App: {e}")
 
 def send_to_all(payload, is_start=False):
-    """Send payload to all configured targets."""
+    """Send payload to all configured targets concurrently."""
     config = get_config()
 
-    # Launch Desktop App if not running (on start)
+    # Launch Desktop App if not running (on start) - must be sequential
     if config["desktop_url"] and is_start:
         if not is_monitor_running(config["desktop_url"]):
             debug_log("Desktop App not running, launching...")
             launch_desktop()
+        show_monitor_window(config["desktop_url"])
 
-    # Send to Desktop App via HTTP
-    if config["desktop_url"]:
-        debug_log(f"Trying Desktop App: {config['desktop_url']}")
-        if is_start:
-            show_monitor_window(config["desktop_url"])
-        success, _ = send_http_post(config["desktop_url"], "/status", payload)
-        debug_log("Sent to Desktop App" if success else "Desktop App failed")
-
-    # Send to ESP32 USB Serial
+    # Resolve serial port once
+    resolved_port = None
     if config["serial_port"]:
         resolved_port = resolve_serial_port(config["serial_port"])
-        if resolved_port:
-            debug_log(f"Trying USB serial: {resolved_port}")
-            if send_serial(resolved_port, payload):
-                debug_log("Sent via USB serial")
-            else:
-                debug_log("USB serial failed")
-        else:
+        if not resolved_port:
             debug_log(f"No serial port found for pattern: {config['serial_port']}")
 
-    # Send to ESP32 HTTP
-    if config["esp32_url"]:
+    # Build list of tasks to run in parallel
+    tasks = []
+
+    def send_desktop():
+        debug_log(f"Trying Desktop App: {config['desktop_url']}")
+        success, _ = send_http_post(config["desktop_url"], "/status", payload)
+        return "Desktop App", success
+
+    def send_to_serial():
+        debug_log(f"Trying USB serial: {resolved_port}")
+        success = send_serial(resolved_port, payload)
+        return "USB serial", success
+
+    def send_esp32():
         debug_log(f"Trying ESP32 HTTP: {config['esp32_url']}")
         success, _ = send_http_post(config["esp32_url"], "/status", payload)
-        debug_log("Sent via ESP32 HTTP" if success else "ESP32 HTTP failed")
+        return "ESP32 HTTP", success
+
+    # Collect tasks
+    if config["desktop_url"]:
+        tasks.append(send_desktop)
+    if resolved_port:
+        tasks.append(send_to_serial)
+    if config["esp32_url"]:
+        tasks.append(send_esp32)
+
+    # Execute all tasks concurrently
+    if tasks:
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+            futures = {executor.submit(task): task for task in tasks}
+            for future in as_completed(futures):
+                try:
+                    name, success = future.result()
+                    debug_log(f"Sent to {name}" if success else f"{name} failed")
+                except Exception as e:
+                    debug_log(f"Task failed with error: {e}")
 
 # ============================================================================
 # Main
