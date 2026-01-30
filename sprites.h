@@ -649,10 +649,10 @@ void drawLoadingDots(TFT_eSPI &tft, int centerX, int y, int frame, bool slow = f
   }
 }
 
-// RGB565 color constants for gradient
+// RGB565 color constants for gradient (matches Desktop/statusline.py)
 #define COLOR_MEM_GREEN  0x0540  // #00AA00
 #define COLOR_MEM_YELLOW 0xFE60  // #FFCC00
-#define COLOR_MEM_RED    0xF800  // #FF0000
+#define COLOR_MEM_RED    0xFA28  // #FF4444
 
 // Interpolate between two RGB565 colors
 uint16_t lerpColor565(uint16_t color1, uint16_t color2, int ratio, int maxRatio) {
@@ -679,21 +679,27 @@ uint16_t lerpColor565(uint16_t color1, uint16_t color2, int ratio, int maxRatio)
 }
 
 // Get gradient color for a specific position in the bar
+// Thresholds: 0-74% Green, 75-89% Yellow, 90%+ Red (matches statusline.py)
 uint16_t getGradientColor(int pos, int width, int percent) {
   // Calculate base color from percent (smooth transition)
   uint16_t baseStart, baseEnd;
   int baseRatio;
 
-  if (percent < 50) {
-    // Green to Yellow range
+  if (percent < 75) {
+    // Green to Yellow range (0-74%)
     baseStart = COLOR_MEM_GREEN;
     baseEnd = COLOR_MEM_YELLOW;
-    baseRatio = percent * 2;  // 0-100 for 0-50%
-  } else {
-    // Yellow to Red range
+    baseRatio = (percent * 100) / 75;  // 0-100 for 0-75%
+  } else if (percent < 90) {
+    // Yellow to Orange range (75-89%)
     baseStart = COLOR_MEM_YELLOW;
     baseEnd = COLOR_MEM_RED;
-    baseRatio = (percent - 50) * 2;  // 0-100 for 50-100%
+    baseRatio = ((percent - 75) * 100) / 15;  // 0-100 for 75-90%
+  } else {
+    // Orange to Red range (90-100%)
+    baseStart = COLOR_MEM_YELLOW;
+    baseEnd = COLOR_MEM_RED;
+    baseRatio = 50 + ((percent - 90) * 50) / 10;  // 50-100 for 90-100%
   }
 
   // Apply position-based gradient within the bar
