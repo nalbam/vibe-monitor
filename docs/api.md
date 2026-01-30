@@ -15,13 +15,13 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 
 | Field | Max Length | Format |
 |-------|------------|--------|
+| `state` | - | One of valid states |
 | `project` | 100 chars | String |
 | `tool` | 50 chars | String |
 | `model` | 50 chars | String |
 | `memory` | - | `N%` where N is 0-100 |
-| `state` | - | One of valid states |
 | `character` | - | `clawd` or `kiro` |
-| `terminalId` | - | String (terminal session ID) |
+| `terminalId` | - | String (iTerm2 session ID or Ghostty PID) |
 
 ---
 
