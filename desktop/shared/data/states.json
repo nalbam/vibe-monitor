@@ -14,7 +14,7 @@
     "textColor": "#FFFFFF"
   },
   "thinking": {
-    "bgColor": "#9933FF",
+    "bgColor": "#AA33BB",
     "text": "Thinking",
     "eyeType": "thinking",
     "showLoading": true,
@@ -49,7 +49,7 @@
     "textColor": "#FFFFFF"
   },
   "sleep": {
-    "bgColor": "#1a1a4e",
+    "bgColor": "#111144",
     "text": "Zzz...",
     "eyeType": "sleep",
     "showLoading": false,

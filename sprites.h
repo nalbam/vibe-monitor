@@ -164,13 +164,13 @@ bool isValidCharacter(String name) {
 
 // Background colors by state (RGB565)
 #define COLOR_BG_IDLE     0x0540  // #00AA00 Green
-#define COLOR_BG_THINKING 0x99BF  // #9933FF Purple
+#define COLOR_BG_THINKING 0xA997  // #AA33BB Purple
 #define COLOR_BG_PLANNING 0x0451  // #008888 Teal
 #define COLOR_BG_WORKING  0x0339  // #0066CC Blue
 #define COLOR_BG_NOTIFY   0xFE60  // #FFCC00 Yellow
 #define COLOR_BG_SESSION  0x0679  // #00CCCC Cyan
 #define COLOR_BG_DONE     0x0540  // #00AA00 Green
-#define COLOR_BG_SLEEP    0x18C9  // #1a1a4e Navy blue
+#define COLOR_BG_SLEEP    0x1088  // #111144 Navy blue
 
 // Text colors
 #define COLOR_TEXT_WHITE  0xFFFF
