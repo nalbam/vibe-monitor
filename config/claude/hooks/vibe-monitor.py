@@ -184,23 +184,102 @@ def build_payload(state, tool, project):
 # Low-Level Send Functions
 # ============================================================================
 
-def send_serial(port, data):
-    """Send data via serial port."""
+# Serial debounce configuration
+SERIAL_DEBOUNCE_MS = 100  # Wait 100ms for more updates before sending
+
+def send_serial_raw(port, data):
+    """Send data via serial port with file locking (internal use)."""
     if not os.path.exists(port):
         return False
 
-    try:
-        flag = "-f" if sys.platform == "darwin" else "-F"
-        subprocess.run(["stty", flag, port, "115200"], check=False, capture_output=True)
+    lock_path = f"/tmp/vibe-monitor-serial-{port.replace('/', '_')}.lock"
 
-        with open(port, "w") as f:
-            f.write(data + "\n")
-            f.flush()  # Ensure data is sent to kernel buffer
-        # Small delay to allow kernel to transmit data before process exits
-        time.sleep(0.05)
-        return True
-    except (IOError, OSError):
+    try:
+        import fcntl
+
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR)
+        max_retries = 10
+        for attempt in range(max_retries):
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if attempt == max_retries - 1:
+                    os.close(lock_fd)
+                    debug_log(f"Failed to acquire serial lock after {max_retries} attempts")
+                    return False
+                time.sleep(0.05)
+
+        try:
+            flag = "-f" if sys.platform == "darwin" else "-F"
+            subprocess.run(["stty", flag, port, "115200"], check=False, capture_output=True)
+
+            with open(port, "w") as f:
+                f.write(data + "\n")
+                f.flush()
+            time.sleep(0.05)
+            return True
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
+
+    except (IOError, OSError) as e:
+        debug_log(f"Serial send error: {e}")
         return False
+
+def send_serial(port, data):
+    """Send data via serial port with debouncing.
+
+    Uses a debounce file to coalesce rapid updates. Only the last update
+    within the debounce window is actually sent to the serial port.
+    """
+    import fcntl
+    import uuid
+
+    if not os.path.exists(port):
+        return False
+
+    # Debounce file stores: {"id": unique_id, "data": payload, "time": timestamp}
+    debounce_path = f"/tmp/vibe-monitor-serial-{port.replace('/', '_')}.debounce"
+    lock_path = f"/tmp/vibe-monitor-serial-{port.replace('/', '_')}.dlock"
+    my_id = str(uuid.uuid4())
+
+    try:
+        # Write our payload to the debounce file (with lock)
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            with open(debounce_path, "w") as f:
+                json.dump({"id": my_id, "data": data, "time": time.time()}, f)
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
+
+        # Wait for debounce period
+        time.sleep(SERIAL_DEBOUNCE_MS / 1000.0)
+
+        # Check if we're still the latest (with lock)
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            with open(debounce_path, "r") as f:
+                state = json.load(f)
+
+            if state["id"] != my_id:
+                # Another process has newer data, skip sending
+                debug_log(f"Serial debounce: skipped (newer update exists)")
+                return True  # Return True as the data will be sent by another process
+
+            # We have the latest data, send it
+            debug_log(f"Serial debounce: sending (we have latest)")
+            return send_serial_raw(port, state["data"])
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
+
+    except (IOError, OSError, json.JSONDecodeError) as e:
+        debug_log(f"Serial debounce error: {e}, falling back to direct send")
+        return send_serial_raw(port, data)
 
 def send_http_post(url, endpoint, data=None):
     """Send HTTP POST request."""

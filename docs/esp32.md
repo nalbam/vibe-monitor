@@ -95,25 +95,25 @@ ls /dev/ttyUSB* /dev/ttyACM*
 
 ```bash
 # Test start state
-echo '{"state":"start","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+echo '{"state":"start","project":"my-project"}' > /dev/cu.usbmodem1101
 
 # Test idle state
-echo '{"state":"idle","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+echo '{"state":"idle","project":"my-project"}' > /dev/cu.usbmodem1101
 
 # Test thinking state
-echo '{"state":"thinking","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+echo '{"state":"thinking","project":"my-project"}' > /dev/cu.usbmodem1101
 
 # Test planning state
-echo '{"state":"planning","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+echo '{"state":"planning","project":"my-project"}' > /dev/cu.usbmodem1101
 
 # Test working state
-echo '{"state":"working","tool":"Bash","project":"vibe-monitor","model":"Opus 4.5","memory":"55%"}' > /dev/cu.usbmodem1101
+echo '{"state":"working","tool":"Bash","project":"my-project","model":"Opus 4.5","memory":"55%"}' > /dev/cu.usbmodem1101
 
 # Test notification state
-echo '{"state":"notification","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+echo '{"state":"notification","project":"my-project"}' > /dev/cu.usbmodem1101
 
 # Test done state
-echo '{"state":"done","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+echo '{"state":"done","project":"my-project"}' > /dev/cu.usbmodem1101
 ```
 
 ## Serial Commands
