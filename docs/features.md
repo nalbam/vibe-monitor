@@ -137,6 +137,9 @@ python3 ~/.claude/hooks/vibe-monitor.py --status
 # Get/Set lock mode
 python3 ~/.claude/hooks/vibe-monitor.py --lock-mode
 python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
+
+# Reboot ESP32 device
+python3 ~/.claude/hooks/vibe-monitor.py --reboot
 ```
 
 ## Desktop App Features

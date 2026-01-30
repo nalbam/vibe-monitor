@@ -55,12 +55,13 @@ export VIBEMON_CACHE_PATH="~/.claude/statusline-cache.json"
 
 # Desktop App URL (auto-launches via npx if not running)
 # e.g., http://127.0.0.1:19280
-export VIBEMON_DESKTOP_URL="http://127.0.0.1:19280"
+export VIBEMON_DESKTOP_URL=""
 
 # ESP32 USB Serial port (optional)
-# e.g., /dev/cu.usbserial-0001, /dev/ttyUSB0
+# Supports wildcard patterns (e.g., /dev/cu.usbmodem*) - uses first match
+# e.g., /dev/cu.usbserial-0001, /dev/ttyUSB0, /dev/cu.usbmodem*
 # Check with: ls /dev/cu.* or ls /dev/tty*
-export VIBEMON_SERIAL_PORT=""
+export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem*"
 
 # ESP32 HTTP URL (optional)
 # e.g., http://192.168.1.100
@@ -158,12 +159,21 @@ export VIBEMON_DESKTOP_URL="http://127.0.0.1:19280"
 
 ---
 
-## Hook Priority
+## Target Behavior
 
-The hook sends status updates in order:
+### Status Updates
+
+Status updates are sent to **all configured targets** (not priority-based):
+- Desktop App (HTTP) - if `VIBEMON_DESKTOP_URL` is set
+- ESP32 USB Serial - if `VIBEMON_SERIAL_PORT` is set
+- ESP32 HTTP - if `VIBEMON_ESP32_URL` is set
+
+### Commands (lock, unlock, etc.)
+
+Commands try targets in order and stop on first success:
 1. **Desktop App** - if `VIBEMON_DESKTOP_URL` is set
-2. **ESP32 USB Serial** - if `VIBEMON_SERIAL_PORT` is set
-3. **ESP32 HTTP** - if `VIBEMON_ESP32_URL` is set
+2. **ESP32 HTTP** - if `VIBEMON_ESP32_URL` is set
+3. **ESP32 USB Serial** - if `VIBEMON_SERIAL_PORT` is set
 
 ---
 

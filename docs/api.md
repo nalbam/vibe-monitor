@@ -75,13 +75,13 @@ curl -X POST http://127.0.0.1:19280/status \
 
 ### GET /status
 
-Get all windows' status.
+Get current status.
 
 ```bash
 curl http://127.0.0.1:19280/status
 ```
 
-**Response:**
+**Response (Desktop):**
 ```json
 {
   "windowCount": 2,
@@ -89,6 +89,17 @@ curl http://127.0.0.1:19280/status
     "my-project": {"state": "working", "tool": "Bash", "model": "opus", "memory": "45%"},
     "other-project": {"state": "idle"}
   }
+}
+```
+
+**Response (ESP32 WiFi):**
+```json
+{
+  "state": "working",
+  "project": "my-project",
+  "locked": "my-project",
+  "lockMode": "on-thinking",
+  "projectCount": 1
 }
 ```
 

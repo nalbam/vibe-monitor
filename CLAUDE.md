@@ -139,6 +139,6 @@ echo '{"state":"working","tool":"Bash"}' > /dev/cu.usbmodem1101
 
 ## Important Notes
 
-- ESP32: `User_Setup.h` must be copied to TFT_eSPI library folder
+- ESP32: Uses LovyanGFX library with `LGFX_ESP32C6.hpp` configuration (TFT_eSPI not required)
 - JSON payload must end with LF (`\n`)
-- WiFi mode: Uncomment `#define USE_WIFI` in .ino file
+- WiFi mode: Create `credentials.h` from example, uncomment `#define USE_WIFI` in .ino file
