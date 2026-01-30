@@ -94,11 +94,26 @@ ls /dev/ttyUSB* /dev/ttyACM*
 ## Testing
 
 ```bash
-# Test working state
-echo '{"state":"working","tool":"Bash","project":"test"}' > /dev/cu.usbmodem1101
+# Test start state
+echo '{"state":"start","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
 
 # Test idle state
-echo '{"state":"idle","project":"test"}' > /dev/cu.usbmodem1101
+echo '{"state":"idle","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+
+# Test thinking state
+echo '{"state":"thinking","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+
+# Test planning state
+echo '{"state":"planning","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+
+# Test working state
+echo '{"state":"working","tool":"Bash","project":"vibe-monitor","model":"Opus 4.5","memory":"55%"}' > /dev/cu.usbmodem1101
+
+# Test notification state
+echo '{"state":"notification","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
+
+# Test done state
+echo '{"state":"done","project":"vibe-monitor"}' > /dev/cu.usbmodem1101
 ```
 
 ## Serial Commands
