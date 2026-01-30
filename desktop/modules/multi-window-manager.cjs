@@ -221,8 +221,8 @@ class MultiWindowManager {
         this.store.set('lockedProject', projectId);
       }
     } else if (this.lockMode === 'on-thinking') {
-      // Lock when entering thinking state
-      if (state === 'thinking') {
+      // Lock when entering start or thinking state
+      if (state === 'start' || state === 'thinking') {
         this.lockedProject = projectId;
         this.store.set('lockedProject', projectId);
       }

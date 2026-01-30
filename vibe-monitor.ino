@@ -411,9 +411,9 @@ void processInput(const char* input) {
       lockedProject[sizeof(lockedProject) - 1] = '\0';
     }
   } else if (lockMode == LOCK_MODE_ON_THINKING) {
-    // Lock on thinking state
+    // Lock on start or thinking state
     const char* stateStr = doc["state"] | "";
-    if (strcmp(stateStr, "thinking") == 0 && strlen(incomingProject) > 0) {
+    if ((strcmp(stateStr, "start") == 0 || strcmp(stateStr, "thinking") == 0) && strlen(incomingProject) > 0) {
       strncpy(lockedProject, incomingProject, sizeof(lockedProject) - 1);
       lockedProject[sizeof(lockedProject) - 1] = '\0';
     }
@@ -874,7 +874,7 @@ void handleUnlock() {
 void handleLockModeGet() {
   char response[192];
   snprintf(response, sizeof(response),
-    "{\"lockMode\":\"%s\",\"modes\":{\"first-project\":\"First project auto-lock\",\"on-thinking\":\"Lock on thinking state\"}}",
+    "{\"lockMode\":\"%s\",\"modes\":{\"first-project\":\"First project auto-lock\",\"on-thinking\":\"Lock on start/thinking\"}}",
     getLockModeString());
   server.send(200, "application/json", response);
 }
