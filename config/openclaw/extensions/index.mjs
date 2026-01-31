@@ -17,7 +17,6 @@
  */
 
 import fs from "node:fs";
-import { execSync } from "node:child_process";
 
 // State management
 let currentState = "idle";
