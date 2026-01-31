@@ -1,72 +1,51 @@
 # VibeMon Bridge for OpenClaw
 
-Two methods are available to connect OpenClaw to VibeMon:
-
-| Method | Reliability | Setup | Recommended |
-|--------|-------------|-------|-------------|
-| **Plugin (hooks)** | High | Easy | Yes |
-| **Log-based** | Medium | Complex | Legacy |
+OpenClaw plugin that sends real-time agent status to VibeMon (ESP32/Desktop) via hooks.
 
 ---
 
-## Method 1: Plugin-based (Recommended)
+## Installation
 
-The plugin uses OpenClaw's hook system for reliable state detection.
-
-### 1.1 Installation
+### 1. Copy Plugin
 
 ```bash
 # Copy plugin to OpenClaw extensions directory
-mkdir -p ~/.openclaw/extensions
-cp -r extensions/vibemon-bridge ~/.openclaw/extensions/
+mkdir -p ~/.openclaw/extensions/vibemon-bridge
+cp extensions/* ~/.openclaw/extensions/vibemon-bridge/
 ```
 
-### 1.2 Enable Plugin
+### 2. Enable Plugin
 
-Add to your OpenClaw config (`~/.openclaw/config.json` or workspace config):
+Edit `~/.openclaw/openclaw.json` and add to `plugins.entries`:
 
 ```json
-{
-  "plugins": {
+"plugins": {
+  "entries": {
     "vibemon-bridge": {
       "enabled": true,
       "config": {
         "projectName": "OpenClaw",
         "character": "claw",
         "serialEnabled": true,
-        "httpEnabled": false,
-        "debug": false
+        "debug": true
       }
     }
   }
 }
 ```
 
-### 1.3 Configuration Options
+### 3. Restart OpenClaw Gateway
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `projectName` | `OpenClaw` | Project name on VibeMon display |
-| `character` | `claw` | Character: `clawd`, `kiro`, `claw` |
-| `serialEnabled` | `true` | Send to ESP32 via USB serial |
-| `httpEnabled` | `false` | Send to VibeMon Desktop app |
-| `httpUrl` | `http://127.0.0.1:19280/status` | Desktop app endpoint |
-| `debug` | `false` | Enable verbose logging |
+```bash
+# If running as service
+systemctl --user restart openclaw-gateway
 
-### 1.4 Hooks Used
+# Or restart manually
+pkill -f openclaw
+openclaw gateway start
+```
 
-| Hook | VibeMon State |
-|------|---------------|
-| `gateway_start` | `start` |
-| `before_agent_start` | `thinking` |
-| `before_tool_call` | `working` (with tool name) |
-| `after_tool_call` | `thinking` |
-| `message_sent` | `done` (3s delay) |
-| `agent_end` | `done` (fallback) |
-| `session_end` | `done` |
-| `gateway_stop` | `done` |
-
-### 1.5 Verify
+### 4. Verify
 
 Check OpenClaw logs for plugin loading:
 ```
@@ -78,55 +57,31 @@ Check OpenClaw logs for plugin loading:
 
 ---
 
-## Method 2: Log-based (Legacy)
+## Configuration Options
 
-`scripts/vibemon-bridge.mjs` tails OpenClaw Gateway logs (JSONL) and streams status to ESP32.
+| Option | Default | Description |
+|--------|---------|-------------|
+| `projectName` | `OpenClaw` | Project name on VibeMon display |
+| `character` | `claw` | Character: `clawd`, `kiro`, `claw` |
+| `serialEnabled` | `true` | Send to ESP32 via USB serial |
+| `httpEnabled` | `false` | Send to VibeMon Desktop app |
+| `httpUrl` | `http://127.0.0.1:19280/status` | Desktop app endpoint |
+| `debug` | `false` | Enable verbose logging |
 
-- Input: OpenClaw log file (`/tmp/openclaw/openclaw-YYYY-MM-DD.log`)
-- Output: `/dev/ttyACM0` (Linux) or `/dev/cu.usbmodem*` (macOS)
+---
 
-### 2.1 File Structure
+## Hooks Used
 
-- `scripts/vibemon-bridge.mjs`: Bridge script (Node.js)
-- `scripts/vibemon-bridge.plist`: launchd user service (macOS)
-- `scripts/vibemon-bridge.service`: systemd user service (Linux)
-
-### 2.2 Quick Start
-
-```bash
-cd ~/.openclaw/workspace
-node scripts/vibemon-bridge.mjs
-```
-
-For debugging:
-```bash
-DEBUG=1 node scripts/vibemon-bridge.mjs
-```
-
-### 2.3 Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PROJECT_NAME` | `OpenClaw` | Project name |
-| `OPENCLAW_LOG_DIR` | `/tmp/openclaw` | Log directory |
-| `DEBUG` | `false` | Debug mode |
-
-### 2.4 Running as User Service
-
-**macOS (launchd):**
-```bash
-cp ~/.openclaw/workspace/scripts/vibemon-bridge.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/vibemon-bridge.plist
-launchctl list | grep vibemon
-```
-
-**Linux (systemd):**
-```bash
-mkdir -p ~/.config/systemd/user
-cp ~/.openclaw/workspace/scripts/vibemon-bridge.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now vibemon-bridge.service
-```
+| Hook | VibeMon State |
+|------|---------------|
+| `gateway_start` | `start` |
+| `before_agent_start` | `thinking` |
+| `before_tool_call` | `working` (with tool name) |
+| `after_tool_call` | `thinking` |
+| `message_sent` | `done` (3s delay) |
+| `agent_end` | `done` (fallback) |
+| `session_end` | `done` |
+| `gateway_stop` | `done` |
 
 ---
 
@@ -193,8 +148,3 @@ ls -la /dev/ttyACM0  # Check group
 - Check config JSON syntax
 - Verify plugin directory: `~/.openclaw/extensions/vibemon-bridge/`
 - Check OpenClaw logs for errors
-
-### Log-based Bridge Issues
-
-- Verify log directory: `ls -la /tmp/openclaw`
-- Check log format: `tail -f /tmp/openclaw/openclaw-*.log`
