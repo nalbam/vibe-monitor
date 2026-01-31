@@ -69,7 +69,7 @@ open simulator/index.html
 - **Click to focus terminal**: Click window to switch to corresponding iTerm2 or Ghostty tab (macOS only, uses `terminalId` from `ITERM_SESSION_ID` or `GHOSTTY_PID`)
 - **State-based always on top**: Active states (thinking, planning, working, notification) keep window on top; inactive states (start, idle, done, sleep) disable always on top to reduce screen obstruction
 - **Always on Top Modes**: `active-only` (default), `all`, `disabled` - configurable via system tray menu
-- **Always on Top Grace Period**: 10 seconds before disabling always on top when state becomes inactive (except sleep which is immediate)
+- **Always on Top**: Active states enable on top immediately; inactive states disable on top immediately (no grace period, prevents focus stealing)
 
 ## Window Mode
 

@@ -17,8 +17,7 @@ const {
   SNAP_DEBOUNCE,
   LOCK_MODES,
   ALWAYS_ON_TOP_MODES,
-  ACTIVE_STATES,
-  ALWAYS_ON_TOP_GRACE_PERIOD
+  ACTIVE_STATES
 } = require('../shared/config.cjs');
 
 // Platform-specific always-on-top level
@@ -782,8 +781,7 @@ class MultiWindowManager {
   /**
    * Update always on top for a specific window based on state
    * Active states (thinking, planning, working, notification) keep always on top
-   * Inactive states (start, idle, done) have grace period before on top is disabled
-   * Sleep state immediately disables on top (no grace period needed)
+   * Inactive states immediately disable on top (prevents focus stealing)
    * Respects alwaysOnTopMode setting
    * @param {string} projectId
    * @param {string} state
@@ -795,7 +793,6 @@ class MultiWindowManager {
     }
 
     const isActiveState = ACTIVE_STATES.includes(state);
-    const isSleepState = state === 'sleep';
 
     // Always clear any pending timer first
     this.clearAlwaysOnTopTimer(projectId);
@@ -804,23 +801,10 @@ class MultiWindowManager {
       if (isActiveState) {
         // Active state: immediately enable on top
         entry.window.setAlwaysOnTop(true, ALWAYS_ON_TOP_LEVEL);
-      } else if (isSleepState) {
-        // Sleep state: immediately disable on top (no grace period)
-        entry.window.setAlwaysOnTop(false, ALWAYS_ON_TOP_LEVEL);
       } else {
-        // Other inactive states (start, idle, done): grace period before disable
-        entry.window.setAlwaysOnTop(true, ALWAYS_ON_TOP_LEVEL);
-
-        const timer = setTimeout(() => {
-          this.alwaysOnTopTimers.delete(projectId);
-          // Re-fetch entry by projectId to handle single-mode window reuse
-          const currentEntry = this.windows.get(projectId);
-          if (this.isWindowValid(currentEntry)) {
-            currentEntry.window.setAlwaysOnTop(false, ALWAYS_ON_TOP_LEVEL);
-          }
-        }, ALWAYS_ON_TOP_GRACE_PERIOD);
-
-        this.alwaysOnTopTimers.set(projectId, timer);
+        // Inactive states (start, idle, done, sleep): immediately disable on top
+        // No grace period to prevent focus stealing
+        entry.window.setAlwaysOnTop(false, ALWAYS_ON_TOP_LEVEL);
       }
     } else {
       // 'all' or 'disabled' mode: apply immediately without grace period

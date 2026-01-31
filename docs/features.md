@@ -170,9 +170,8 @@ python3 ~/.claude/hooks/vibe-monitor.py --reboot
 | `disabled` | No windows stay on top |
 
 When `active-only` is selected:
-- Active states immediately enable always on top
-- Inactive states (start, idle, done) have a 10-second grace period before disabling
-- Sleep state immediately disables always on top (no grace period)
+- Active states (thinking, planning, working, notification) immediately enable always on top
+- Inactive states (start, idle, done, sleep) immediately disable always on top (prevents focus stealing)
 
 Change via system tray menu: Always on Top → Select mode
 
