@@ -34,9 +34,9 @@ dmesg | tail -n 50
 ### 2.2 Serial Permissions (dialout)
 The bridge needs write access to the TTY device.
 
-- Add your user (e.g., `pi`) to the `dialout` group:
+- Add your user to the `dialout` group:
 ```bash
-sudo usermod -aG dialout pi
+sudo usermod -aG dialout $USER
 # Logout/reboot may be required for changes to take effect
 ```
 
@@ -114,24 +114,25 @@ Common fields:
 ## 6) Running with systemd (Recommended)
 
 ### 6.1 Install as System Service
-Example for `pi` user.
 
-1) Copy the unit file
+1) Edit the service file and replace `YOUR_USERNAME` with your actual username
+
+2) Copy the unit file
 ```bash
 sudo cp ~/.openclaw/workspace/scripts/vibemon-bridge.service /etc/systemd/system/vibemon-bridge.service
 ```
 
-2) Reload systemd
+3) Reload systemd
 ```bash
 sudo systemctl daemon-reload
 ```
 
-3) Enable and start
+4) Enable and start
 ```bash
 sudo systemctl enable --now vibemon-bridge.service
 ```
 
-4) Check status/logs
+5) Check status/logs
 ```bash
 sudo systemctl status vibemon-bridge.service -n 50
 sudo journalctl -u vibemon-bridge.service -f
@@ -159,9 +160,9 @@ journalctl --user -u vibemon-bridge.service -f
 
 ### 7.2 Write Permission Denied
 - Verify the group is `dialout` with `ls -la /dev/ttyACM0`
-- Confirm `pi` is in the `dialout` group:
+- Confirm your user is in the `dialout` group:
 ```bash
-groups pi
+groups $USER
 ```
 
 ### 7.3 OpenClaw Log File Not Found

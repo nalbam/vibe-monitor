@@ -1,10 +1,10 @@
 [Unit]
-Description=OpenClaw -> ESP32-C6 LCD status bridge (OpenClaw) [user]
+Description=VibeMon Bridge - OpenClaw status to ESP32
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/.openclaw/workspace
-ExecStart=/usr/bin/env node /home/pi/.openclaw/workspace/scripts/vibemon-bridge.mjs
+WorkingDirectory=%h/.openclaw/workspace
+ExecStart=/usr/bin/env node %h/.openclaw/workspace/scripts/vibemon-bridge.mjs
 Restart=always
 RestartSec=2
 Environment=PROJECT_NAME=OpenClaw

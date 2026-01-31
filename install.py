@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Vibe Monitor Installation Script
-Installs hooks and configuration for Claude Code or Kiro IDE.
+Installs hooks and configuration for Claude Code, Kiro IDE, or OpenClaw.
 
 Usage:
   # Online install (recommended)
@@ -12,6 +12,7 @@ Usage:
 """
 
 import difflib
+import getpass
 import json
 import sys
 from pathlib import Path
@@ -48,6 +49,12 @@ KIRO_FILES = [
     "config/kiro/hooks/vibe-monitor-file-edited.kiro.hook",
     "config/kiro/hooks/vibe-monitor-file-deleted.kiro.hook",
     "config/kiro/hooks/vibe-monitor-agent-stop.kiro.hook",
+]
+
+OPENCLAW_FILES = [
+    "config/openclaw/scripts/vibemon-bridge.mjs",
+    "config/openclaw/scripts/vibemon-bridge.service",
+    "config/openclaw/scripts/vibemon-bridge.user.service",
 ]
 
 
@@ -341,6 +348,48 @@ def install_kiro(source: FileSource) -> bool:
     return True
 
 
+def install_openclaw(source: FileSource) -> bool:
+    """Install Vibe Monitor bridge for OpenClaw."""
+    print(f"\n{colored('Installing Vibe Monitor for OpenClaw...', 'cyan')}\n")
+
+    openclaw_home = Path.home() / ".openclaw" / "workspace"
+    scripts_dir = openclaw_home / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+
+    current_user = getpass.getuser()
+    print(f"  Current user: {colored(current_user, 'yellow')}")
+
+    print("\nCopying files:")
+
+    # vibemon-bridge.mjs
+    content = source.get_file("config/openclaw/scripts/vibemon-bridge.mjs")
+    write_file_with_diff(scripts_dir / "vibemon-bridge.mjs", content, "scripts/vibemon-bridge.mjs")
+
+    # vibemon-bridge.service (replace YOUR_USERNAME with current user)
+    content = source.get_file("config/openclaw/scripts/vibemon-bridge.service")
+    content = content.replace("YOUR_USERNAME", current_user)
+    content = content.replace("%h", f"/home/{current_user}")
+    write_file_with_diff(scripts_dir / "vibemon-bridge.service", content, "scripts/vibemon-bridge.service")
+
+    # vibemon-bridge.user.service (replace %h with actual home)
+    content = source.get_file("config/openclaw/scripts/vibemon-bridge.user.service")
+    content = content.replace("%h", str(Path.home()))
+    write_file_with_diff(scripts_dir / "vibemon-bridge.user.service", content, "scripts/vibemon-bridge.user.service")
+
+    print(f"\n{colored('OpenClaw installation complete!', 'green')}")
+    print(f"\n{colored('Next steps:', 'yellow')}")
+    print("  1. Connect ESP32 via USB")
+    print("  2. Add user to dialout group: sudo usermod -aG dialout $USER")
+    print("  3. Install as systemd service:")
+    print(f"     {colored('sudo cp ~/.openclaw/workspace/scripts/vibemon-bridge.service /etc/systemd/system/', 'cyan')}")
+    print(f"     {colored('sudo systemctl daemon-reload', 'cyan')}")
+    print(f"     {colored('sudo systemctl enable --now vibemon-bridge.service', 'cyan')}")
+    print("  Or run manually:")
+    print(f"     {colored('node ~/.openclaw/workspace/scripts/vibemon-bridge.mjs', 'cyan')}")
+
+    return True
+
+
 def main():
     """Main entry point."""
     # Enable interactive input when running via curl pipe
@@ -361,28 +410,33 @@ def main():
     print("\nSelect platform to install:")
     print(f"  {colored('1)', 'cyan')} Claude Code")
     print(f"  {colored('2)', 'cyan')} Kiro IDE")
-    print(f"  {colored('3)', 'cyan')} Both")
+    print(f"  {colored('3)', 'cyan')} OpenClaw")
+    print(f"  {colored('4)', 'cyan')} All")
     print(f"  {colored('q)', 'cyan')} Quit")
 
     while True:
-        choice = input("\nYour choice [1/2/3/q]: ").strip().lower()
+        choice = input("\nYour choice [1/2/3/4/q]: ").strip().lower()
         if choice in ("1", "claude"):
             install_claude(source)
             break
         elif choice in ("2", "kiro"):
             install_kiro(source)
             break
-        elif choice in ("3", "both"):
+        elif choice in ("3", "openclaw"):
+            install_openclaw(source)
+            break
+        elif choice in ("4", "all"):
             install_claude(source)
             install_kiro(source)
+            install_openclaw(source)
             break
         elif choice in ("q", "quit", "exit"):
             print("\nInstallation cancelled.")
             sys.exit(0)
         else:
-            print("Please enter 1, 2, 3, or q")
+            print("Please enter 1, 2, 3, 4, or q")
 
-    print(f"\n{colored('Done!', 'green')} Restart Claude Code or Kiro to apply changes.\n")
+    print(f"\n{colored('Done!', 'green')} Restart your IDE to apply changes.\n")
 
 
 if __name__ == "__main__":

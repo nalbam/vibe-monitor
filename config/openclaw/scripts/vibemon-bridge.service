@@ -1,20 +1,21 @@
 [Unit]
-Description=OpenClaw -> ESP32-C6 LCD status bridge (OpenClaw)
+Description=VibeMon Bridge - OpenClaw status to ESP32
 After=openclaw-gateway.service
 Wants=openclaw-gateway.service
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/.openclaw/workspace
-ExecStart=/usr/bin/env node /home/pi/.openclaw/workspace/scripts/vibemon-bridge.mjs
+# Change YOUR_USERNAME to your actual username
+User=YOUR_USERNAME
+WorkingDirectory=%h/.openclaw/workspace
+ExecStart=/usr/bin/env node %h/.openclaw/workspace/scripts/vibemon-bridge.mjs
 Restart=always
 RestartSec=2
 Environment=PROJECT_NAME=OpenClaw
 Environment=OPENCLAW_LOG_DIR=/tmp/openclaw
 
 # If tty permissions are an issue, either:
-# - add user 'pi' to dialout group, or
+# - add user to dialout group, or
 # - run as root (not recommended)
 
 [Install]
