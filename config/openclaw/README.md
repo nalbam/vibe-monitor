@@ -16,9 +16,9 @@ The plugin uses OpenClaw's hook system for reliable state detection.
 ### 1.1 Installation
 
 ```bash
-# Copy plugin to OpenClaw plugins directory
-mkdir -p ~/.openclaw/workspace/plugins
-cp -r plugins/vibemon-bridge ~/.openclaw/workspace/plugins/
+# Copy plugin to OpenClaw extensions directory
+mkdir -p ~/.openclaw/extensions
+cp -r extensions/vibemon-bridge ~/.openclaw/extensions/
 ```
 
 ### 1.2 Enable Plugin
@@ -191,7 +191,7 @@ ls -la /dev/ttyACM0  # Check group
 ### Plugin Not Loading
 
 - Check config JSON syntax
-- Verify plugin directory: `~/.openclaw/workspace/plugins/vibemon-bridge/`
+- Verify plugin directory: `~/.openclaw/extensions/vibemon-bridge/`
 - Check OpenClaw logs for errors
 
 ### Log-based Bridge Issues

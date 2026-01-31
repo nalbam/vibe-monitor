@@ -59,8 +59,8 @@ OPENCLAW_FILES = [
 ]
 
 OPENCLAW_PLUGIN_FILES = [
-    "config/openclaw/plugins/vibemon-bridge/openclaw.plugin.json",
-    "config/openclaw/plugins/vibemon-bridge/index.mjs",
+    "config/openclaw/extensions/vibemon-bridge/openclaw.plugin.json",
+    "config/openclaw/extensions/vibemon-bridge/index.mjs",
 ]
 
 
@@ -358,18 +358,18 @@ def install_openclaw_plugin(source: FileSource) -> bool:
     """Install VibeMon plugin for OpenClaw (recommended)."""
     print(f"\n{colored('Installing VibeMon Plugin for OpenClaw...', 'cyan')}\n")
 
-    openclaw_home = Path.home() / ".openclaw" / "workspace"
-    plugin_dir = openclaw_home / "plugins" / "vibemon-bridge"
+    openclaw_home = Path.home() / ".openclaw"
+    plugin_dir = openclaw_home / "extensions" / "vibemon-bridge"
     plugin_dir.mkdir(parents=True, exist_ok=True)
 
     print("Copying plugin files:")
 
     # openclaw.plugin.json
-    content = source.get_file("config/openclaw/plugins/vibemon-bridge/openclaw.plugin.json")
+    content = source.get_file("config/openclaw/extensions/vibemon-bridge/openclaw.plugin.json")
     write_file_with_diff(plugin_dir / "openclaw.plugin.json", content, "openclaw.plugin.json")
 
     # index.mjs
-    content = source.get_file("config/openclaw/plugins/vibemon-bridge/index.mjs")
+    content = source.get_file("config/openclaw/extensions/vibemon-bridge/index.mjs")
     write_file_with_diff(plugin_dir / "index.mjs", content, "index.mjs")
 
     print(f"\n{colored('Plugin installation complete!', 'green')}")
