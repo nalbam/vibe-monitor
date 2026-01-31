@@ -9,11 +9,11 @@
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>exec /usr/bin/env node HOME_DIR/.openclaw/workspace/scripts/vibemon-bridge.mjs</string>
+        <string>exec /usr/bin/env node "$HOME/.openclaw/workspace/scripts/vibemon-bridge.mjs"</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>HOME_DIR/.openclaw/workspace</string>
+    <string>/tmp</string>
 
     <key>EnvironmentVariables</key>
     <dict>
@@ -32,9 +32,9 @@
     <true/>
 
     <key>StandardOutPath</key>
-    <string>HOME_DIR/.openclaw/logs/vibemon-bridge.log</string>
+    <string>/tmp/vibemon-bridge.log</string>
 
     <key>StandardErrorPath</key>
-    <string>HOME_DIR/.openclaw/logs/vibemon-bridge.error.log</string>
+    <string>/tmp/vibemon-bridge.error.log</string>
 </dict>
 </plist>

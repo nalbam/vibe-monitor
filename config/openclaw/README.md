@@ -16,9 +16,8 @@
 ## 1) File Structure
 
 - `scripts/vibemon-bridge.mjs`: Bridge script (Node.js)
-- `scripts/vibemon-bridge.plist`: launchd service (macOS)
-- `scripts/vibemon-bridge.service`: systemd system service (Linux)
-- `scripts/vibemon-bridge.user.service`: systemd user service (Linux)
+- `scripts/vibemon-bridge.plist`: launchd user service (macOS)
+- `scripts/vibemon-bridge.service`: systemd user service (Linux)
 
 ---
 
@@ -74,10 +73,24 @@ node scripts/vibemon-bridge.mjs
 ```
 
 If working correctly, you'll see logs on stderr:
-- `Using tty: /dev/ttyACM0` (Linux) or `/dev/cu.usbmodem*` (macOS)
-- `Tailing log: /tmp/openclaw/openclaw-YYYY-MM-DD.log`
+```
+==================================================
+VibeMon Bridge for OpenClaw
+==================================================
+Using tty: /dev/ttyACM0
+Tailing log: /tmp/openclaw/openclaw-2026-01-31.log
+Debug mode: OFF (set DEBUG=1 to enable)
+Supported patterns:
+  - Tool patterns: 4
+  - Session state patterns: 4
+  - JSON formats: 6 variants
+==================================================
+```
 
-Verify that JSON lines are being received on the ESP32.
+For debugging, enable debug mode:
+```bash
+DEBUG=1 node scripts/vibemon-bridge.mjs
+```
 
 ---
 
@@ -85,15 +98,17 @@ Verify that JSON lines are being received on the ESP32.
 
 The bridge uses the following environment variables:
 
-- `PROJECT_NAME` (default: `OpenClaw`)
-  - Project name displayed on ESP32
-- `OPENCLAW_LOG_DIR` (default: `/tmp/openclaw`)
-  - OpenClaw log directory
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PROJECT_NAME` | `OpenClaw` | Project name displayed on ESP32 |
+| `OPENCLAW_LOG_DIR` | `/tmp/openclaw` | OpenClaw log directory |
+| `DEBUG` | `false` | Enable debug logging (`1` or `true`) |
 
 Example:
 ```bash
 PROJECT_NAME=OpenClaw \
 OPENCLAW_LOG_DIR=/tmp/openclaw \
+DEBUG=1 \
 node scripts/vibemon-bridge.mjs
 ```
 
@@ -118,7 +133,7 @@ Common fields:
 
 ---
 
-## 6) Running as a Service
+## 6) Running as a User Service
 
 ### 6.1 macOS (launchd)
 
@@ -133,48 +148,47 @@ launchctl load ~/Library/LaunchAgents/vibemon-bridge.plist
 launchctl list | grep vibemon
 
 # View logs
-tail -f ~/.openclaw/logs/vibemon-bridge.log
-tail -f ~/.openclaw/logs/vibemon-bridge.error.log
+tail -f /tmp/vibemon-bridge.log
+tail -f /tmp/vibemon-bridge.error.log
 
 # Unload (stop) the service
 launchctl unload ~/Library/LaunchAgents/vibemon-bridge.plist
 ```
 
-### 6.2 Linux (systemd) - System Service
-
-> **Note:** If you used `install.py`, the username and paths are already configured automatically.
-
-1) Copy the unit file
-```bash
-sudo cp ~/.openclaw/workspace/scripts/vibemon-bridge.service /etc/systemd/system/vibemon-bridge.service
-```
-
-2) Reload systemd
-```bash
-sudo systemctl daemon-reload
-```
-
-3) Enable and start
-```bash
-sudo systemctl enable --now vibemon-bridge.service
-```
-
-4) Check status/logs
-```bash
-sudo systemctl status vibemon-bridge.service -n 50
-sudo journalctl -u vibemon-bridge.service -f
-```
-
-### 6.3 Linux (systemd) - User Service (Optional)
-
-Use this if you want to run as a user service in a GUI login session.
+### 6.2 Linux (systemd user service)
 
 ```bash
+# Create user systemd directory
 mkdir -p ~/.config/systemd/user
-cp ~/.openclaw/workspace/scripts/vibemon-bridge.user.service ~/.config/systemd/user/vibemon-bridge.service
+
+# Copy the service file
+cp ~/.openclaw/workspace/scripts/vibemon-bridge.service ~/.config/systemd/user/
+
+# Reload systemd
 systemctl --user daemon-reload
+
+# Enable and start
 systemctl --user enable --now vibemon-bridge.service
+
+# Check status
+systemctl --user status vibemon-bridge.service
+
+# View logs
 journalctl --user -u vibemon-bridge.service -f
+
+# Stop the service
+systemctl --user stop vibemon-bridge.service
+
+# Disable the service
+systemctl --user disable vibemon-bridge.service
+```
+
+#### Enable linger (optional, for headless servers)
+
+By default, user services stop when the user logs out. To keep them running:
+
+```bash
+sudo loginctl enable-linger $USER
 ```
 
 ---
@@ -205,11 +219,49 @@ groups $USER
 - Verify `OPENCLAW_LOG_DIR` matches the actual log path
 - Confirm Gateway is writing logs to that location
 
+### 7.4 Service not starting
+
+**Linux:**
+```bash
+# Check detailed status
+systemctl --user status vibemon-bridge.service -l
+
+# Check journal logs
+journalctl --user -u vibemon-bridge.service --no-pager -n 50
+```
+
+**macOS:**
+```bash
+# Check if loaded
+launchctl list | grep vibemon
+
+# View error log
+cat /tmp/vibemon-bridge.error.log
+```
+
 ---
 
-## 8) Future Improvements
+## 8) Log Format Resilience
 
-Current v1 only detects TTY changes but does **not reopen** the stream.
-If USB reconnects are frequent, consider these improvements:
-- Close existing stream and open new one when `/dev/ttyACM*` changes
-- Send periodic heartbeat/ping to ESP32
+The bridge supports multiple log formats for resilience against OpenClaw updates:
+
+**JSON Formats:**
+- `{"0": "...", "1": "..."}`
+- `{"subsystem": "...", "message": "..."}`
+- `{"msg": "...", "module": "..."}`
+- `{"text": "..."}` or `{"log": "..."}`
+- `[subsystem, message]` (array)
+
+**State Detection Patterns:**
+- `session state: prev=idle new=processing`
+- `state changed: idle -> processing`
+- `session.state = processing`
+- `{"state": "processing"}`
+
+**Tool Detection Patterns:**
+- `embedded run tool start: tool=exec`
+- `tool_call started tool=exec`
+- `executing tool: exec`
+- `[tool:exec] start`
+
+The bridge automatically handles log file rotation at midnight.

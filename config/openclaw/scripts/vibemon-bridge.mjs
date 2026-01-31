@@ -17,9 +17,15 @@ import fs from "node:fs";
 import path from "node:path";
 
 const LOG_DIR = process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw";
+const DEBUG = process.env.DEBUG === "1" || process.env.DEBUG === "true";
 
 const PROJECT = process.env.PROJECT_NAME ?? "OpenClaw";
 const CHARACTER = "claw";
+
+// Debug logging helper
+function debug(...args) {
+  if (DEBUG) console.error("[DEBUG]", ...args);
+}
 
 function listTtys() {
   try {
@@ -79,93 +85,277 @@ function setState(stream, nextState, extra = {}) {
   });
 }
 
+// --- Multi-pattern matchers for log format resilience ---
+
+// Tool execution patterns (ordered by priority)
+const TOOL_PATTERNS = [
+  // Current format: embedded run tool start: runId=... tool=exec toolCallId=...
+  {
+    name: "embedded_run_tool",
+    regex: /embedded run tool (start|end):.*?\btool=([a-zA-Z0-9_:-]+)/,
+    extract: (m) => ({ phase: m[1], tool: m[2] }),
+  },
+  // Alternative: tool_call start tool=exec
+  {
+    name: "tool_call",
+    regex: /tool[_\s]?call\s+(start|end|started|ended|begin|finish).*?\btool[=:\s]+([a-zA-Z0-9_:-]+)/i,
+    extract: (m) => ({ phase: m[1].replace(/ed$/, "").replace("begin", "start").replace("finish", "end"), tool: m[2] }),
+  },
+  // Alternative: executing tool: exec
+  {
+    name: "executing_tool",
+    regex: /(executing|finished|starting|completed)\s+tool[:\s]+([a-zA-Z0-9_:-]+)/i,
+    extract: (m) => ({
+      phase: ["executing", "starting"].includes(m[1].toLowerCase()) ? "start" : "end",
+      tool: m[2],
+    }),
+  },
+  // Alternative: [tool:exec] start
+  {
+    name: "bracketed_tool",
+    regex: /\[tool[:\s]*([a-zA-Z0-9_:-]+)\]\s*(start|end|begin|finish)/i,
+    extract: (m) => ({ phase: m[2].replace("begin", "start").replace("finish", "end"), tool: m[1] }),
+  },
+];
+
+// Session state patterns (ordered by priority)
+const SESSION_STATE_PATTERNS = [
+  // Current format: session state: sessionId=... prev=idle new=processing
+  {
+    name: "session_state_kv",
+    test: (line) => line.includes("session state:") || line.includes("session_state:"),
+    extract: (line) => {
+      const prev = line.match(/\bprev[=:\s]+([a-zA-Z_]+)/i)?.[1] ?? null;
+      const next = line.match(/\bnew[=:\s]+([a-zA-Z_]+)/i)?.[1] ?? null;
+      const reason = line.match(/\breason[=:\s]*"?([^"\s]+)"?/i)?.[1] ?? null;
+      return prev || next ? { prev, next, reason } : null;
+    },
+  },
+  // Alternative: state changed: idle -> processing
+  {
+    name: "state_changed_arrow",
+    test: (line) => /state\s*(changed|transition)/i.test(line),
+    extract: (line) => {
+      const m = line.match(/([a-zA-Z_]+)\s*(?:->|=>|to)\s*([a-zA-Z_]+)/i);
+      return m ? { prev: m[1], next: m[2], reason: null } : null;
+    },
+  },
+  // Alternative: session.state = processing
+  {
+    name: "state_assignment",
+    test: (line) => /session\.?state/i.test(line),
+    extract: (line) => {
+      const m = line.match(/session\.?state\s*[=:]\s*([a-zA-Z_]+)/i);
+      return m ? { prev: null, next: m[1], reason: null } : null;
+    },
+  },
+  // Alternative: {"state": "processing", "previous": "idle"}
+  {
+    name: "state_json",
+    test: (line) => line.includes('"state"'),
+    extract: (line) => {
+      const stateMatch = line.match(/"state"\s*:\s*"([a-zA-Z_]+)"/);
+      const prevMatch = line.match(/"(?:prev|previous|from)"\s*:\s*"([a-zA-Z_]+)"/);
+      return stateMatch ? { prev: prevMatch?.[1] ?? null, next: stateMatch[1], reason: null } : null;
+    },
+  },
+];
+
+// Run lifecycle patterns
+const RUN_LIFECYCLE_PATTERNS = {
+  start: [
+    /embedded run start:/i,
+    /run[_\s]?started/i,
+    /agent[_\s]?run[_\s]?begin/i,
+    /starting[_\s]?run/i,
+    /\brun\b.*\bstart/i,
+  ],
+  done: [
+    /embedded run done:/i,
+    /run[_\s]?(?:ended|finished|completed|done)/i,
+    /agent[_\s]?run[_\s]?(?:end|finish|complete)/i,
+    /\brun\b.*\b(?:end|done|complete)/i,
+  ],
+  promptStart: [
+    /embedded run prompt start/i,
+    /prompt[_\s]?(?:start|begin)/i,
+    /starting[_\s]?prompt/i,
+  ],
+  promptEnd: [
+    /embedded run prompt end/i,
+    /prompt[_\s]?(?:end|finish|done)/i,
+    /finished[_\s]?prompt/i,
+  ],
+  delivered: [
+    /delivered reply to/i,
+    /reply[_\s]?delivered/i,
+    /response[_\s]?sent/i,
+    /message[_\s]?delivered/i,
+  ],
+};
+
+// Subsystem patterns for matching log sources
+const SUBSYSTEM_PATTERNS = {
+  diagnostic: [/diagnostic/i, /diag/i, /session/i],
+  agent: [/agent\/embedded/i, /embedded/i, /agent/i],
+  gateway: [/gateway\/channels/i, /gateway/i, /channel/i],
+};
+
 function parseEmbeddedTool(line) {
-  // Example:
-  // embedded run tool start: runId=... tool=exec toolCallId=...
-  const m = line.match(/embedded run tool (start|end): .*? tool=([a-zA-Z0-9_:-]+)/);
-  if (!m) return null;
-  return { phase: m[1], tool: m[2] };
+  for (const pattern of TOOL_PATTERNS) {
+    const m = line.match(pattern.regex);
+    if (m) {
+      const result = pattern.extract(m);
+      debug(`Tool matched [${pattern.name}]:`, result);
+      return result;
+    }
+  }
+  return null;
 }
 
 function parseSessionState(line) {
-  // Example:
-  // session state: sessionId=... prev=idle new=processing reason="run_started" ...
-  if (!line.startsWith("session state:")) return null;
-  const prev = line.match(/\sprev=([^\s]+)/)?.[1] ?? null;
-  const next = line.match(/\snew=([^\s]+)/)?.[1] ?? null;
-  const reason = line.match(/\sreason=\"([^\"]+)\"/)?.[1] ?? null;
-  return { prev, next, reason };
+  for (const pattern of SESSION_STATE_PATTERNS) {
+    if (pattern.test(line)) {
+      const result = pattern.extract(line);
+      if (result) {
+        debug(`Session state matched [${pattern.name}]:`, result);
+        return result;
+      }
+    }
+  }
+  return null;
+}
+
+function matchesAnyPattern(text, patterns) {
+  return patterns.some((p) => p.test(text));
+}
+
+function matchesSubsystem(text, type) {
+  const patterns = SUBSYSTEM_PATTERNS[type];
+  return patterns ? matchesAnyPattern(text, patterns) : false;
+}
+
+// Extract message and subsystem from various JSON log formats
+function extractLogFields(obj) {
+  // Format 1: {"0": "{\"subsystem\":...}", "1": "message"}
+  if (typeof obj?.["0"] === "string" && typeof obj?.["1"] === "string") {
+    return { subsystem: obj["0"], msg: obj["1"] };
+  }
+
+  // Format 2: {"subsystem": "...", "message": "..."}
+  if (typeof obj?.subsystem === "string" && typeof obj?.message === "string") {
+    return { subsystem: obj.subsystem, msg: obj.message };
+  }
+
+  // Format 3: {"sub": "...", "msg": "..."}
+  if (typeof obj?.sub === "string" && typeof obj?.msg === "string") {
+    return { subsystem: obj.sub, msg: obj.msg };
+  }
+
+  // Format 4: {"level": "...", "msg": "...", "module": "..."}
+  if (typeof obj?.msg === "string") {
+    return { subsystem: obj.module ?? obj.logger ?? obj.source ?? "", msg: obj.msg };
+  }
+
+  // Format 5: {"text": "..."} or {"log": "..."}
+  if (typeof obj?.text === "string") {
+    return { subsystem: "", msg: obj.text };
+  }
+  if (typeof obj?.log === "string") {
+    return { subsystem: "", msg: obj.log };
+  }
+
+  // Format 6: Array format [subsystem, message]
+  if (Array.isArray(obj) && obj.length >= 2) {
+    return { subsystem: String(obj[0] ?? ""), msg: String(obj[1] ?? "") };
+  }
+
+  return null;
 }
 
 function handleLogLine(stream, obj) {
-  // The OpenClaw JSONL file logs often look like:
-  // {"0":"{\"subsystem\":\"diagnostic\"}","1":"session state: ...", ...}
-  const subsystemRaw = typeof obj?.["0"] === "string" ? obj["0"] : "";
-  const msg = typeof obj?.["1"] === "string" ? obj["1"] : "";
-  if (!msg) return;
+  const fields = extractLogFields(obj);
+  if (!fields || !fields.msg) {
+    debug("Skipping unrecognized log format:", JSON.stringify(obj).slice(0, 100));
+    return;
+  }
 
-  // Session state transitions
-  if (subsystemRaw.includes("diagnostic") && msg.startsWith("session state:")) {
+  const { subsystem, msg } = fields;
+  debug("Processing:", { subsystem: subsystem.slice(0, 50), msg: msg.slice(0, 80) });
+
+  // Session state transitions (highest priority)
+  if (matchesSubsystem(subsystem, "diagnostic") || msg.toLowerCase().includes("session")) {
     const s = parseSessionState(msg);
-    if (!s) return;
+    if (s) {
+      const nextState = s.next?.toLowerCase();
+      if (nextState === "processing" || nextState === "running" || nextState === "active") {
+        debug("State -> thinking (session processing)");
+        setState(stream, "thinking");
+        return;
+      }
+      if (nextState === "idle" || nextState === "inactive" || nextState === "ready") {
+        debug("State -> done (session idle)");
+        setState(stream, "done");
+        return;
+      }
+    }
+  }
 
-    if (s.next === "processing") {
-      // User prompt/run started
+  // Run lifecycle events
+  if (matchesSubsystem(subsystem, "agent") || msg.toLowerCase().includes("run")) {
+    // Run start -> thinking
+    if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.start)) {
+      debug("State -> thinking (run start)");
       setState(stream, "thinking");
       return;
     }
 
-    if (s.next === "idle") {
-      // Run ended
+    // Run done -> done
+    if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.done)) {
+      debug("State -> done (run done)");
       setState(stream, "done");
       return;
     }
 
-    return;
-  }
-
-  // Embedded run lifecycle (fallbacks when diagnostics/session.state is missing)
-  if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run start:")) {
-    setState(stream, "thinking");
-    return;
-  }
-
-  if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run done:")) {
-    setState(stream, "done");
-    return;
-  }
-
-  // Delivery marker (reliable for chat turns): once we deliver a reply, the run is effectively done.
-  if (subsystemRaw.includes("gateway/channels/") && msg.startsWith("delivered reply to")) {
-    setState(stream, "done");
-    return;
-  }
-
-  // Prompt boundaries (map to planning)
-  if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run prompt start")) {
-    setState(stream, "planning");
-    return;
-  }
-
-  if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run prompt end")) {
-    // If the run had no tools, we may otherwise remain stuck in planning.
-    if (currentState === "planning") setState(stream, "thinking");
-    return;
-  }
-
-  // Tool activity
-  if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run tool ")) {
-    const t = parseEmbeddedTool(msg);
-    if (!t) return;
-
-    if (t.phase === "start") {
-      setState(stream, "working", { tool: t.tool });
+    // Prompt start -> planning
+    if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.promptStart)) {
+      debug("State -> planning (prompt start)");
+      setState(stream, "planning");
       return;
     }
 
-    if (t.phase === "end") {
-      // Go back to thinking while processing
-      if (currentState !== "done") setState(stream, "thinking");
+    // Prompt end -> thinking (if still in planning)
+    if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.promptEnd)) {
+      if (currentState === "planning") {
+        debug("State -> thinking (prompt end, was planning)");
+        setState(stream, "thinking");
+      }
+      return;
+    }
+
+    // Tool activity
+    const t = parseEmbeddedTool(msg);
+    if (t) {
+      if (t.phase === "start") {
+        debug("State -> working:", t.tool);
+        setState(stream, "working", { tool: t.tool });
+        return;
+      }
+      if (t.phase === "end") {
+        if (currentState !== "done") {
+          debug("State -> thinking (tool end)");
+          setState(stream, "thinking");
+        }
+        return;
+      }
+    }
+  }
+
+  // Delivery marker (reliable for chat turns)
+  if (matchesSubsystem(subsystem, "gateway") || matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.delivered)) {
+    if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.delivered)) {
+      debug("State -> done (reply delivered)");
+      setState(stream, "done");
       return;
     }
   }
@@ -205,8 +395,17 @@ async function main() {
   setState(ttyStream, "done", { note: "bridge_started" });
 
   const logPath = todayLogPath();
+  console.error("=".repeat(50));
+  console.error("VibeMon Bridge for OpenClaw");
+  console.error("=".repeat(50));
   console.error("Using tty:", dev);
   console.error("Tailing log:", logPath);
+  console.error("Debug mode:", DEBUG ? "ON" : "OFF (set DEBUG=1 to enable)");
+  console.error("Supported patterns:");
+  console.error("  - Tool patterns:", TOOL_PATTERNS.length);
+  console.error("  - Session state patterns:", SESSION_STATE_PATTERNS.length);
+  console.error("  - JSON formats: 6 variants");
+  console.error("=".repeat(50));
 
   // If the log file doesn't exist yet, wait for it.
   const waitStart = Date.now();
@@ -247,6 +446,18 @@ async function main() {
       // Keeping it simple for v1; if you see reconnect issues, we can add reopen logic.
     }
   }, 5000).unref();
+
+  // Check for log file rotation at midnight
+  let currentLogPath = logPath;
+  setInterval(() => {
+    const newLogPath = todayLogPath();
+    if (newLogPath !== currentLogPath) {
+      console.error(`Log file rotated: ${currentLogPath} -> ${newLogPath}`);
+      console.error("Restarting bridge to follow new log file...");
+      // Kill tail and let the process exit, systemd/launchd will restart us
+      tail.kill("SIGTERM");
+    }
+  }, 60000).unref(); // Check every minute
 
   tail.on("exit", (code, sig) => {
     console.error(`tail exited code=${code} sig=${sig}`);

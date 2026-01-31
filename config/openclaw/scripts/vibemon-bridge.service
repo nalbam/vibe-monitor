@@ -1,25 +1,15 @@
 [Unit]
 Description=VibeMon Bridge - OpenClaw status to ESP32
-After=openclaw-gateway.service
-Wants=openclaw-gateway.service
+After=default.target
 
 [Service]
 Type=simple
-# ============================================================
-# MANUAL INSTALL: Replace YOUR_USERNAME and YOUR_HOME_DIR
-# install.py does this automatically
-# ============================================================
-User=YOUR_USERNAME
-WorkingDirectory=YOUR_HOME_DIR/.openclaw/workspace
-ExecStart=/usr/bin/env node YOUR_HOME_DIR/.openclaw/workspace/scripts/vibemon-bridge.mjs
+WorkingDirectory=%h/.openclaw/workspace
+ExecStart=/usr/bin/env node %h/.openclaw/workspace/scripts/vibemon-bridge.mjs
 Restart=always
 RestartSec=2
 Environment=PROJECT_NAME=OpenClaw
 Environment=OPENCLAW_LOG_DIR=/tmp/openclaw
 
-# If tty permissions are an issue, either:
-# - add user to dialout group, or
-# - run as root (not recommended)
-
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
