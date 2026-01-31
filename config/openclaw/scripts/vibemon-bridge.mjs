@@ -71,13 +71,14 @@ function nowIso() {
 
 // --- state machine ---
 let currentState = null; // last emitted state
-let activeRuns = 0; // count of active embedded runs
+let doneTimer = null; // timer for delayed done transition
+const DONE_DELAY_MS = 3000; // wait 3 seconds after delivered before done
 
 function setState(stream, nextState, extra = {}) {
   if (nextState === currentState && Object.keys(extra).length === 0) return;
   currentState = nextState;
 
-  debug(`setState: ${nextState}, activeRuns=${activeRuns}`, extra);
+  debug(`setState: ${nextState}`, extra);
   writeJsonLine(stream, {
     state: nextState,
     project: PROJECT,
@@ -85,6 +86,24 @@ function setState(stream, nextState, extra = {}) {
     ts: nowIso(),
     ...extra,
   });
+}
+
+function cancelDoneTimer() {
+  if (doneTimer) {
+    clearTimeout(doneTimer);
+    doneTimer = null;
+    debug("Done timer cancelled");
+  }
+}
+
+function scheduleDone(stream) {
+  cancelDoneTimer();
+  debug(`Scheduling done in ${DONE_DELAY_MS}ms`);
+  doneTimer = setTimeout(() => {
+    doneTimer = null;
+    debug("Done timer fired -> done");
+    setState(stream, "done");
+  }, DONE_DELAY_MS);
 }
 
 // --- Multi-pattern matchers for log format resilience ---
@@ -291,6 +310,7 @@ function handleLogLine(stream, obj) {
     if (s) {
       const nextState = s.next?.toLowerCase();
       if (nextState === "processing" || nextState === "running" || nextState === "active") {
+        cancelDoneTimer(); // New work started, don't go to done
         debug("State -> thinking (session processing)");
         setState(stream, "thinking");
         return;
@@ -302,24 +322,23 @@ function handleLogLine(stream, obj) {
 
   // Run lifecycle events
   if (matchesSubsystem(subsystem, "agent") || msg.toLowerCase().includes("run")) {
-    // Run start -> increment counter and set thinking
+    // Run start -> cancel any pending done timer, set thinking
     if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.start)) {
-      activeRuns++;
-      debug(`Run start: activeRuns=${activeRuns}`);
+      cancelDoneTimer();
+      debug("Run start -> thinking");
       setState(stream, "thinking");
       return;
     }
 
-    // Run done -> decrement counter, check if all runs completed
+    // Run done -> just log, wait for delivered to schedule done
     if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.done)) {
-      activeRuns = Math.max(0, activeRuns - 1);
-      debug(`Run done: activeRuns=${activeRuns}`);
-      // Don't transition to done here - wait for delivered reply
+      debug("Run done (waiting for delivered)");
       return;
     }
 
     // Prompt start -> planning
     if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.promptStart)) {
+      cancelDoneTimer(); // Still working, don't go to done
       debug("State -> planning (prompt start)");
       setState(stream, "planning");
       return;
@@ -338,6 +357,7 @@ function handleLogLine(stream, obj) {
     const t = parseEmbeddedTool(msg);
     if (t) {
       if (t.phase === "start") {
+        cancelDoneTimer(); // Still working, don't go to done
         debug("State -> working:", t.tool);
         setState(stream, "working", { tool: t.tool });
         return;
@@ -352,17 +372,11 @@ function handleLogLine(stream, obj) {
     }
   }
 
-  // Delivery marker - only transition to done if no active runs
+  // Delivery marker - schedule done after delay (cancelled if new run starts)
   if (matchesSubsystem(subsystem, "gateway") || matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.delivered)) {
     if (matchesAnyPattern(msg, RUN_LIFECYCLE_PATTERNS.delivered)) {
-      debug(`Reply delivered: activeRuns=${activeRuns}`);
-      // Only go to done if no other runs are active
-      if (activeRuns === 0) {
-        debug("State -> done (all runs completed, reply delivered)");
-        setState(stream, "done");
-      } else {
-        debug(`Skipping done: ${activeRuns} runs still active`);
-      }
+      debug("Reply delivered -> scheduling done");
+      scheduleDone(stream);
       return;
     }
   }
