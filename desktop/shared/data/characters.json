@@ -10,14 +10,14 @@
     "name": "kiro",
     "displayName": "Kiro",
     "color": "#FFFFFF",
-    "eyes": { "left": { "x": 29, "y": 21 }, "right": { "x": 39, "y": 21 }, "w": 5, "h": 8 },
+    "eyes": { "left": { "x": 30, "y": 21 }, "right": { "x": 39, "y": 21 }, "w": 5, "h": 8 },
     "effect": { "x": 50, "y": 3 }
   },
   "claw": {
     "name": "claw",
     "displayName": "Claw",
     "color": "#DD4444",
-    "eyes": { "left": { "x": 20, "y": 16 }, "right": { "x": 39, "y": 16 }, "size": 6 },
+    "eyes": { "left": { "x": 21, "y": 16 }, "right": { "x": 38, "y": 16 }, "size": 6 },
     "effect": { "x": 49, "y": 4 }
   }
 }
