@@ -4,7 +4,9 @@
  *
  * - Watches OpenClaw gateway JSONL log file(s)
  * - Derives high-level state (thinking/planning/working/done)
- * - Writes newline-delimited JSON to the first /dev/ttyACM* device
+ * - Writes newline-delimited JSON to the first USB serial device
+ *   - Linux: /dev/ttyACM*
+ *   - macOS: /dev/cu.usbmodem*
  *
  * Expected ESP32 input example:
  *   {"state":"working","tool":"exec","project":"OpenClaw","character":"claw"}\n
@@ -21,9 +23,10 @@ const CHARACTER = "claw";
 
 function listTtys() {
   try {
-    return fs
-      .readdirSync("/dev")
-      .filter((n) => n.startsWith("ttyACM"))
+    const devices = fs.readdirSync("/dev");
+    // Linux: /dev/ttyACM*, macOS: /dev/cu.usbmodem*
+    return devices
+      .filter((n) => n.startsWith("ttyACM") || n.startsWith("cu.usbmodem"))
       .map((n) => path.join("/dev", n))
       .sort();
   } catch {
@@ -180,12 +183,16 @@ function ensureDeviceReady(dev) {
 async function main() {
   let dev = pickTty();
   if (!dev) {
-    console.error("No /dev/ttyACM* device found. Plug ESP32-C6 and retry.");
+    console.error("No USB serial device found. Plug ESP32-C6 and retry.");
+    console.error("  Linux: /dev/ttyACM*");
+    console.error("  macOS: /dev/cu.usbmodem*");
     process.exit(2);
   }
 
   if (!ensureDeviceReady(dev)) {
-    console.error(`Found ${dev} but not writable. Check permissions (dialout group) or run as root.`);
+    console.error(`Found ${dev} but not writable.`);
+    console.error("  Linux: Check permissions (dialout group) or run as root.");
+    console.error("  macOS: No additional permissions needed.");
   }
 
   const ttyStream = fs.createWriteStream(dev, { flags: "w" });

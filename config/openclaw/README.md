@@ -16,25 +16,32 @@
 ## 1) File Structure
 
 - `scripts/vibemon-bridge.mjs`: Bridge script (Node.js)
-- `scripts/vibemon-bridge.service`: systemd (system) service unit (recommended for Raspberry Pi/servers)
-- `scripts/vibemon-bridge.user.service`: systemd (user) service unit (optional)
+- `scripts/vibemon-bridge.plist`: launchd service (macOS)
+- `scripts/vibemon-bridge.service`: systemd system service (Linux)
+- `scripts/vibemon-bridge.user.service`: systemd user service (Linux)
 
 ---
 
 ## 2) Prerequisites
 
 ### 2.1 Connect ESP32 via USB
-- When you connect the ESP32-C6 board via USB, it typically appears as a device like `/dev/ttyACM0`.
-- Verify:
+
+**macOS:**
+```bash
+ls /dev/cu.usbmodem*
+```
+
+**Linux:**
 ```bash
 ls -la /dev/ttyACM*
 dmesg | tail -n 50
 ```
 
-### 2.2 Serial Permissions (dialout)
-The bridge needs write access to the TTY device.
+### 2.2 Serial Permissions
 
-- Add your user to the `dialout` group:
+**macOS:** No additional permissions needed.
+
+**Linux:** Add your user to the `dialout` group:
 ```bash
 sudo usermod -aG dialout $USER
 # Logout/reboot may be required for changes to take effect
@@ -111,9 +118,29 @@ Common fields:
 
 ---
 
-## 6) Running with systemd (Recommended)
+## 6) Running as a Service
 
-### 6.1 Install as System Service
+### 6.1 macOS (launchd)
+
+```bash
+# Copy plist to LaunchAgents
+cp ~/.openclaw/workspace/scripts/vibemon-bridge.plist ~/Library/LaunchAgents/
+
+# Load the service
+launchctl load ~/Library/LaunchAgents/vibemon-bridge.plist
+
+# Check status
+launchctl list | grep vibemon
+
+# View logs
+tail -f ~/.openclaw/logs/vibemon-bridge.log
+tail -f ~/.openclaw/logs/vibemon-bridge.error.log
+
+# Unload (stop) the service
+launchctl unload ~/Library/LaunchAgents/vibemon-bridge.plist
+```
+
+### 6.2 Linux (systemd) - System Service
 
 1) Edit the service file and replace `YOUR_USERNAME` with your actual username
 
@@ -138,8 +165,9 @@ sudo systemctl status vibemon-bridge.service -n 50
 sudo journalctl -u vibemon-bridge.service -f
 ```
 
-### 6.2 Install as User Service (Optional)
-Use this only if you want to run as a user service in a GUI login session.
+### 6.3 Linux (systemd) - User Service (Optional)
+
+Use this if you want to run as a user service in a GUI login session.
 
 ```bash
 mkdir -p ~/.config/systemd/user
@@ -153,12 +181,19 @@ journalctl --user -u vibemon-bridge.service -f
 
 ## 7) Troubleshooting
 
-### 7.1 No `/dev/ttyACM*` Found
-- Check cable (must support data transfer)
+### 7.1 No USB Device Found
+
+**macOS:**
+- Check `ls /dev/cu.usbmodem*`
+- Try different USB ports
+- Verify cable supports data transfer
+
+**Linux:**
+- Check `ls /dev/ttyACM*`
 - Check recognition logs with `dmesg | tail`
 - Verify board reset/boot mode
 
-### 7.2 Write Permission Denied
+### 7.2 Write Permission Denied (Linux)
 - Verify the group is `dialout` with `ls -la /dev/ttyACM0`
 - Confirm your user is in the `dialout` group:
 ```bash

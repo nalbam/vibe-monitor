@@ -14,6 +14,7 @@ Usage:
 import difflib
 import getpass
 import json
+import platform
 import sys
 from pathlib import Path
 from urllib.request import urlopen
@@ -55,6 +56,7 @@ OPENCLAW_FILES = [
     "config/openclaw/scripts/vibemon-bridge.mjs",
     "config/openclaw/scripts/vibemon-bridge.service",
     "config/openclaw/scripts/vibemon-bridge.user.service",
+    "config/openclaw/scripts/vibemon-bridge.plist",
 ]
 
 
@@ -352,12 +354,22 @@ def install_openclaw(source: FileSource) -> bool:
     """Install Vibe Monitor bridge for OpenClaw."""
     print(f"\n{colored('Installing Vibe Monitor for OpenClaw...', 'cyan')}\n")
 
+    is_macos = platform.system() == "Darwin"
+    is_linux = platform.system() == "Linux"
+
     openclaw_home = Path.home() / ".openclaw" / "workspace"
     scripts_dir = openclaw_home / "scripts"
     scripts_dir.mkdir(parents=True, exist_ok=True)
 
+    # Create logs directory for macOS
+    if is_macos:
+        logs_dir = Path.home() / ".openclaw" / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+
     current_user = getpass.getuser()
-    print(f"  Current user: {colored(current_user, 'yellow')}")
+    home_dir = str(Path.home())
+    print(f"  Platform: {colored(platform.system(), 'yellow')}")
+    print(f"  User: {colored(current_user, 'yellow')}")
 
     print("\nCopying files:")
 
@@ -365,27 +377,48 @@ def install_openclaw(source: FileSource) -> bool:
     content = source.get_file("config/openclaw/scripts/vibemon-bridge.mjs")
     write_file_with_diff(scripts_dir / "vibemon-bridge.mjs", content, "scripts/vibemon-bridge.mjs")
 
-    # vibemon-bridge.service (replace YOUR_USERNAME with current user)
-    content = source.get_file("config/openclaw/scripts/vibemon-bridge.service")
-    content = content.replace("YOUR_USERNAME", current_user)
-    content = content.replace("%h", f"/home/{current_user}")
-    write_file_with_diff(scripts_dir / "vibemon-bridge.service", content, "scripts/vibemon-bridge.service")
+    if is_macos:
+        # macOS: launchd plist
+        content = source.get_file("config/openclaw/scripts/vibemon-bridge.plist")
+        content = content.replace("HOME_DIR", home_dir)
+        write_file_with_diff(scripts_dir / "vibemon-bridge.plist", content, "scripts/vibemon-bridge.plist")
 
-    # vibemon-bridge.user.service (replace %h with actual home)
-    content = source.get_file("config/openclaw/scripts/vibemon-bridge.user.service")
-    content = content.replace("%h", str(Path.home()))
-    write_file_with_diff(scripts_dir / "vibemon-bridge.user.service", content, "scripts/vibemon-bridge.user.service")
+        print(f"\n{colored('OpenClaw installation complete!', 'green')}")
+        print(f"\n{colored('Next steps:', 'yellow')}")
+        print("  1. Connect ESP32 via USB")
+        print("  2. Install as launchd service:")
+        print(f"     {colored(f'cp ~/.openclaw/workspace/scripts/vibemon-bridge.plist ~/Library/LaunchAgents/', 'cyan')}")
+        print(f"     {colored('launchctl load ~/Library/LaunchAgents/vibemon-bridge.plist', 'cyan')}")
+        print("  Or run manually:")
+        print(f"     {colored('node ~/.openclaw/workspace/scripts/vibemon-bridge.mjs', 'cyan')}")
 
-    print(f"\n{colored('OpenClaw installation complete!', 'green')}")
-    print(f"\n{colored('Next steps:', 'yellow')}")
-    print("  1. Connect ESP32 via USB")
-    print("  2. Add user to dialout group: sudo usermod -aG dialout $USER")
-    print("  3. Install as systemd service:")
-    print(f"     {colored('sudo cp ~/.openclaw/workspace/scripts/vibemon-bridge.service /etc/systemd/system/', 'cyan')}")
-    print(f"     {colored('sudo systemctl daemon-reload', 'cyan')}")
-    print(f"     {colored('sudo systemctl enable --now vibemon-bridge.service', 'cyan')}")
-    print("  Or run manually:")
-    print(f"     {colored('node ~/.openclaw/workspace/scripts/vibemon-bridge.mjs', 'cyan')}")
+    elif is_linux:
+        # Linux: systemd service files
+        content = source.get_file("config/openclaw/scripts/vibemon-bridge.service")
+        content = content.replace("YOUR_USERNAME", current_user)
+        content = content.replace("%h", home_dir)
+        write_file_with_diff(scripts_dir / "vibemon-bridge.service", content, "scripts/vibemon-bridge.service")
+
+        content = source.get_file("config/openclaw/scripts/vibemon-bridge.user.service")
+        content = content.replace("%h", home_dir)
+        write_file_with_diff(scripts_dir / "vibemon-bridge.user.service", content, "scripts/vibemon-bridge.user.service")
+
+        print(f"\n{colored('OpenClaw installation complete!', 'green')}")
+        print(f"\n{colored('Next steps:', 'yellow')}")
+        print("  1. Connect ESP32 via USB")
+        print("  2. Add user to dialout group: sudo usermod -aG dialout $USER")
+        print("  3. Install as systemd service:")
+        print(f"     {colored('sudo cp ~/.openclaw/workspace/scripts/vibemon-bridge.service /etc/systemd/system/', 'cyan')}")
+        print(f"     {colored('sudo systemctl daemon-reload', 'cyan')}")
+        print(f"     {colored('sudo systemctl enable --now vibemon-bridge.service', 'cyan')}")
+        print("  Or run manually:")
+        print(f"     {colored('node ~/.openclaw/workspace/scripts/vibemon-bridge.mjs', 'cyan')}")
+
+    else:
+        print(f"\n{colored('OpenClaw installation complete!', 'green')}")
+        print(f"\n{colored('Note:', 'yellow')} Service files are only available for macOS and Linux.")
+        print("  Run manually:")
+        print(f"     {colored('node ~/.openclaw/workspace/scripts/vibemon-bridge.mjs', 'cyan')}")
 
     return True
 
