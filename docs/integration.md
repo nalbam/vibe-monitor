@@ -197,7 +197,16 @@ cp config/openclaw/extensions/* ~/.openclaw/extensions/vibemon-bridge/
 systemctl --user restart openclaw-gateway
 ```
 
-See [VibeMon Bridge Plugin](../config/openclaw/README.md) for configuration options.
+### Configuration Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `projectName` | `OpenClaw` | Project name on display |
+| `character` | `claw` | Character: `clawd`, `kiro`, `claw` |
+| `serialEnabled` | `true` | Send to ESP32 via USB serial |
+| `httpEnabled` | `false` | Send to Desktop app |
+| `httpUrl` | `http://127.0.0.1:19280/status` | Desktop app endpoint |
+| `debug` | `false` | Enable verbose logging |
 
 ### OpenClaw Hook Events
 
