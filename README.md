@@ -111,7 +111,7 @@ See [Integration Guide](docs/integration.md) for detailed manual setup instructi
 | `planning` | Teal | Plan mode active |
 | `working` | Blue | Tool executing |
 | `notification` | Yellow | User input needed |
-| `done` | Green | Task completed |
+| `done` | Green | Tool completed |
 | `sleep` | Navy | 5min inactivity |
 
 See [Features](docs/features.md) for animations, working state text, and more.
