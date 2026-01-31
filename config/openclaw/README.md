@@ -7,7 +7,7 @@
 - 출력(ESP32로 쓰는 것): `/dev/ttyACM0` 등
 - 출력 예시:
 ```json
-{"state":"working","tool":"exec","project":"Sera","ts":"2026-01-31T04:12:33.123Z"}
+{"state":"working","tool":"exec","project":"OpenClaw","character":"claw","ts":"2026-01-31T04:12:33.123Z"}
 ```
 
 > 참고: `done → idle` 전환은 **VibeMon**이 담당합니다. 브릿지는 **thinking/planning/working/done**만 보냅니다.
@@ -79,14 +79,14 @@ ESP32 쪽에서 JSON 라인이 수신되는지 확인하세요.
 
 브릿지는 아래 환경변수를 사용합니다.
 
-- `SERA_PROJECT` (기본: `Sera`)
+- `PROJECT_NAME` (기본: `OpenClaw`)
   - ESP32 디스플레이에 찍을 프로젝트/이름 구분용
 - `OPENCLAW_LOG_DIR` (기본: `/tmp/openclaw`)
   - OpenClaw 로그 디렉토리
 
 예:
 ```bash
-SERA_PROJECT=Sera \
+PROJECT_NAME=OpenClaw \
 OPENCLAW_LOG_DIR=/tmp/openclaw \
 node scripts/esp32-status-bridge.mjs
 ```
@@ -106,7 +106,8 @@ node scripts/esp32-status-bridge.mjs
 - `tool`: 예) `exec`, `web_search`, `browser`, ...
 
 공통 필드:
-- `project`: `SERA_PROJECT`
+- `project`: `PROJECT_NAME` (기본: `OpenClaw`)
+- `character`: `claw` (고정)
 - `ts`: ISO timestamp
 
 ---

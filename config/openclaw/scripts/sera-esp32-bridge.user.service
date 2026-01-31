@@ -1,5 +1,5 @@
 [Unit]
-Description=OpenClaw -> ESP32-C6 LCD status bridge (Sera) [user]
+Description=OpenClaw -> ESP32-C6 LCD status bridge (OpenClaw) [user]
 
 [Service]
 Type=simple
@@ -7,7 +7,7 @@ WorkingDirectory=/home/pi/.openclaw/workspace
 ExecStart=/usr/bin/env node /home/pi/.openclaw/workspace/scripts/esp32-status-bridge.mjs
 Restart=always
 RestartSec=2
-Environment=SERA_PROJECT=Sera
+Environment=PROJECT_NAME=OpenClaw
 Environment=OPENCLAW_LOG_DIR=/tmp/openclaw
 
 [Install]

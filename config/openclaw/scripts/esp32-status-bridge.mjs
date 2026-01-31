@@ -7,15 +7,17 @@
  * - Writes newline-delimited JSON to the first /dev/ttyACM* device
  *
  * Expected ESP32 input example:
- *   {"state":"working","tool":"exec","project":"Sera"}\n
+ *   {"state":"working","tool":"exec","project":"OpenClaw","character":"claw"}\n
  */
 
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const PROJECT = process.env.SERA_PROJECT ?? "Sera";
 const LOG_DIR = process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw";
+
+const PROJECT = process.env.PROJECT_NAME ?? "OpenClaw";
+const CHARACTER = "claw";
 
 function listTtys() {
   try {
@@ -68,6 +70,7 @@ function setState(stream, nextState, extra = {}) {
   writeJsonLine(stream, {
     state: nextState,
     project: PROJECT,
+    character: CHARACTER,
     ts: nowIso(),
     ...extra,
   });
