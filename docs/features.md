@@ -122,7 +122,7 @@ Lock the monitor to a specific project to prevent display updates from other pro
 | Mode | Description |
 |------|-------------|
 | `first-project` | First incoming project is automatically locked |
-| `on-thinking` | Lock when entering start or thinking state (default) |
+| `on-thinking` | Lock when entering thinking state (default) |
 
 ### CLI Commands
 
