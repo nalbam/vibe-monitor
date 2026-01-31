@@ -12,8 +12,9 @@ See at a glance what your AI coding assistant is doing — thinking, writing cod
 
 | Tool | Description |
 |------|-------------|
-| **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** | Anthropic's official AI coding assistant |
+| **[Claude Code](https://claude.ai/code)** | Anthropic's official AI coding assistant |
 | **[Kiro](https://kiro.dev/)** | AWS's AI coding assistant |
+| **[OpenClaw](https://openclaw.ai/)** | Open-source computer use agent |
 
 ## What It Monitors
 
@@ -78,7 +79,7 @@ open simulator/index.html
 curl -fsSL https://nalbam.github.io/vibe-monitor/install.py | python3
 ```
 
-The script configures hooks for Claude Code or Kiro automatically.
+The script configures hooks for Claude Code, Kiro, or OpenClaw automatically.
 
 ### Manual Setup
 
@@ -105,7 +106,7 @@ See [Features](docs/features.md) for animations, working state text, and more.
 |-----------|-------|-------------------|
 | `clawd` | Orange | Claude Code |
 | `kiro` | White | Kiro |
-| `claw` | Red | OpenClew |
+| `claw` | Red | OpenClaw |
 
 ## HTTP API
 
@@ -191,7 +192,7 @@ See [ESP32 Setup](docs/esp32.md) for hardware setup instructions.
 
 ## Documentation
 
-- [Integration Guide](docs/integration.md) - Claude Code & Kiro setup
+- [Integration Guide](docs/integration.md) - Claude Code, Kiro & OpenClaw setup
 - [Features](docs/features.md) - States, animations, window modes
 - [API Reference](docs/api.md) - All HTTP endpoints
 - [ESP32 Setup](docs/esp32.md) - Hardware setup

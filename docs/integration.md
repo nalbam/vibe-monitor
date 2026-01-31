@@ -9,7 +9,7 @@ curl -fsSL https://nalbam.github.io/vibe-monitor/install.py | python3
 ```
 
 The script will:
-1. Ask which tool to configure (Claude Code, Kiro, or both)
+1. Ask which tool to configure (Claude Code, Kiro, OpenClaw, or all)
 2. Download and copy hook scripts and configuration files
 3. Optionally create `.env.local` from example
 4. Merge hooks into `settings.json` (Claude Code only)
@@ -159,6 +159,59 @@ export VIBEMON_DESKTOP_URL="http://127.0.0.1:19280"
 
 ---
 
+## OpenClaw Setup (Manual)
+
+OpenClaw uses a log-tailing bridge script (`esp32-status-bridge.mjs`) to send status to ESP32.
+
+> **Note:** OpenClaw integration is primarily designed for ESP32 hardware (USB Serial).
+
+### 1. Copy scripts
+
+```bash
+mkdir -p ~/.openclaw/workspace/scripts
+
+cp config/openclaw/scripts/esp32-status-bridge.mjs ~/.openclaw/workspace/scripts/
+cp config/openclaw/scripts/sera-esp32-bridge.service ~/.openclaw/workspace/scripts/
+```
+
+### 2. Configure environment
+
+```bash
+# Project name displayed on ESP32
+export SERA_PROJECT="Sera"
+
+# OpenClaw log directory
+export OPENCLAW_LOG_DIR="/tmp/openclaw"
+```
+
+### 3. Run manually (for testing)
+
+```bash
+cd ~/.openclaw/workspace
+node scripts/esp32-status-bridge.mjs
+```
+
+### 4. Run as systemd service (recommended)
+
+```bash
+sudo cp ~/.openclaw/workspace/scripts/sera-esp32-bridge.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now sera-esp32-bridge.service
+```
+
+See [OpenClaw Setup Guide](../config/openclaw/README.md) for detailed instructions.
+
+### OpenClaw Events
+
+| Event | State | Description |
+|-------|-------|-------------|
+| Run start | `thinking` | User prompt submitted |
+| Planning | `planning` | Prompt interpretation |
+| Tool execution | `working` | Tool running (exec, web_search, etc.) |
+| Run end | `done` | Task completed |
+
+---
+
 ## Target Behavior
 
 ### Status Updates
@@ -179,9 +232,10 @@ Commands try targets in order and stop on first success:
 
 ## Event Mapping Comparison
 
-| Action | Claude Code | Kiro | State |
-|--------|-------------|------|-------|
-| User input | `UserPromptSubmit` | `promptSubmit` | `thinking` |
-| File operations | `PreToolUse` | `fileCreated/fileSaved/fileDeleted` | `working` |
-| Agent done | `Stop` | `agentStop` | `done` |
-| Notification | `Notification` | - | `notification` |
+| Action | Claude Code | Kiro | OpenClaw | State |
+|--------|-------------|------|----------|-------|
+| User input | `UserPromptSubmit` | `promptSubmit` | Run start | `thinking` |
+| Planning | - | - | Embedded run | `planning` |
+| File/Tool operations | `PreToolUse` | `fileCreated/fileSaved/fileDeleted` | Tool execution | `working` |
+| Agent done | `Stop` | `agentStop` | Run end | `done` |
+| Notification | `Notification` | - | - | `notification` |

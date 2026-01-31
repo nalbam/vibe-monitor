@@ -12,8 +12,9 @@ See at a glance what your AI coding assistant is doing — thinking, writing cod
 
 ## Supported Tools
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** - Anthropic's AI coding assistant
+- **[Claude Code](https://claude.ai/code)** - Anthropic's AI coding assistant
 - **[Kiro](https://kiro.dev/)** - AWS's AI coding assistant
+- **[OpenClaw](https://openclaw.ai/)** - Open-source computer use agent
 
 ## Features
 
@@ -47,7 +48,7 @@ vibe-monitor
 curl -fsSL https://nalbam.github.io/vibe-monitor/install.py | python3
 ```
 
-This will configure hooks for Claude Code or Kiro automatically.
+This will configure hooks for Claude Code, Kiro, or OpenClaw automatically.
 
 ### Manual Setup
 
