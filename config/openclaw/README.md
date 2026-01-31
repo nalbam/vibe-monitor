@@ -6,9 +6,9 @@
 - 입력(브릿지가 읽는 것): OpenClaw 로그 파일 (`/tmp/openclaw/openclaw-YYYY-MM-DD.log`)
 - 출력(ESP32로 쓰는 것): `/dev/ttyACM0` 등
 - 출력 예시:
-  ```json
-  {"state":"working","tool":"exec","project":"Sera","ts":"2026-01-31T04:12:33.123Z"}
-  ```
+```json
+{"state":"working","tool":"exec","project":"Sera","ts":"2026-01-31T04:12:33.123Z"}
+```
 
 > 참고: `done → idle` 전환은 **VibeMon**이 담당합니다. 브릿지는 **thinking/planning/working/done**만 보냅니다.
 
