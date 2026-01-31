@@ -129,6 +129,12 @@ function handleLogLine(stream, obj) {
     return;
   }
 
+  // Delivery marker (reliable for chat turns): once we deliver a reply, the run is effectively done.
+  if (subsystemRaw.includes("gateway/channels/") && msg.startsWith("delivered reply to")) {
+    setState(stream, "done");
+    return;
+  }
+
   // Prompt boundaries (map to planning)
   if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run prompt start")) {
     setState(stream, "planning");
@@ -138,12 +144,6 @@ function handleLogLine(stream, obj) {
   if (subsystemRaw.includes("agent/embedded") && msg.startsWith("embedded run prompt end")) {
     // If the run had no tools, we may otherwise remain stuck in planning.
     if (currentState === "planning") setState(stream, "thinking");
-    return;
-  }
-
-  // Delivery marker (reliable for chat turns): once we deliver a reply, the run is effectively done.
-  if (subsystemRaw.includes("gateway/channels/") && msg.startsWith("delivered reply to")) {
-    setState(stream, "done");
     return;
   }
 
