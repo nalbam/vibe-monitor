@@ -21,7 +21,7 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | `model` | 50 chars | String |
 | `memory` | - | `N%` where N is 0-100 |
 | `character` | - | `clawd`, `kiro`, or `claw` |
-| `terminalId` | - | String (iTerm2 session ID or Ghostty PID) |
+| `terminalId` | - | Format: `iterm2:<UUID>` or `ghostty:<PID>` (from `ITERM_SESSION_ID` or `GHOSTTY_PID` env) |
 
 ---
 

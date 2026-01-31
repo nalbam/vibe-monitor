@@ -75,7 +75,10 @@ The `working` state displays context-aware text based on the active tool:
 - **Sparkle**: Session start shows rotating sparkle effect
 - **Thought bubble**: Thinking state shows animated thought bubble
 - **Zzz**: Sleep state shows blinking Z animation
-- **Memory bar**: Gradient colors based on usage (green → yellow → red)
+- **Memory bar**: Gradient colors based on usage thresholds:
+  - 0-74%: Green
+  - 75-89%: Yellow (warning)
+  - 90-100%: Red (critical)
 
 ## Window Mode
 

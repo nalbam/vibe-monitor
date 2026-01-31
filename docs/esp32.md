@@ -115,7 +115,7 @@ echo '{"state":"done","project":"my-project"}' > /dev/cu.usbmodem1101
 
 ### Raspberry Pi / Linux
 
-Linux에서는 시리얼 통신 전에 baud rate 설정이 필요합니다.
+On Linux, you need to set the baud rate before serial communication.
 
 ```bash
 # Set baud rate first (required, only once per session)
@@ -131,7 +131,7 @@ echo '{"state":"notification","project":"my-project"}' > /dev/ttyACM0 && sleep 1
 echo '{"state":"done","project":"my-project"}' > /dev/ttyACM0
 ```
 
-> **Note:** `stty` 명령은 세션당 한 번만 실행하면 됩니다. 터미널을 닫거나 장치를 재연결하면 다시 설정해야 합니다.
+> **Note:** The `stty` command only needs to be run once per session. You'll need to set it again if you close the terminal or reconnect the device.
 
 ## Serial Commands
 
