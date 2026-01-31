@@ -17,12 +17,15 @@
  */
 
 import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 
 // State management
 let currentState = "idle";
 let doneTimer = null;
 let ttyPath = null;
 let lastSendTime = 0;
+let cachedModel = null;
 
 // Configuration (set in register)
 let config = {
@@ -49,6 +52,37 @@ function debug(message) {
   if (config.debug && logger) {
     logger.info?.(`[vibemon] ${message}`);
   }
+}
+
+/**
+ * Read model from ~/.openclaw/openclaw.json
+ */
+function readModelFromConfig() {
+  if (cachedModel) return cachedModel;
+
+  try {
+    const configPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
+    if (!fs.existsSync(configPath)) {
+      debug("openclaw.json not found");
+      return null;
+    }
+
+    const content = fs.readFileSync(configPath, "utf-8");
+    const json = JSON.parse(content);
+
+    // Get model from agents.defaults.model.primary
+    const model = json?.agents?.defaults?.model?.primary;
+    if (model) {
+      // Extract short name (e.g., "openai/gpt-5.2" -> "gpt-5.2")
+      cachedModel = model.includes("/") ? model.split("/").pop() : model;
+      debug(`Model from config: ${cachedModel}`);
+      return cachedModel;
+    }
+  } catch (err) {
+    debug(`Failed to read model: ${err.message}`);
+  }
+
+  return null;
 }
 
 /**
@@ -154,13 +188,20 @@ async function sendHttp(payload) {
  * Build status payload
  */
 function buildPayload(state, extra = {}) {
-  return {
+  const payload = {
     state,
     project: config.projectName,
     character: config.character,
-    ts: new Date().toISOString(),
     ...extra,
   };
+
+  // Add model if available
+  const model = readModelFromConfig();
+  if (model) {
+    payload.model = model;
+  }
+
+  return payload;
 }
 
 /**
