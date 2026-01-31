@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "entries": {
+      "vibemon-bridge": {
+        "enabled": true,
+        "config": {
+          "projectName": "OpenClaw",
+          "character": "claw",
+          "serialEnabled": true,
+          "httpEnabled": false,
+          "debug": false
+        }
+      }
+    }
+  }
+}
