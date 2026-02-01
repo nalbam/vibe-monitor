@@ -47,11 +47,11 @@ bool spriteInitialized = false;
 #define STATUS_TEXT_Y 160
 #define LOADING_Y     190
 #define PROJECT_Y     224
-#define TOOL_Y        238
-#define MODEL_Y       252
-#define MEMORY_Y      266
+#define TOOL_Y        240
+#define MODEL_Y       256
+#define MEMORY_Y      272
 #define MEMORY_BAR_X  10
-#define MEMORY_BAR_Y  280
+#define MEMORY_BAR_Y  288
 #define MEMORY_BAR_W  152
 #define MEMORY_BAR_H  8
 #define BRAND_Y       300
