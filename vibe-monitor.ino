@@ -15,11 +15,15 @@
 // Persistent storage for settings
 Preferences preferences;
 
+// WiFi configuration (create credentials.h from credentials.h.example)
+#if __has_include("credentials.h")
+#include "credentials.h"
+#endif
+
 // WiFi (HTTP fallback, optional)
 #ifdef USE_WIFI
 #include <WiFi.h>
 #include <WebServer.h>
-#include "credentials.h"  // Create from credentials.h.example
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 WebServer server(80);

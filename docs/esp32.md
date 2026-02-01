@@ -40,19 +40,14 @@ Tools → Manage Libraries:
 cp credentials.h.example credentials.h
 ```
 
-### 2. Edit `credentials.h` with your WiFi credentials
+### 2. Edit `credentials.h`
 
 ```cpp
+// Uncomment to enable WiFi mode
+#define USE_WIFI
+
 #define WIFI_SSID "YOUR_SSID"
 #define WIFI_PASSWORD "YOUR_PASSWORD"
-```
-
-### 3. Enable WiFi in `vibe-monitor.ino`
-
-Uncomment the following line:
-
-```cpp
-#define USE_WIFI
 ```
 
 ## WiFi HTTP Endpoints
