@@ -4,9 +4,9 @@
 [![npm downloads](https://img.shields.io/npm/dm/vibe-monitor.svg)](https://www.npmjs.com/package/vibe-monitor)
 [![license](https://img.shields.io/npm/l/vibe-monitor.svg)](https://github.com/nalbam/vibe-monitor/blob/main/LICENSE)
 
-**Real-time status monitor for AI coding assistants with pixel art character display.**
+**Real-time status monitor for AI assistants with pixel art character display.**
 
-See at a glance what your AI coding assistant is doing — thinking, writing code, or waiting for input. A cute pixel art character visually represents the current state.
+See at a glance what your AI assistant is doing — thinking, working, or waiting for input. A cute pixel art character visually represents the current state.
 
 ## Supported Tools
 

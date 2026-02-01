@@ -1,6 +1,6 @@
 # Integration Guide
 
-Vibe Monitor receives status updates from AI coding assistants through their hook systems.
+Vibe Monitor receives status updates from AI assistants through their hook systems.
 
 ## Quick Install (Recommended)
 
