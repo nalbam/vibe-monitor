@@ -23,6 +23,7 @@ export function needsAnimationRedraw(state, animFrame, blinkFrame) {
     case 'thinking':
     case 'planning':
     case 'working':
+    case 'packing':
     case 'sleep':
       return true;  // Always animate these states
     case 'idle':

@@ -273,6 +273,8 @@ Commands try targets in order and stop on first success:
 | `VIBEMON_AUTO_LAUNCH` | Auto-launch Desktop App (1: enabled) | `1` |
 | `VIBEMON_HTTP_URLS` | HTTP targets (comma-separated) | `http://127.0.0.1:19280,http://192.168.0.185` |
 | `VIBEMON_SERIAL_PORT` | ESP32 USB Serial port (supports wildcards) | `/dev/cu.usbmodem*` |
+| `VIBEMON_WS_URL` | WebSocket server URL (Desktop App only) | `wss://your-server.com/ws` |
+| `VIBEMON_WS_TOKEN` | WebSocket authentication token (Desktop App only) | `your-secret-token` |
 
 ---
 
@@ -285,3 +287,35 @@ Commands try targets in order and stop on first success:
 | Tool execution | `PreToolUse` | `fileCreated/fileSaved/fileDeleted/preToolUse` | `before_tool_call` | `working` |
 | Agent done | `Stop` | `agentStop` | `message_sent` | `done` |
 | Notification | `Notification` | - | - | `notification` |
+
+---
+
+## WebSocket Connection (Optional)
+
+The Desktop App can receive status updates from a central WebSocket server instead of or in addition to HTTP.
+
+### Configuration
+
+Set environment variables before starting the Desktop App:
+
+```bash
+export VIBEMON_WS_URL="wss://your-server.com/ws"
+export VIBEMON_WS_TOKEN="your-auth-token"
+npx vibe-monitor
+```
+
+### Features
+
+- **Auto-reconnect**: Reconnects automatically with exponential backoff (5s to 30s)
+- **Token authentication**: Sends auth token on connection
+- **Status updates**: Receives same JSON format as HTTP `/status` endpoint
+
+### Message Format
+
+The WebSocket server should send status updates in JSON format:
+
+```json
+{"state": "working", "tool": "Bash", "project": "my-project", "character": "clawd"}
+```
+
+This is the same format used by the HTTP `POST /status` endpoint.

@@ -27,6 +27,15 @@ Preferences preferences;
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 WebServer server(80);
+
+// WebSocket client (optional, requires USE_WIFI)
+#ifdef USE_WEBSOCKET
+#include <WebSocketsClient.h>
+WebSocketsClient webSocket;
+bool wsConnected = false;
+unsigned long lastWsReconnect = 0;
+const unsigned long WS_RECONNECT_INTERVAL = 5000;  // 5 seconds
+#endif
 #endif
 
 // tft instance is defined in TFT_Compat.h
@@ -109,6 +118,7 @@ AppState parseState(const char* stateStr) {
   if (strcmp(stateStr, "thinking") == 0) return STATE_THINKING;
   if (strcmp(stateStr, "planning") == 0) return STATE_PLANNING;
   if (strcmp(stateStr, "working") == 0) return STATE_WORKING;
+  if (strcmp(stateStr, "packing") == 0) return STATE_PACKING;
   if (strcmp(stateStr, "notification") == 0) return STATE_NOTIFICATION;
   if (strcmp(stateStr, "done") == 0) return STATE_DONE;
   if (strcmp(stateStr, "sleep") == 0) return STATE_SLEEP;
@@ -222,6 +232,7 @@ const char* getStateString(AppState state) {
     case STATE_THINKING: return "thinking";
     case STATE_PLANNING: return "planning";
     case STATE_WORKING: return "working";
+    case STATE_PACKING: return "packing";
     case STATE_NOTIFICATION: return "notification";
     case STATE_DONE: return "done";
     case STATE_SLEEP: return "sleep";
@@ -261,6 +272,9 @@ void setup() {
 
 #ifdef USE_WIFI
   setupWiFi();
+#ifdef USE_WEBSOCKET
+  setupWebSocket();
+#endif
 #endif
 }
 
@@ -285,6 +299,9 @@ void loop() {
 
 #ifdef USE_WIFI
   server.handleClient();
+#ifdef USE_WEBSOCKET
+  webSocket.loop();
+#endif
 #endif
 
   // Animation update (100ms interval)
@@ -320,9 +337,10 @@ void checkSleepTimer() {
     }
   }
 
-  // planning/thinking/working/notification -> idle after 5 minutes
+  // planning/thinking/working/notification/packing -> idle after 5 minutes
   if (currentState == STATE_PLANNING || currentState == STATE_THINKING ||
-      currentState == STATE_WORKING || currentState == STATE_NOTIFICATION) {
+      currentState == STATE_WORKING || currentState == STATE_NOTIFICATION ||
+      currentState == STATE_PACKING) {
     if (now - lastActivityTime >= SLEEP_TIMEOUT) {
       previousState = currentState;
       currentState = STATE_IDLE;
@@ -547,10 +565,10 @@ void drawStartScreen() {
   // Draw character in idle state (128x128) using sprite buffer
   const CharacterGeometry* character = getCharacter(currentCharacter);
   if (spriteInitialized) {
-    drawCharacterToSprite(charSprite, EYE_NORMAL, bgColor, character);
+    drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
     charSprite.pushSprite(CHAR_X_BASE, CHAR_Y_BASE);
   } else {
-    drawCharacter(tft, CHAR_X_BASE, CHAR_Y_BASE, EYE_NORMAL, bgColor, character);
+    drawCharacter(tft, CHAR_X_BASE, CHAR_Y_BASE, EYE_NORMAL, EFFECT_NONE, bgColor, character);
   }
 
   // Title
@@ -573,6 +591,7 @@ void drawStatus() {
   uint16_t bgColor = getBackgroundColorEnum(currentState);
   uint16_t textColor = getTextColorEnum(currentState);
   EyeType eyeType = getEyeTypeEnum(currentState);
+  EffectType effectType = getEffectTypeEnum(currentState);
   const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
   // Fill background (only if dirty)
@@ -589,11 +608,11 @@ void drawStatus() {
   // Draw character using sprite buffer (no flickering)
   if (dirtyCharacter || needsRedraw) {
     if (spriteInitialized) {
-      drawCharacterToSprite(charSprite, eyeType, bgColor, character);
+      drawCharacterToSprite(charSprite, eyeType, effectType, bgColor, character);
       charSprite.pushSprite(charX, charY);
     } else {
       // Fallback to direct drawing
-      drawCharacter(tft, charX, charY, eyeType, bgColor, character);
+      drawCharacter(tft, charX, charY, eyeType, effectType, bgColor, character);
     }
   }
 
@@ -720,6 +739,7 @@ void clearPreviousEdges(int oldX, int oldY, int newX, int newY, int w, int h, ui
 void updateAnimation() {
   uint16_t bgColor = getBackgroundColorEnum(currentState);
   EyeType eyeType = getEyeTypeEnum(currentState);
+  EffectType effectType = getEffectTypeEnum(currentState);
   const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
   // Calculate new floating position
@@ -732,7 +752,7 @@ void updateAnimation() {
   // Determine if we need to redraw character based on state and animation frame
   bool needsCharRedraw = positionChanged;
   if (!needsCharRedraw) {
-    if (currentState == STATE_THINKING || currentState == STATE_PLANNING) {
+    if (currentState == STATE_THINKING || currentState == STATE_PLANNING || currentState == STATE_PACKING) {
       needsCharRedraw = (animFrame % 12 == 0);  // Thought bubble animation
     } else if (currentState == STATE_WORKING) {
       needsCharRedraw = (animFrame % 2 == 0);   // Matrix rain animation
@@ -751,24 +771,24 @@ void updateAnimation() {
         clearPreviousEdges(lastCharX, lastCharY, newCharX, newCharY, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
       }
       // Draw to sprite and push to screen in one operation
-      drawCharacterToSprite(charSprite, eyeType, bgColor, character);
+      drawCharacterToSprite(charSprite, eyeType, effectType, bgColor, character);
       charSprite.pushSprite(newCharX, newCharY);
     } else {
       // Fallback to direct drawing
       if (positionChanged) {
         clearPreviousEdges(lastCharX, lastCharY, newCharX, newCharY, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
       }
-      drawCharacter(tft, newCharX, newCharY, eyeType, bgColor, character);
+      drawCharacter(tft, newCharX, newCharY, eyeType, effectType, bgColor, character);
     }
     lastCharX = newCharX;
     lastCharY = newCharY;
   }
 
-  // Update loading dots for thinking/planning/working states
-  if (currentState == STATE_THINKING || currentState == STATE_PLANNING) {
-    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);
+  // Update loading dots for thinking/planning/packing/working states
+  if (currentState == STATE_THINKING || currentState == STATE_PLANNING || currentState == STATE_PACKING) {
+    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, true);  // Slow
   } else if (currentState == STATE_WORKING) {
-    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);
+    drawLoadingDots(tft, SCREEN_WIDTH / 2, LOADING_Y, animFrame, false);  // Fast
   }
 }
 
@@ -792,10 +812,10 @@ void updateBlink() {
       if (now - lastBlink > 3200) {
         // Start blink: draw closed eyes
         if (spriteInitialized) {
-          drawCharacterToSprite(charSprite, EYE_BLINK, bgColor, character);
+          drawCharacterToSprite(charSprite, EYE_BLINK, EFFECT_NONE, bgColor, character);
           charSprite.pushSprite(charX, charY);
         } else {
-          drawCharacter(tft, charX, charY, EYE_BLINK, bgColor, character);
+          drawCharacter(tft, charX, charY, EYE_BLINK, EFFECT_NONE, bgColor, character);
         }
         blinkPhase = BLINK_CLOSED;
         blinkPhaseStart = now;
@@ -807,10 +827,10 @@ void updateBlink() {
       if (now - blinkPhaseStart >= 100) {
         // End blink: draw open eyes
         if (spriteInitialized) {
-          drawCharacterToSprite(charSprite, EYE_NORMAL, bgColor, character);
+          drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
           charSprite.pushSprite(charX, charY);
         } else {
-          drawCharacter(tft, charX, charY, EYE_NORMAL, bgColor, character);
+          drawCharacter(tft, charX, charY, EYE_NORMAL, EFFECT_NONE, bgColor, character);
         }
         blinkPhase = BLINK_NONE;
         lastBlink = now;
@@ -953,4 +973,59 @@ void handleReboot() {
   delay(100);  // Allow HTTP response to complete
   ESP.restart();
 }
+
+#ifdef USE_WEBSOCKET
+void setupWebSocket() {
+  // Connect to WebSocket server
+#if WS_USE_SSL
+  webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
+#else
+  webSocket.begin(WS_HOST, WS_PORT, WS_PATH);
+#endif
+
+  // Set event handler
+  webSocket.onEvent(webSocketEvent);
+
+  // Set reconnect interval
+  webSocket.setReconnectInterval(WS_RECONNECT_INTERVAL);
+
+  Serial.println("{\"websocket\":\"connecting\"}");
+}
+
+void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
+  switch (type) {
+    case WStype_DISCONNECTED:
+      wsConnected = false;
+      Serial.println("{\"websocket\":\"disconnected\"}");
+      break;
+
+    case WStype_CONNECTED:
+      wsConnected = true;
+      Serial.print("{\"websocket\":\"connected\",\"url\":\"");
+      Serial.print((char*)payload);
+      Serial.println("\"}");
+
+      // Send authentication message if token is configured
+      if (strlen(WS_TOKEN) > 0) {
+        char authMsg[128];
+        snprintf(authMsg, sizeof(authMsg), "{\"type\":\"auth\",\"token\":\"%s\"}", WS_TOKEN);
+        webSocket.sendTXT(authMsg);
+        Serial.println("{\"websocket\":\"auth_sent\"}");
+      }
+      break;
+
+    case WStype_TEXT:
+      // Process received message (same as Serial/HTTP input)
+      processInput((char*)payload);
+      break;
+
+    case WStype_ERROR:
+      Serial.println("{\"websocket\":\"error\"}");
+      break;
+
+    default:
+      break;
+  }
+}
+#endif
 #endif
