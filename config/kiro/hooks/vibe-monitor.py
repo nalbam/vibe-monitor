@@ -73,6 +73,9 @@ HTTP_TIMEOUT_SECONDS = 5
 # Desktop launch configuration
 DESKTOP_LAUNCH_WAIT_SECONDS = 3
 
+# Character configuration
+CHARACTER = "kiro"
+
 
 @dataclass(frozen=True)
 class Config:
@@ -165,7 +168,7 @@ def build_payload(state: str, project: str, event: str | None = None) -> str:
     payload: dict[str, str] = {
         "state": state,
         "project": project,
-        "character": "kiro",
+        "character": CHARACTER,
     }
     if event:
         payload["tool"] = event
@@ -343,12 +346,13 @@ def send_vibemon_api(
     tool: str,
     model: str,
     memory: int,
+    character: str,
 ) -> bool:
     """Send status to Vibemon API with Bearer token authentication.
 
     API: POST /status
     Headers: Authorization: Bearer <token>, Content-Type: application/json
-    Body: { projectId, state, project, tool, model, memory }
+    Body: { state, project, tool, model, memory, character }
     """
     try:
         api_url = f"{url.rstrip('/')}/status"
@@ -358,6 +362,7 @@ def send_vibemon_api(
             "tool": tool,
             "model": model,
             "memory": memory,
+            "character": character,
         })
 
         req = Request(
@@ -694,6 +699,7 @@ def send_to_all(payload: str, is_start: bool = False) -> None:
                     tool=payload_data.get("tool", ""),
                     model="",  # Kiro doesn't have model info
                     memory=0,  # Kiro doesn't have memory info
+                    character=payload_data.get("character", CHARACTER),
                 )
             ))
 

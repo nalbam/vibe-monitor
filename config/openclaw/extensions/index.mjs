@@ -21,6 +21,9 @@ import path from "node:path";
 import os from "node:os";
 import { spawn } from "node:child_process";
 
+// Character configuration
+const CHARACTER = "claw";
+
 // State management
 let currentState = "idle";
 let doneTimer = null;
@@ -31,7 +34,7 @@ let cachedModel = null;
 // Configuration (set in register)
 let config = {
   projectName: "OpenClaw",
-  character: "claw",
+  character: CHARACTER,
   serialEnabled: false,
   httpEnabled: false,
   httpUrls: ["http://127.0.0.1:19280"],
@@ -274,6 +277,7 @@ async function sendVibemonApi(payload) {
     tool: payload.tool || "",
     model: payload.model || "",
     memory: 0, // OpenClaw doesn't have memory info
+    character: payload.character || CHARACTER,
   };
 
   try {
