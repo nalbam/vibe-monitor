@@ -338,7 +338,6 @@ def send_http_get(url: str, endpoint: str) -> tuple[bool, str | None]:
 def send_vibemon_api(
     url: str,
     token: str,
-    project_id: str,
     state: str,
     project: str,
     tool: str,
@@ -354,7 +353,6 @@ def send_vibemon_api(
     try:
         api_url = f"{url.rstrip('/')}/status"
         payload = json.dumps({
-            "projectId": project_id,
             "state": state,
             "project": project,
             "tool": tool,
@@ -691,7 +689,6 @@ def send_to_all(payload: str, is_start: bool = False) -> None:
                 lambda: send_vibemon_api(
                     url=config.vibemon_url,
                     token=config.vibemon_token,
-                    project_id=project,
                     state=payload_data.get("state", ""),
                     project=project,
                     tool=payload_data.get("tool", ""),

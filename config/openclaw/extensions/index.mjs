@@ -269,7 +269,6 @@ async function sendVibemonApi(payload) {
   if (!project) return;
 
   const apiPayload = {
-    projectId: project,
     state: payload.state || "",
     project: project,
     tool: payload.tool || "",
