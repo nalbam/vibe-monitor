@@ -829,6 +829,7 @@ void setupWiFi() {
     // HTTP server setup
     server.on("/status", HTTP_POST, handleStatus);
     server.on("/status", HTTP_GET, handleStatusGet);
+    server.on("/health", HTTP_GET, handleHealth);
     server.on("/lock", HTTP_POST, handleLock);
     server.on("/unlock", HTTP_POST, handleUnlock);
     server.on("/lock-mode", HTTP_GET, handleLockModeGet);
@@ -863,6 +864,10 @@ void handleStatusGet() {
       getStateString(currentState), currentProject, getLockModeString(), projectCount);
   }
   server.send(200, "application/json", response);
+}
+
+void handleHealth() {
+  server.send(200, "application/json", "{\"status\":\"ok\"}");
 }
 
 void handleLock() {

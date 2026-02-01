@@ -86,25 +86,25 @@ Two modes available (`multi` or `single`):
 
 ### API Endpoints
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /status` | Create/update window for project |
-| `GET /status` | Returns all windows' states |
-| `GET /windows` | List all active windows |
-| `POST /close` | Close specific project window |
-| `POST /show` | Show window (Desktop only) |
-| `GET /health` | Health check |
-| `GET /window-mode` | Get current window mode (multi/single) |
-| `POST /window-mode` | Set window mode |
-| `POST /lock` | Lock to project (single mode only) |
-| `POST /unlock` | Unlock project (single mode only) |
-| `GET /lock-mode` | Get current lock mode |
-| `POST /lock-mode` | Set lock mode |
-| `GET /debug` | Window/display debug info (Desktop only) |
-| `GET /stats` | Stats dashboard page (Desktop only) |
-| `GET /stats/data` | Stats data from cache (Desktop only) |
-| `POST /quit` | Quit application (Desktop only) |
-| `POST /reboot` | Reboot device (ESP32 only) |
+| Endpoint | Platform | Description |
+|----------|----------|-------------|
+| `POST /status` | All | Create/update window for project |
+| `GET /status` | All | Returns current state |
+| `GET /health` | All | Health check |
+| `POST /lock` | All | Lock to project |
+| `POST /unlock` | All | Unlock project |
+| `GET /lock-mode` | All | Get current lock mode |
+| `POST /lock-mode` | All | Set lock mode |
+| `GET /windows` | Desktop | List all active windows |
+| `POST /close` | Desktop | Close specific project window |
+| `POST /show` | Desktop | Show window |
+| `GET /window-mode` | Desktop | Get current window mode (multi/single) |
+| `POST /window-mode` | Desktop | Set window mode |
+| `GET /debug` | Desktop | Window/display debug info |
+| `GET /stats` | Desktop | Stats dashboard page |
+| `GET /stats/data` | Desktop | Stats data from cache |
+| `POST /quit` | Desktop | Quit application |
+| `POST /reboot` | ESP32 | Reboot device |
 
 ## States
 
