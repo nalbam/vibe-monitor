@@ -56,8 +56,8 @@ load_env()
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
 # Error messages
-ERR_NO_TARGET = '{"error":"No monitor target available. Set VIBEMON_DESKTOP_URL, VIBEMON_ESP32_URL, or VIBEMON_SERIAL_PORT"}'
-ERR_NO_ESP32 = '{"error":"No ESP32 target available. Set VIBEMON_ESP32_URL or VIBEMON_SERIAL_PORT"}'
+ERR_NO_TARGET = '{"error":"No monitor target available. Set VIBEMON_HTTP_URLS or VIBEMON_SERIAL_PORT"}'
+ERR_NO_ESP32 = '{"error":"No ESP32 target available. Set VIBEMON_HTTP_URLS (with ESP32 URL) or VIBEMON_SERIAL_PORT"}'
 ERR_INVALID_MODE = '{"error":"Invalid mode: %s. Valid modes: first-project, on-thinking"}'
 
 VALID_LOCK_MODES = frozenset(["first-project", "on-thinking"])
@@ -79,14 +79,21 @@ DESKTOP_LAUNCH_WAIT_SECONDS = 3
 class Config:
     """Immutable configuration container."""
 
-    desktop_url: str | None
-    esp32_url: str | None
+    http_urls: tuple[str, ...]
     serial_port: str | None
     cache_path: str
+    auto_launch: bool
 
 
 # Cached configuration (computed once)
 _config: Config | None = None
+
+
+def parse_http_urls(urls_str: str | None) -> tuple[str, ...]:
+    """Parse comma-separated HTTP URLs."""
+    if not urls_str:
+        return ()
+    return tuple(url.strip() for url in urls_str.split(",") if url.strip())
 
 
 def get_config() -> Config:
@@ -94,12 +101,12 @@ def get_config() -> Config:
     global _config
     if _config is None:
         _config = Config(
-            desktop_url=os.environ.get("VIBEMON_DESKTOP_URL"),
-            esp32_url=os.environ.get("VIBEMON_ESP32_URL"),
+            http_urls=parse_http_urls(os.environ.get("VIBEMON_HTTP_URLS")),
             serial_port=os.environ.get("VIBEMON_SERIAL_PORT"),
             cache_path=os.path.expanduser(
                 os.environ.get("VIBEMON_CACHE_PATH", "~/.claude/statusline-cache.json")
             ),
+            auto_launch=os.environ.get("VIBEMON_AUTO_LAUNCH", "0") == "1",
         )
     return _config
 
@@ -398,29 +405,28 @@ def _send_http_request(
     return send_http_get(url, endpoint)
 
 
+def is_localhost_url(url: str) -> bool:
+    """Check if URL is localhost (Desktop App)."""
+    return "127.0.0.1" in url or "localhost" in url
+
+
 def try_http_targets(
     endpoint: str,
     data: str | None = None,
     method: str = "POST",
-    include_desktop: bool = True,
+    include_localhost: bool = True,
 ) -> tuple[bool, str | None]:
-    """Try HTTP targets (Desktop → ESP32) in order.
+    """Try HTTP targets in order.
 
     Returns: (success, result_text)
     """
     config = get_config()
 
-    # Try Desktop App
-    if include_desktop and config.desktop_url:
-        debug_log(f"Trying Desktop App: {config.desktop_url}")
-        success, result = _send_http_request(config.desktop_url, endpoint, data, method)
-        if success:
-            return True, result
-
-    # Try ESP32 HTTP
-    if config.esp32_url:
-        debug_log(f"Trying ESP32 HTTP: {config.esp32_url}")
-        success, result = _send_http_request(config.esp32_url, endpoint, data, method)
+    for url in config.http_urls:
+        if not include_localhost and is_localhost_url(url):
+            continue
+        debug_log(f"Trying HTTP: {url}")
+        success, result = _send_http_request(url, endpoint, data, method)
         if success:
             return True, result
 
@@ -452,14 +458,14 @@ def try_all_targets(
     endpoint: str,
     http_data: str | None,
     serial_command: str,
-    include_desktop: bool = True,
+    include_localhost: bool = True,
 ) -> tuple[bool, str | None]:
-    """Try all targets: Desktop → ESP32 HTTP → Serial.
+    """Try all targets: HTTP → Serial.
 
     Returns: (success, result_text or None)
     """
     # Try HTTP targets first
-    success, result = try_http_targets(endpoint, http_data, "POST", include_desktop)
+    success, result = try_http_targets(endpoint, http_data, "POST", include_localhost)
     if success:
         return True, result
 
@@ -581,8 +587,8 @@ def send_reboot() -> bool:
 
     serial_data = json.dumps({"command": "reboot"})
 
-    # ESP32 only - don't include Desktop
-    success, result = try_all_targets("/reboot", None, serial_data, include_desktop=False)
+    # ESP32 only - don't include localhost (Desktop)
+    success, result = try_all_targets("/reboot", None, serial_data, include_localhost=False)
 
     if success:
         _print_result(result, '{"success":true,"rebooting":true}')
@@ -640,16 +646,25 @@ def launch_desktop() -> None:
         debug_log(f"Failed to launch Desktop App: {e}")
 
 
+def get_desktop_url(http_urls: tuple[str, ...]) -> str | None:
+    """Get first localhost URL (Desktop App) from HTTP URLs."""
+    for url in http_urls:
+        if is_localhost_url(url):
+            return url
+    return None
+
+
 def send_to_all(payload: str, is_start: bool = False) -> None:
     """Send payload to all configured targets concurrently."""
     config = get_config()
 
     # Launch Desktop App if not running (on start) - must be sequential
-    if config.desktop_url and is_start:
-        if not is_monitor_running(config.desktop_url):
+    desktop_url = get_desktop_url(config.http_urls)
+    if desktop_url and is_start and config.auto_launch:
+        if not is_monitor_running(desktop_url):
             debug_log("Desktop App not running, launching...")
             launch_desktop()
-        show_monitor_window(config.desktop_url)
+        show_monitor_window(desktop_url)
 
     # Resolve serial port once
     resolved_port: str | None = None
@@ -661,14 +676,16 @@ def send_to_all(payload: str, is_start: bool = False) -> None:
     # Build list of tasks to run in parallel
     tasks: list[tuple[str, Any]] = []
 
-    if config.desktop_url:
-        tasks.append(("Desktop App", lambda: send_http_post(config.desktop_url, "/status", payload)[0]))
+    for url in config.http_urls:
+        # Capture url in closure
+        u = url
+        label = "Desktop App" if is_localhost_url(url) else f"HTTP ({url})"
+        tasks.append((label, lambda u=u: send_http_post(u, "/status", payload)[0]))
+
     if resolved_port:
         # Capture resolved_port in closure
         port = resolved_port
         tasks.append(("USB serial", lambda p=port: send_serial(p, payload)))
-    if config.esp32_url:
-        tasks.append(("ESP32 HTTP", lambda: send_http_post(config.esp32_url, "/status", payload)[0]))
 
     if not tasks:
         return

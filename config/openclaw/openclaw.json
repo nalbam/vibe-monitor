@@ -7,7 +7,7 @@
           "projectName": "OpenClaw",
           "character": "claw",
           "serialEnabled": true,
-          "httpEnabled": false,
+          "httpEnabled": true,
           "debug": false
         }
       }
