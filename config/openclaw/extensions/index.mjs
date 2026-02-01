@@ -164,9 +164,9 @@ function sendSerial(payload) {
 }
 
 /**
- * Check if localhost URL exists in config
+ * Get Desktop App URL from config (localhost or 127.0.0.1)
  */
-function getLocalhostUrl() {
+function getDesktopAppUrl() {
   return config.httpUrls.find((url) => url.includes("127.0.0.1") || url.includes("localhost"));
 }
 
@@ -174,11 +174,11 @@ function getLocalhostUrl() {
  * Check if Desktop App is running
  */
 async function isDesktopRunning() {
-  const localhostUrl = getLocalhostUrl();
-  if (!localhostUrl) return false;
+  const desktopUrl = getDesktopAppUrl();
+  if (!desktopUrl) return false;
 
   try {
-    const response = await fetch(`${localhostUrl}/health`, { method: "GET" });
+    const response = await fetch(`${desktopUrl}/health`, { method: "GET" });
     return response.ok;
   } catch {
     return false;
@@ -210,9 +210,9 @@ function launchDesktop() {
 async function autoLaunchDesktop() {
   if (!config.autoLaunch || !config.httpEnabled) return;
 
-  // Only auto-launch if localhost URL is configured
-  const localhostUrl = getLocalhostUrl();
-  if (!localhostUrl) return;
+  // Only auto-launch if Desktop App URL is configured
+  const desktopUrl = getDesktopAppUrl();
+  if (!desktopUrl) return;
 
   const running = await isDesktopRunning();
   if (!running) {
