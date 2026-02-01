@@ -177,10 +177,15 @@ EVENT_STATE_MAP: dict[str, str] = {
 def get_project_name(cwd: str, transcript_path: str) -> str:
     """Extract project name from cwd or transcript path."""
     if cwd:
-        return os.path.basename(cwd)
+        name = os.path.basename(cwd.rstrip("/"))
+        if name:
+            return name
     if transcript_path:
-        return os.path.basename(os.path.dirname(transcript_path))
-    return os.path.basename(os.getcwd())
+        name = os.path.basename(os.path.dirname(transcript_path))
+        if name:
+            return name
+    name = os.path.basename(os.getcwd().rstrip("/"))
+    return name if name else "default"
 
 
 def get_state(event_name: str, permission_mode: str = "default") -> str:

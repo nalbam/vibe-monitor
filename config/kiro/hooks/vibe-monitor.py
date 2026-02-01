@@ -765,7 +765,7 @@ def main() -> None:
     state = get_state(event_type)
 
     # Get project name from current directory
-    project_name = os.path.basename(os.getcwd())
+    project_name = os.path.basename(os.getcwd().rstrip("/")) or "default"
 
     debug_log(f"Event: {event_type}, State: {state}, Project: {project_name}")
 
