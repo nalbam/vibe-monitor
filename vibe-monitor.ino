@@ -565,10 +565,10 @@ void drawStartScreen() {
   // Draw character in idle state (128x128) using sprite buffer
   const CharacterGeometry* character = getCharacter(currentCharacter);
   if (spriteInitialized) {
-    drawCharacterToSprite(charSprite, EYE_NORMAL, bgColor, character);
+    drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
     charSprite.pushSprite(CHAR_X_BASE, CHAR_Y_BASE);
   } else {
-    drawCharacter(tft, CHAR_X_BASE, CHAR_Y_BASE, EYE_NORMAL, bgColor, character);
+    drawCharacter(tft, CHAR_X_BASE, CHAR_Y_BASE, EYE_NORMAL, EFFECT_NONE, bgColor, character);
   }
 
   // Title
@@ -591,6 +591,7 @@ void drawStatus() {
   uint16_t bgColor = getBackgroundColorEnum(currentState);
   uint16_t textColor = getTextColorEnum(currentState);
   EyeType eyeType = getEyeTypeEnum(currentState);
+  EffectType effectType = getEffectTypeEnum(currentState);
   const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
   // Fill background (only if dirty)
@@ -607,11 +608,11 @@ void drawStatus() {
   // Draw character using sprite buffer (no flickering)
   if (dirtyCharacter || needsRedraw) {
     if (spriteInitialized) {
-      drawCharacterToSprite(charSprite, eyeType, bgColor, character);
+      drawCharacterToSprite(charSprite, eyeType, effectType, bgColor, character);
       charSprite.pushSprite(charX, charY);
     } else {
       // Fallback to direct drawing
-      drawCharacter(tft, charX, charY, eyeType, bgColor, character);
+      drawCharacter(tft, charX, charY, eyeType, effectType, bgColor, character);
     }
   }
 
@@ -738,6 +739,7 @@ void clearPreviousEdges(int oldX, int oldY, int newX, int newY, int w, int h, ui
 void updateAnimation() {
   uint16_t bgColor = getBackgroundColorEnum(currentState);
   EyeType eyeType = getEyeTypeEnum(currentState);
+  EffectType effectType = getEffectTypeEnum(currentState);
   const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
   // Calculate new floating position
@@ -769,14 +771,14 @@ void updateAnimation() {
         clearPreviousEdges(lastCharX, lastCharY, newCharX, newCharY, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
       }
       // Draw to sprite and push to screen in one operation
-      drawCharacterToSprite(charSprite, eyeType, bgColor, character);
+      drawCharacterToSprite(charSprite, eyeType, effectType, bgColor, character);
       charSprite.pushSprite(newCharX, newCharY);
     } else {
       // Fallback to direct drawing
       if (positionChanged) {
         clearPreviousEdges(lastCharX, lastCharY, newCharX, newCharY, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
       }
-      drawCharacter(tft, newCharX, newCharY, eyeType, bgColor, character);
+      drawCharacter(tft, newCharX, newCharY, eyeType, effectType, bgColor, character);
     }
     lastCharX = newCharX;
     lastCharY = newCharY;
@@ -810,10 +812,10 @@ void updateBlink() {
       if (now - lastBlink > 3200) {
         // Start blink: draw closed eyes
         if (spriteInitialized) {
-          drawCharacterToSprite(charSprite, EYE_BLINK, bgColor, character);
+          drawCharacterToSprite(charSprite, EYE_BLINK, EFFECT_NONE, bgColor, character);
           charSprite.pushSprite(charX, charY);
         } else {
-          drawCharacter(tft, charX, charY, EYE_BLINK, bgColor, character);
+          drawCharacter(tft, charX, charY, EYE_BLINK, EFFECT_NONE, bgColor, character);
         }
         blinkPhase = BLINK_CLOSED;
         blinkPhaseStart = now;
@@ -825,10 +827,10 @@ void updateBlink() {
       if (now - blinkPhaseStart >= 100) {
         // End blink: draw open eyes
         if (spriteInitialized) {
-          drawCharacterToSprite(charSprite, EYE_NORMAL, bgColor, character);
+          drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
           charSprite.pushSprite(charX, charY);
         } else {
-          drawCharacter(tft, charX, charY, EYE_NORMAL, bgColor, character);
+          drawCharacter(tft, charX, charY, EYE_NORMAL, EFFECT_NONE, bgColor, character);
         }
         blinkPhase = BLINK_NONE;
         lastBlink = now;

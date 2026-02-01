@@ -166,24 +166,38 @@ bool isValidCharacter(String name) {
 #define CHAR_HEIGHT 128
 #define SCALE       2    // Scale factor from original design
 
-// Eye types
+// Eye types (visual appearance of eyes)
 enum EyeType {
-  EYE_SPARKLE,     // start: normal + sparkle
-  EYE_NORMAL,      // idle: square eyes
-  EYE_BLINK,       // idle blink: closed eyes (no Zzz)
-  EYE_THINKING,    // thinking: looking up eyes + thought bubble
-  EYE_FOCUSED,     // working: horizontal flat eyes
-  EYE_ALERT,       // notification: round eyes
-  EYE_HAPPY,       // done: curved happy eyes
-  EYE_SLEEP        // sleep: closed eyes + Zzz
+  EYE_NORMAL,      // Normal square eyes (default)
+  EYE_BLINK,       // Closed eyes (horizontal lines)
+  EYE_HAPPY,       // Happy eyes (> <)
+  EYE_FOCUSED      // Sunglasses (Matrix style)
 };
+
+// Effect types (visual effects around character)
+enum EffectType {
+  EFFECT_NONE,     // No effect
+  EFFECT_SPARKLE,  // Sparkle effect (start state)
+  EFFECT_THINKING, // Thought bubble (thinking/planning state)
+  EFFECT_ALERT,    // Question mark (notification state)
+  EFFECT_MATRIX,   // Matrix rain background (working state)
+  EFFECT_ZZZ       // Zzz animation (sleep state)
+};
+
+// Legacy EyeType values for backward compatibility
+// DEPRECATED: Use EyeType + EffectType separately
+#define EYE_SPARKLE_LEGACY  100  // Maps to EYE_NORMAL + EFFECT_SPARKLE
+#define EYE_THINKING_LEGACY 101  // Maps to EYE_NORMAL + EFFECT_THINKING
+#define EYE_ALERT_LEGACY    102  // Maps to EYE_NORMAL + EFFECT_ALERT
+#define EYE_SLEEP_LEGACY    103  // Maps to EYE_BLINK + EFFECT_ZZZ
 
 // Animation frame counter
 extern int animFrame;
 
 // Forward declarations for functions called before definition
 void drawMatrixBackground(TFT_eSPI &tft, int x, int y, int frame, int size);
-void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeometry* character);
+void drawEyeType(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeometry* character);
+void drawEffectType(TFT_eSPI &tft, int x, int y, EffectType effectType, const CharacterGeometry* character);
 void drawQuestionMark(TFT_eSPI &tft, int x, int y);
 void drawSparkle(TFT_eSPI &tft, int x, int y, uint16_t sparkleColor);
 void drawThoughtBubble(TFT_eSPI &tft, int x, int y, int frame, uint16_t color);
@@ -209,15 +223,17 @@ void drawZzz(TFT_eSPI &tft, int x, int y, int frame, uint16_t color);
 
 // Forward declarations for sprite versions
 void drawMatrixBackgroundToSprite(TFT_eSprite &sprite, int frame, int size);
-void drawEyesToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGeometry* character);
+void drawEyeTypeToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGeometry* character);
+void drawEffectTypeToSprite(TFT_eSprite &sprite, EffectType effectType, const CharacterGeometry* character);
 
 // Draw the Claude character to sprite buffer (128x128) - NO FLICKERING
-void drawCharacterToSprite(TFT_eSprite &sprite, EyeType eyeType, uint16_t bgColor, const CharacterGeometry* character = &CHAR_CLAWD) {
+// New API: separate eyeType and effectType
+void drawCharacterToSprite(TFT_eSprite &sprite, EyeType eyeType, EffectType effectType, uint16_t bgColor, const CharacterGeometry* character = &CHAR_CLAWD) {
   // Clear sprite with background color
   sprite.fillSprite(bgColor);
 
-  // Draw matrix background for working state (behind character)
-  if (eyeType == EYE_FOCUSED) {
+  // Draw matrix background for matrix effect (behind character)
+  if (effectType == EFFECT_MATRIX) {
     drawMatrixBackgroundToSprite(sprite, animFrame, CHAR_WIDTH / SCALE);
   }
 
@@ -230,17 +246,22 @@ void drawCharacterToSprite(TFT_eSprite &sprite, EyeType eyeType, uint16_t bgColo
     drawClawImageToSprite(sprite);
   }
 
-  // Draw eyes based on type
-  drawEyesToSprite(sprite, eyeType, character);
+  // Draw eye type (normal, blink, happy, focused)
+  drawEyeTypeToSprite(sprite, eyeType, character);
+
+  // Draw effect (sparkle, thinking, alert, zzz)
+  // Note: matrix effect is drawn above as background
+  drawEffectTypeToSprite(sprite, effectType, character);
 }
 
 // Legacy: Draw the Claude character at specified position (128x128) - direct to screen
-void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, uint16_t bgColor, const CharacterGeometry* character = &CHAR_CLAWD) {
+// New API: separate eyeType and effectType
+void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, EffectType effectType, uint16_t bgColor, const CharacterGeometry* character = &CHAR_CLAWD) {
   // Clear background area
   tft.fillRect(x, y, CHAR_WIDTH, CHAR_HEIGHT, bgColor);
 
-  // Draw matrix background for working state (behind character)
-  if (eyeType == EYE_FOCUSED) {
+  // Draw matrix background for matrix effect (behind character)
+  if (effectType == EFFECT_MATRIX) {
     drawMatrixBackground(tft, x, y, animFrame, CHAR_WIDTH / SCALE);
   }
 
@@ -253,8 +274,11 @@ void drawCharacter(TFT_eSPI &tft, int x, int y, EyeType eyeType, uint16_t bgColo
     drawClawImage(tft, x, y);
   }
 
-  // Draw eyes/effects
-  drawEyes(tft, x, y, eyeType, character);
+  // Draw eye type
+  drawEyeType(tft, x, y, eyeType, character);
+
+  // Draw effect
+  drawEffectType(tft, x, y, effectType, character);
 }
 
 // Sunglasses colors
@@ -366,64 +390,78 @@ inline void drawSunglasses(TFT_eSPI &tft, int leftEyeX, int rightEyeX, int eyeY,
   drawSunglassesT(tft, leftEyeX, rightEyeX, eyeY, ew, eh, isKiro);
 }
 
-// Draw eyes based on eye type (scaled 2x)
-// Note: Eyes are now part of character images, only draw effects and sunglasses
-void drawEyes(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeometry* character = &CHAR_CLAWD) {
+// Draw eye type only (normal, blink, happy, focused)
+// EyeType: EYE_NORMAL | EYE_BLINK | EYE_HAPPY | EYE_FOCUSED
+void drawEyeType(TFT_eSPI &tft, int x, int y, EyeType eyeType, const CharacterGeometry* character = &CHAR_CLAWD) {
   // Eye base positions (scaled 2x)
   int leftEyeX = x + (character->eyeLeftX * SCALE);
   int rightEyeX = x + (character->eyeRightX * SCALE);
   int eyeY = y + (character->eyeY * SCALE);
-  int ew = character->eyeW * SCALE;  // Scaled eye width
-  int eh = character->eyeH * SCALE;  // Scaled eye height
+  int ew = character->eyeW * SCALE;
+  int eh = character->eyeH * SCALE;
   bool isKiro = (character == &CHAR_KIRO);
 
-  // Effect color (yellow for white characters, white for others)
+  switch (eyeType) {
+    case EYE_FOCUSED:
+      // Sunglasses (Matrix style)
+      drawSunglasses(tft, leftEyeX, rightEyeX, eyeY, ew, eh, isKiro);
+      break;
+
+    case EYE_BLINK:
+      // Closed eyes (horizontal lines)
+      drawSleepEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
+      break;
+
+    case EYE_HAPPY:
+      // Happy eyes (> <)
+      drawHappyEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
+      break;
+
+    case EYE_NORMAL:
+    default:
+      // Normal eyes - already in character image, no additional drawing needed
+      break;
+  }
+}
+
+// Draw effect only (sparkle, thinking, alert, zzz)
+// EffectType: EFFECT_NONE | EFFECT_SPARKLE | EFFECT_THINKING | EFFECT_ALERT | EFFECT_MATRIX | EFFECT_ZZZ
+void drawEffectType(TFT_eSPI &tft, int x, int y, EffectType effectType, const CharacterGeometry* character = &CHAR_CLAWD) {
+  bool isKiro = (character == &CHAR_KIRO);
   uint16_t effectColor = isKiro ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
 
   // Effect position (from character config)
   int effectX = x + (character->effectX * SCALE);
   int effectY = y + (character->effectY * SCALE);
 
-  // Only draw effects and sunglasses (eyes are in the images)
-  switch (eyeType) {
-    case EYE_FOCUSED:
-      // Sunglasses for Matrix style (working state)
-      drawSunglasses(tft, leftEyeX, rightEyeX, eyeY, ew, eh, isKiro);
-      break;
-
-    case EYE_ALERT:
-      // Question mark effect (notification state)
-      drawQuestionMark(tft, effectX, effectY);
-      break;
-
-    case EYE_SPARKLE:
-      // Sparkle effect (start state)
+  switch (effectType) {
+    case EFFECT_SPARKLE:
+      // Sparkle effect
       drawSparkle(tft, effectX, effectY + (2 * SCALE), effectColor);
       break;
 
-    case EYE_THINKING:
-      // Thought bubble effect (thinking state)
+    case EFFECT_THINKING:
+      // Thought bubble effect
       drawThoughtBubble(tft, effectX, effectY, animFrame, effectColor);
       break;
 
-    case EYE_SLEEP:
-      // Sleep eyes (closed eyes) and Zzz effect
-      drawSleepEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
+    case EFFECT_ALERT:
+      // Question mark effect
+      drawQuestionMark(tft, effectX, effectY);
+      break;
+
+    case EFFECT_ZZZ:
+      // Zzz sleep effect
       drawZzz(tft, effectX, effectY, animFrame, effectColor);
       break;
 
-    case EYE_BLINK:
-      // Blink eyes (closed eyes without Zzz)
-      drawSleepEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
+    case EFFECT_MATRIX:
+      // Matrix rain - handled separately in drawCharacter (background effect)
       break;
 
-    case EYE_HAPPY:
-      // Happy eyes (> <) for done state
-      drawHappyEyes(tft, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
-      break;
-
+    case EFFECT_NONE:
     default:
-      // EYE_NORMAL: no additional effects needed
+      // No effect
       break;
   }
 }
@@ -732,18 +770,29 @@ uint16_t getBackgroundColorEnum(AppState state) {
 }
 
 // Get eye type for state (enum version - efficient)
+// Get eye type for state (new API)
+// EyeType: EYE_NORMAL | EYE_BLINK | EYE_HAPPY | EYE_FOCUSED
 EyeType getEyeTypeEnum(AppState state) {
   switch (state) {
-    case STATE_START: return EYE_SPARKLE;
-    case STATE_IDLE: return EYE_NORMAL;
-    case STATE_THINKING: return EYE_THINKING;
-    case STATE_PLANNING: return EYE_THINKING;
     case STATE_WORKING: return EYE_FOCUSED;
-    case STATE_PACKING: return EYE_THINKING;
-    case STATE_NOTIFICATION: return EYE_ALERT;
     case STATE_DONE: return EYE_HAPPY;
-    case STATE_SLEEP: return EYE_SLEEP;
+    case STATE_SLEEP: return EYE_BLINK;
     default: return EYE_NORMAL;
+  }
+}
+
+// Get effect type for state (new API)
+// EffectType: EFFECT_NONE | EFFECT_SPARKLE | EFFECT_THINKING | EFFECT_ALERT | EFFECT_MATRIX | EFFECT_ZZZ
+EffectType getEffectTypeEnum(AppState state) {
+  switch (state) {
+    case STATE_START: return EFFECT_SPARKLE;
+    case STATE_THINKING: return EFFECT_THINKING;
+    case STATE_PLANNING: return EFFECT_THINKING;
+    case STATE_PACKING: return EFFECT_THINKING;
+    case STATE_WORKING: return EFFECT_MATRIX;
+    case STATE_NOTIFICATION: return EFFECT_ALERT;
+    case STATE_SLEEP: return EFFECT_ZZZ;
+    default: return EFFECT_NONE;
   }
 }
 
@@ -811,17 +860,24 @@ uint16_t getBackgroundColor(String state) {
   return COLOR_BG_IDLE;
 }
 
+// Get eye type for state (legacy String version)
 EyeType getEyeType(String state) {
-  if (state == "start") return EYE_SPARKLE;
-  if (state == "idle") return EYE_NORMAL;
-  if (state == "thinking") return EYE_THINKING;
-  if (state == "planning") return EYE_THINKING;
   if (state == "working") return EYE_FOCUSED;
-  if (state == "packing") return EYE_THINKING;
-  if (state == "notification") return EYE_ALERT;
   if (state == "done") return EYE_HAPPY;
-  if (state == "sleep") return EYE_SLEEP;
+  if (state == "sleep") return EYE_BLINK;
   return EYE_NORMAL;
+}
+
+// Get effect type for state (legacy String version)
+EffectType getEffectType(String state) {
+  if (state == "start") return EFFECT_SPARKLE;
+  if (state == "thinking") return EFFECT_THINKING;
+  if (state == "planning") return EFFECT_THINKING;
+  if (state == "packing") return EFFECT_THINKING;
+  if (state == "working") return EFFECT_MATRIX;
+  if (state == "notification") return EFFECT_ALERT;
+  if (state == "sleep") return EFFECT_ZZZ;
+  return EFFECT_NONE;
 }
 
 String getStatusText(String state) {
@@ -933,7 +989,8 @@ inline void drawThoughtBubbleToSprite(TFT_eSprite &sprite, int x, int y, int fra
 }
 
 // Draw eyes to sprite based on eye type
-void drawEyesToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGeometry* character = &CHAR_CLAWD) {
+// Draw eye type to sprite (normal, blink, happy, focused)
+void drawEyeTypeToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGeometry* character = &CHAR_CLAWD) {
   int leftEyeX = character->eyeLeftX * SCALE;
   int rightEyeX = character->eyeRightX * SCALE;
   int eyeY = character->eyeY * SCALE;
@@ -941,28 +998,9 @@ void drawEyesToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGeome
   int eh = character->eyeH * SCALE;
   bool isKiro = (character == &CHAR_KIRO);
 
-  uint16_t effectColor = isKiro ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
-
-  // Effect position (from character config)
-  int effectX = character->effectX * SCALE;
-  int effectY = character->effectY * SCALE;
-
   switch (eyeType) {
     case EYE_FOCUSED:
       drawSunglassesT(sprite, leftEyeX, rightEyeX, eyeY, ew, eh, isKiro);
-      break;
-    case EYE_ALERT:
-      drawQuestionMarkT(sprite, effectX, effectY);
-      break;
-    case EYE_SPARKLE:
-      drawSparkleT(sprite, effectX, effectY + (2 * SCALE), effectColor);
-      break;
-    case EYE_THINKING:
-      drawThoughtBubbleT(sprite, effectX, effectY, animFrame, effectColor);
-      break;
-    case EYE_SLEEP:
-      drawSleepEyesT(sprite, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
-      drawZzzT(sprite, effectX, effectY, animFrame, effectColor);
       break;
     case EYE_BLINK:
       drawSleepEyesT(sprite, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
@@ -970,6 +1008,39 @@ void drawEyesToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGeome
     case EYE_HAPPY:
       drawHappyEyesT(sprite, leftEyeX, rightEyeX, eyeY, ew, eh, character->color, isKiro);
       break;
+    case EYE_NORMAL:
+    default:
+      // Normal eyes - already in character image
+      break;
+  }
+}
+
+// Draw effect to sprite (sparkle, thinking, alert, zzz)
+void drawEffectTypeToSprite(TFT_eSprite &sprite, EffectType effectType, const CharacterGeometry* character = &CHAR_CLAWD) {
+  bool isKiro = (character == &CHAR_KIRO);
+  uint16_t effectColor = isKiro ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
+
+  // Effect position (from character config)
+  int effectX = character->effectX * SCALE;
+  int effectY = character->effectY * SCALE;
+
+  switch (effectType) {
+    case EFFECT_SPARKLE:
+      drawSparkleT(sprite, effectX, effectY + (2 * SCALE), effectColor);
+      break;
+    case EFFECT_THINKING:
+      drawThoughtBubbleT(sprite, effectX, effectY, animFrame, effectColor);
+      break;
+    case EFFECT_ALERT:
+      drawQuestionMarkT(sprite, effectX, effectY);
+      break;
+    case EFFECT_ZZZ:
+      drawZzzT(sprite, effectX, effectY, animFrame, effectColor);
+      break;
+    case EFFECT_MATRIX:
+      // Matrix rain - handled separately in drawCharacterToSprite
+      break;
+    case EFFECT_NONE:
     default:
       break;
   }

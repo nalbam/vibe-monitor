@@ -201,8 +201,8 @@ function updateDisplay() {
   // Draw info icons
   drawInfoIcons(state.textColor, state.bgColor, useEmoji);
 
-  // Draw character
-  drawCharacter(state.eyeType, currentState, currentCharacter, animFrame);
+  // Draw character (eyeType and effect from state)
+  drawCharacter(state.eyeType, state.effect, currentState, currentCharacter, animFrame);
 }
 
 // Update loading dots (slower for thinking state)
@@ -240,34 +240,38 @@ function animationLoop(timestamp) {
   // Only redraw when necessary
   if (needsAnimationRedraw(currentState, animFrame, blinkFrame)) {
     if (currentState === 'start') {
-      drawCharacter('sparkle', currentState, currentCharacter, animFrame);
+      drawCharacter('normal', 'sparkle', currentState, currentCharacter, animFrame);
     }
 
     if (currentState === 'thinking') {
       updateLoadingDots(true);  // Slow for thinking
-      drawCharacter('thinking', currentState, currentCharacter, animFrame);
+      drawCharacter('normal', 'thinking', currentState, currentCharacter, animFrame);
     }
 
     if (currentState === 'planning') {
       updateLoadingDots(true);  // Slow for planning
-      drawCharacter('thinking', currentState, currentCharacter, animFrame);
+      drawCharacter('normal', 'thinking', currentState, currentCharacter, animFrame);
     }
 
     if (currentState === 'working') {
       updateLoadingDots(false);  // Normal speed for working
-      drawCharacter('focused', currentState, currentCharacter, animFrame);
+      drawCharacter('focused', 'matrix', currentState, currentCharacter, animFrame);
+    }
+
+    if (currentState === 'packing') {
+      drawCharacter('normal', 'thinking', currentState, currentCharacter, animFrame);
     }
 
     if (currentState === 'idle') {
       if (blinkFrame === BLINK_START_FRAME) {
-        drawCharacter('blink', currentState, currentCharacter, animFrame);
+        drawCharacter('blink', 'none', currentState, currentCharacter, animFrame);
       } else if (blinkFrame === BLINK_END_FRAME) {
-        drawCharacter('normal', currentState, currentCharacter, animFrame);
+        drawCharacter('normal', 'none', currentState, currentCharacter, animFrame);
       }
     }
 
     if (currentState === 'sleep') {
-      drawCharacter('sleep', currentState, currentCharacter, animFrame);
+      drawCharacter('blink', 'zzz', currentState, currentCharacter, animFrame);
     }
   }
 

@@ -25,7 +25,7 @@ function getEyeCoverPosition(leftX, rightX, eyeY, eyeW, eyeH, isKiro = false) {
   return { lensW, lensH, lensY, leftLensX, rightLensX };
 }
 
-// Draw sunglasses (Matrix style)
+// Draw sunglasses (Matrix style) - focused eyeType
 function drawSunglasses(leftX, rightX, eyeY, eyeW, eyeH, drawRect, isKiro = false) {
   const { lensW, lensH, lensY, leftLensX, rightLensX } = getEyeCoverPosition(leftX, rightX, eyeY, eyeW, eyeH, isKiro);
 
@@ -63,8 +63,8 @@ function drawSunglasses(leftX, rightX, eyeY, eyeW, eyeH, drawRect, isKiro = fals
   drawRect(leftLensX + lensW, bridgeY, rightLensX - leftLensX - lensW, 1, frameColor);
 }
 
-// Draw sleep eyes (closed eyes with body color background)
-function drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, bodyColor, isKiro = false) {
+// Draw closed eyes (blink eyeType) - horizontal lines
+function drawBlinkEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, bodyColor, isKiro = false) {
   const { lensW, lensH, lensY, leftLensX, rightLensX } = getEyeCoverPosition(leftX, rightX, eyeY, eyeW, eyeH, isKiro);
 
   // Cover original eyes with body color (same area as sunglasses)
@@ -78,7 +78,7 @@ function drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, bodyColor, isK
   drawRect(rightLensX + 1, closedEyeY, lensW - 2, closedEyeH, COLOR_EYE);
 }
 
-// Draw happy eyes (> < style for done state)
+// Draw happy eyes (> < style) - happy eyeType
 function drawHappyEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, bodyColor, isKiro = false) {
   const { lensW, lensH, lensY, leftLensX, rightLensX } = getEyeCoverPosition(leftX, rightX, eyeY, eyeW, eyeH, isKiro);
 
@@ -107,63 +107,106 @@ function getEffectColor(char) {
   return char.color === '#FFFFFF' ? COLOR_EFFECT_ALT : COLOR_WHITE;
 }
 
-// Draw eyes (scaled 2x)
-// Note: Eyes are now part of character images, only draw effects and sunglasses
-export function drawEyes(eyeType, char, animFrame, drawRect) {
+// Draw eye type only (normal, blink, happy, focused)
+// eyeType: 'normal' | 'blink' | 'happy' | 'focused'
+export function drawEyeType(eyeType, char, animFrame, drawRect) {
   char = char || CHARACTER_CONFIG[DEFAULT_CHARACTER];
   const leftX = char.eyes.left.x;
   const rightX = char.eyes.right.x;
   const eyeY = char.eyes.left.y;
-  // Support separate width/height or fallback to size
   const eyeW = char.eyes.w || char.eyes.size || 6;
   const eyeH = char.eyes.h || char.eyes.size || 6;
   const isKiro = char.name === 'kiro';
+
+  switch (eyeType) {
+    case 'focused':
+      // Sunglasses (Matrix style)
+      drawSunglasses(leftX, rightX, eyeY, eyeW, eyeH, drawRect, isKiro);
+      break;
+
+    case 'blink':
+      // Closed eyes (horizontal lines)
+      drawBlinkEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+      break;
+
+    case 'happy':
+      // Happy eyes (> <)
+      drawHappyEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+      break;
+
+    case 'normal':
+    default:
+      // Normal eyes - already in character image, no additional drawing needed
+      break;
+  }
+}
+
+// Draw effect only (sparkle, thinking, alert, matrix, zzz, none)
+// effect: 'sparkle' | 'thinking' | 'alert' | 'matrix' | 'zzz' | 'none'
+export function drawEffect(effect, char, animFrame, drawRect) {
+  char = char || CHARACTER_CONFIG[DEFAULT_CHARACTER];
+  const rightX = char.eyes.right.x;
+  const eyeY = char.eyes.left.y;
+  const eyeW = char.eyes.w || char.eyes.size || 6;
   const effectColor = getEffectColor(char);
 
   // Effect position (from character config, fallback to eye-based calculation)
   const effectX = char.effect?.x ?? (rightX + eyeW + 2);
   const effectY = char.effect?.y ?? (eyeY - 18);
 
-  switch (eyeType) {
-    case 'focused':
-      // Sunglasses for Matrix style (working state)
-      drawSunglasses(leftX, rightX, eyeY, eyeW, eyeH, drawRect, isKiro);
-      break;
-
-    case 'alert':
-      // Question mark effect (notification state)
-      drawQuestionMark(effectX, effectY, drawRect);
-      break;
-
+  switch (effect) {
     case 'sparkle':
-      // Sparkle effect (start state)
+      // Sparkle effect
       drawSparkle(effectX, effectY + 2, animFrame, drawRect, effectColor);
       break;
 
     case 'thinking':
-      // Thought bubble effect (thinking state)
+      // Thought bubble effect
       drawThoughtBubble(effectX, effectY, animFrame, drawRect, effectColor);
       break;
 
-    case 'sleep':
-      // Sleep eyes (closed eyes) and Zzz effect
-      drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+    case 'alert':
+      // Question mark effect
+      drawQuestionMark(effectX, effectY, drawRect);
+      break;
+
+    case 'zzz':
+      // Zzz sleep effect
       drawZzz(effectX, effectY, animFrame, drawRect, effectColor);
       break;
 
-    case 'blink':
-      // Blink eyes (closed eyes without Zzz)
-      drawSleepEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+    case 'matrix':
+      // Matrix rain - handled separately in character.js (background effect)
       break;
 
-    case 'happy':
-      // Happy eyes (> <) for done state
-      drawHappyEyes(leftX, rightX, eyeY, eyeW, eyeH, drawRect, char.color, isKiro);
+    case 'none':
+    default:
+      // No effect
       break;
   }
 }
 
-// Draw sparkle (scaled 2x)
+// Legacy: Draw eyes (combined eyeType + effect for backward compatibility)
+// DEPRECATED: Use drawEyeType() and drawEffect() separately
+export function drawEyes(eyeType, char, animFrame, drawRect) {
+  // Map old eyeType to new eyeType + effect
+  const mapping = {
+    'normal': { eye: 'normal', fx: 'none' },
+    'blink': { eye: 'blink', fx: 'none' },
+    'happy': { eye: 'happy', fx: 'none' },
+    'focused': { eye: 'focused', fx: 'none' },
+    'sparkle': { eye: 'normal', fx: 'sparkle' },
+    'thinking': { eye: 'normal', fx: 'thinking' },
+    'alert': { eye: 'normal', fx: 'alert' },
+    'sleep': { eye: 'blink', fx: 'zzz' },
+  };
+
+  const { eye, fx } = mapping[eyeType] || { eye: 'normal', fx: 'none' };
+  drawEyeType(eye, char, animFrame, drawRect);
+  drawEffect(fx, char, animFrame, drawRect);
+}
+
+// Draw sparkle effect
 export function drawSparkle(x, y, animFrame, drawRect, color = COLOR_WHITE) {
   const frame = animFrame % 4;
   drawRect(x + 2, y + 2, 2, 2, color);
@@ -181,7 +224,7 @@ export function drawSparkle(x, y, animFrame, drawRect, color = COLOR_WHITE) {
   }
 }
 
-// Draw question mark
+// Draw question mark effect
 export function drawQuestionMark(x, y, drawRect) {
   const color = '#000000';
   drawRect(x + 1, y, 4, 2, color);
@@ -191,7 +234,7 @@ export function drawQuestionMark(x, y, drawRect) {
   drawRect(x + 2, y + 10, 2, 2, color);
 }
 
-// Draw Zzz animation for sleep state
+// Draw Zzz animation for sleep effect
 export function drawZzz(x, y, animFrame, drawRect, color = COLOR_WHITE) {
   const frame = animFrame % 20;
   if (frame < 10) {
@@ -204,7 +247,7 @@ export function drawZzz(x, y, animFrame, drawRect, color = COLOR_WHITE) {
   }
 }
 
-// Draw thought bubble animation for thinking state
+// Draw thought bubble animation for thinking effect
 export function drawThoughtBubble(x, y, animFrame, drawRect, color = COLOR_WHITE) {
   const frame = animFrame % 12;
   // Small dots leading to bubble (always visible)
