@@ -99,6 +99,17 @@ WebSocket mode allows ESP32 to receive real-time status updates from a central s
 
 > **Note:** For local servers, use your PC's IP address, not `localhost` (ESP32 treats localhost as itself).
 
+### 3. Partition Scheme (Required for SSL)
+
+WebSocket with SSL requires more program space. Change the partition scheme:
+
+1. `Tools` → `Partition Scheme`
+2. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"**
+
+This increases app space from 1.3MB to 3MB.
+
+> **Note:** If you don't need SSL (local testing), you can use the default partition with `WS_USE_SSL false`.
+
 ## WiFi HTTP Endpoints
 
 When WiFi is enabled, the ESP32 runs an HTTP server on port 80:
