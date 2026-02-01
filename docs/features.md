@@ -54,7 +54,8 @@ The `working` state displays context-aware text based on the active tool:
 | From State | Timeout | To State |
 |------------|---------|----------|
 | `start`, `done` | 1 minute | `idle` |
-| `idle`, `notification` | 5 minutes | `sleep` |
+| `planning`, `thinking`, `working`, `notification` | 5 minutes | `idle` |
+| `idle` | 5 minutes | `sleep` |
 
 **Desktop only:** After 10 minutes in sleep state, the window automatically closes.
 
