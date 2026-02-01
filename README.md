@@ -212,6 +212,7 @@ See [ESP32 Setup](docs/esp32.md) for hardware setup instructions.
 - [Features](docs/features.md) - States, animations, window modes
 - [API Reference](docs/api.md) - All HTTP endpoints
 - [ESP32 Setup](docs/esp32.md) - Hardware setup
+- [Desktop App (npm)](desktop/README.md) - npm package README
 
 ## Version History
 

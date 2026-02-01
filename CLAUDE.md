@@ -50,6 +50,7 @@ open simulator/index.html
   - `states.json`: State colors, text, eyeType definitions
   - `characters.json`: Character eyes/effect configuration (image-based rendering)
   - `texts.json`: Thinking/planning/tool status texts
+- **Documentation**: `README.md`, `CLAUDE.md`, `docs/*`, `desktop/README.md` (npm package)
 
 ## Key Patterns
 

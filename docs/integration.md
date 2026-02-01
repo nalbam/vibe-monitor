@@ -280,8 +280,8 @@ Commands try targets in order and stop on first success:
 
 | Action | Claude Code | Kiro | OpenClaw | State |
 |--------|-------------|------|----------|-------|
-| Session start | `SessionStart` | - | `gateway_start` | `start` |
+| Session start | `SessionStart` | `agentSpawn` | `gateway_start` | `start` |
 | User input | `UserPromptSubmit` | `promptSubmit` | `before_agent_start` | `thinking` |
-| Tool execution | `PreToolUse` | `fileCreated/fileSaved/fileDeleted` | `before_tool_call` | `working` |
+| Tool execution | `PreToolUse` | `fileCreated/fileSaved/fileDeleted/preToolUse` | `before_tool_call` | `working` |
 | Agent done | `Stop` | `agentStop` | `message_sent` | `done` |
 | Notification | `Notification` | - | - | `notification` |

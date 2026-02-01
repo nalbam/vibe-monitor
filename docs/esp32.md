@@ -89,7 +89,7 @@ ls /dev/ttyUSB* /dev/ttyACM*
 
 ## Testing
 
-## Character
+### Character
 
 ```bash
 echo '{"state":"idle","project":"my-project","character":"clawd"}' > /dev/cu.usbmodem1101 && sleep 1
