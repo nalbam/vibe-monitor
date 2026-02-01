@@ -46,12 +46,12 @@ bool spriteInitialized = false;
 #define FLOAT_AMPLITUDE_Y 5  // Floating animation amplitude Y (pixels)
 #define STATUS_TEXT_Y 160
 #define LOADING_Y     190
-#define PROJECT_Y     220
-#define TOOL_Y        235
-#define MODEL_Y       250
-#define MEMORY_Y      265
+#define PROJECT_Y     224
+#define TOOL_Y        238
+#define MODEL_Y       252
+#define MEMORY_Y      266
 #define MEMORY_BAR_X  10
-#define MEMORY_BAR_Y  285
+#define MEMORY_BAR_Y  280
 #define MEMORY_BAR_W  152
 #define MEMORY_BAR_H  8
 #define BRAND_Y       300
@@ -612,15 +612,15 @@ void drawStatus() {
 
     if (strlen(currentProject) > 0) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1);
+      tft.setTextSize(1.3);
       drawFolderIcon(tft, 10, PROJECT_Y, textColor);
       tft.setCursor(24, PROJECT_Y);
 
       char displayProject[20];
       size_t maxDisplay = sizeof(displayProject) - 1;
-      if (strlen(currentProject) > 16) {
-        strncpy(displayProject, currentProject, 13);
-        displayProject[13] = '\0';
+      if (strlen(currentProject) > 15) {
+        strncpy(displayProject, currentProject, 12);
+        displayProject[12] = '\0';
         strncat(displayProject, "...", maxDisplay - strlen(displayProject));
       } else {
         strncpy(displayProject, currentProject, maxDisplay);
@@ -632,7 +632,7 @@ void drawStatus() {
     // Tool name (working state only)
     if (strlen(currentTool) > 0 && currentState == STATE_WORKING) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1);
+      tft.setTextSize(1.3);
       drawToolIcon(tft, 10, TOOL_Y, textColor);
       tft.setCursor(24, TOOL_Y);
       tft.println(currentTool);
@@ -641,15 +641,15 @@ void drawStatus() {
     // Model name
     if (strlen(currentModel) > 0) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1);
+      tft.setTextSize(1.3);
       drawRobotIcon(tft, 10, MODEL_Y, textColor);
       tft.setCursor(24, MODEL_Y);
 
       char displayModel[20];
       size_t maxModel = sizeof(displayModel) - 1;
-      if (strlen(currentModel) > 14) {
-        strncpy(displayModel, currentModel, 11);
-        displayModel[11] = '\0';
+      if (strlen(currentModel) > 15) {
+        strncpy(displayModel, currentModel, 12);
+        displayModel[12] = '\0';
         strncat(displayModel, "...", maxModel - strlen(displayModel));
       } else {
         strncpy(displayModel, currentModel, maxModel);
@@ -661,7 +661,7 @@ void drawStatus() {
     // Memory usage (hide on start state)
     if (strlen(currentMemory) > 0 && currentState != STATE_START) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1);
+      tft.setTextSize(1.3);
       drawBrainIcon(tft, 10, MEMORY_Y, textColor);
       tft.setCursor(24, MEMORY_Y);
       tft.println(currentMemory);
@@ -808,9 +808,9 @@ void updateBlink() {
 void setupWiFi() {
   WiFi.begin(ssid, password);
 
-  tft.setCursor(10, BRAND_Y - 30);
+  tft.setCursor(10, BRAND_Y - 35);
   tft.setTextColor(COLOR_TEXT_DIM);
-  tft.setTextSize(1);
+  tft.setTextSize(1.3);
   tft.print("WiFi: ");
 
   int attempts = 0;
@@ -822,7 +822,7 @@ void setupWiFi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     tft.println("OK");
-    tft.setCursor(10, BRAND_Y - 15);
+    tft.setCursor(10, BRAND_Y - 20);
     tft.print("IP: ");
     tft.println(WiFi.localIP());
 
