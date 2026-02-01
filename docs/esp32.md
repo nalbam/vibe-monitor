@@ -58,6 +58,7 @@ When WiFi is enabled, the ESP32 runs an HTTP server on port 80:
 |----------|--------|-------------|
 | `/status` | POST | Update monitor status |
 | `/status` | GET | Get current status |
+| `/health` | GET | Health check |
 | `/lock` | POST | Lock to project |
 | `/unlock` | POST | Unlock project |
 | `/lock-mode` | GET | Get lock mode |

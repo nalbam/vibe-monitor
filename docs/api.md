@@ -33,7 +33,7 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | GET /windows | ✓ | - |
 | POST /close | ✓ | - |
 | POST /show | ✓ | - |
-| GET /health | ✓ | - |
+| GET /health | ✓ | ✓ |
 | GET /debug | ✓ | - |
 | POST /quit | ✓ | - |
 | POST /lock | ✓ | ✓ |
