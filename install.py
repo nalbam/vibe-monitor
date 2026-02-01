@@ -48,6 +48,7 @@ KIRO_FILES = [
     "config/kiro/hooks/vibe-monitor-file-edited.kiro.hook",
     "config/kiro/hooks/vibe-monitor-file-deleted.kiro.hook",
     "config/kiro/hooks/vibe-monitor-agent-stop.kiro.hook",
+    "config/kiro/agents/default.json",
 ]
 
 OPENCLAW_FILES = [
@@ -312,6 +313,7 @@ def install_kiro(source: FileSource) -> bool:
     kiro_home = Path.home() / ".kiro"
     kiro_home.mkdir(parents=True, exist_ok=True)
     (kiro_home / "hooks").mkdir(parents=True, exist_ok=True)
+    (kiro_home / "agents").mkdir(parents=True, exist_ok=True)
 
     print("Copying files:")
 
@@ -330,6 +332,10 @@ def install_kiro(source: FileSource) -> bool:
     # vibe-monitor.py
     content = source.get_file("config/kiro/hooks/vibe-monitor.py")
     write_file_with_diff(kiro_home / "hooks" / "vibe-monitor.py", content, "hooks/vibe-monitor.py")
+
+    # agents/default.json
+    content = source.get_file("config/kiro/agents/default.json")
+    write_file_with_diff(kiro_home / "agents" / "default.json", content, "agents/default.json")
 
     # Handle .env.local
     env_content = source.get_file("config/kiro/.env.example")
@@ -366,7 +372,7 @@ def install_openclaw(source: FileSource) -> bool:
 
     print(f"\n{colored('OpenClaw installation complete!', 'green')}")
     print(f"\n{colored('Next steps:', 'yellow')}")
-    print("  1. Connect ESP32 via USB")
+    print("  1. Connect ESP32 via USB or start Desktop App")
     print("  2. Enable plugin in OpenClaw config (~/.openclaw/openclaw.json):")
     print(f"""     {colored('''"plugins": {
   "entries": {
@@ -376,7 +382,10 @@ def install_openclaw(source: FileSource) -> bool:
         "projectName": "OpenClaw",
         "character": "claw",
         "serialEnabled": true,
-        "debug": true
+        "httpEnabled": true,
+        "httpUrls": ["http://127.0.0.1:19280"],
+        "autoLaunch": true,
+        "debug": false
       }
     }
   }
