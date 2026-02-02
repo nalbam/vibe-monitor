@@ -56,24 +56,24 @@ export VIBEMON_CACHE_PATH="~/.claude/statusline-cache.json"
 # Auto-launch Desktop App (1: enabled, 0: disabled)
 # When enabled, launches Desktop App via npx if not running
 # Default: 0 (disabled)
-export VIBEMON_AUTO_LAUNCH=1
+# export VIBEMON_AUTO_LAUNCH=1
 
 # HTTP URLs (comma-separated)
 # - Desktop App: http://127.0.0.1:19280
 # - ESP32 WiFi: http://192.168.0.185
 # Multiple targets supported (sends to all in parallel)
-export VIBEMON_HTTP_URLS="http://127.0.0.1:19280"
+# export VIBEMON_HTTP_URLS="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 # Supports wildcard patterns (e.g., /dev/cu.usbmodem*) - uses first match
 # e.g., /dev/cu.usbserial-0001, /dev/ttyUSB0, /dev/cu.usbmodem*
 # Check with: ls /dev/cu.* or ls /dev/tty*
-export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem*"
+# export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem*"
 
 # VibeMon API (optional) - Send status to vibemon.io
 # Get your token from the VibeMon dashboard
-# export VIBEMON_URL="https://vibemon.io"
-# export VIBEMON_TOKEN="vbm_xxxxxxxxxxxxxxxxxxxx"
+export VIBEMON_URL="https://vibemon.io"
+export VIBEMON_TOKEN="" # vbm_xxxxxxxxxxxxxxxxxxxx
 ```
 
 ### 3. Register in `~/.claude/settings.json`
@@ -88,6 +88,9 @@ export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem*"
       { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
     ],
     "PreToolUse": [
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
+    ],
+    "PreCompact": [
       { "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibe-monitor.py" }] }
     ],
     "Notification": [
@@ -128,6 +131,7 @@ Claude Code statusline shows project, model, and memory usage:
 | `SessionStart` | `start` | Session begins |
 | `UserPromptSubmit` | `thinking` | User submits prompt |
 | `PreToolUse` | `working` | Tool execution starts |
+| `PreCompact` | `packing` | Context compacting |
 | `Notification` | `notification` | User input needed |
 | `Stop` | `done` | Agent turn ends |
 
@@ -159,18 +163,18 @@ Edit `~/.kiro/.env.local`:
 
 ```bash
 # Auto-launch Desktop App (1: enabled, 0: disabled)
-export VIBEMON_AUTO_LAUNCH=1
+# export VIBEMON_AUTO_LAUNCH=1
 
 # HTTP URLs (comma-separated)
-export VIBEMON_HTTP_URLS="http://127.0.0.1:19280"
+# export VIBEMON_HTTP_URLS="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 # export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem*"
 
 # VibeMon API (optional) - Send status to vibemon.io
 # Get your token from the VibeMon dashboard
-# export VIBEMON_URL="https://vibemon.io"
-# export VIBEMON_TOKEN="vbm_xxxxxxxxxxxxxxxxxxxx"
+export VIBEMON_URL="https://vibemon.io"
+export VIBEMON_TOKEN="" # vbm_xxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Kiro Hook Events
@@ -244,10 +248,12 @@ systemctl --user restart openclaw-gateway
 |--------|---------|-------------|
 | `projectName` | `OpenClaw` | Project name on display |
 | `character` | `claw` | Character: `clawd`, `kiro`, `claw` |
-| `serialEnabled` | `true` | Send to ESP32 via USB serial |
-| `httpEnabled` | `true` | Send to Desktop app |
-| `httpUrl` | `http://127.0.0.1:19280` | Desktop app base URL |
-| `autoLaunch` | `true` | Auto-launch Desktop App via npx |
+| `autoLaunch` | `false` | Auto-launch Desktop App via npx |
+| `serialEnabled` | `false` | Send to ESP32 via USB serial |
+| `httpEnabled` | `false` | Send to Desktop app |
+| `httpUrls` | `["http://127.0.0.1:19280"]` | HTTP endpoints array |
+| `vibemonUrl` | `https://vibemon.io` | VibeMon API URL |
+| `vibemonToken` | `""` | VibeMon API token |
 | `debug` | `false` | Enable verbose logging |
 
 ### OpenClaw Hook Events
@@ -288,7 +294,7 @@ Commands try targets in order and stop on first success:
 | `VIBEMON_SERIAL_PORT` | ESP32 USB Serial port (supports wildcards) | `/dev/cu.usbmodem*` |
 | `VIBEMON_URL` | VibeMon API URL | `https://vibemon.io` |
 | `VIBEMON_TOKEN` | VibeMon API authentication token | `vbm_xxxxxxxxxxxxxxxxxxxx` |
-| `VIBEMON_WS_URL` | WebSocket server URL (Desktop App only) | `wss://your-server.com/` |
+| `VIBEMON_WS_URL` | WebSocket server URL (Desktop App only) | `wss://ws.vibemon.io` |
 | `VIBEMON_WS_TOKEN` | WebSocket authentication token (Desktop App only) | `your-secret-token` |
 
 ---
@@ -300,6 +306,7 @@ Commands try targets in order and stop on first success:
 | Session start | `SessionStart` | `agentSpawn` | `gateway_start` | `start` |
 | User input | `UserPromptSubmit` | `promptSubmit` | `before_agent_start` | `thinking` |
 | Tool execution | `PreToolUse` | `fileCreated/fileSaved/fileDeleted/preToolUse` | `before_tool_call` | `working` |
+| Context compact | `PreCompact` | - | - | `packing` |
 | Agent done | `Stop` | `agentStop` | `message_sent` | `done` |
 | Notification | `Notification` | - | - | `notification` |
 
@@ -314,7 +321,7 @@ The Desktop App can receive status updates from a central WebSocket server inste
 Set environment variables before starting the Desktop App:
 
 ```bash
-export VIBEMON_WS_URL="wss://your-server.com/ws"
+export VIBEMON_WS_URL="wss://ws.vibemon.io"
 export VIBEMON_WS_TOKEN="your-auth-token"
 npx vibe-monitor
 ```

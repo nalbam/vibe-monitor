@@ -68,9 +68,9 @@ WebSocket mode allows ESP32 to receive real-time status updates from a central s
 #define USE_WEBSOCKET
 
 // WebSocket server configuration
-#define WS_HOST "vibemon.io"     // Server hostname
+#define WS_HOST "ws.vibemon.io"  // Server hostname
 #define WS_PORT 443              // Port (443 for HTTPS, 80 for HTTP)
-#define WS_PATH "/api/ws"        // WebSocket endpoint path
+#define WS_PATH "/"              // WebSocket endpoint path
 
 // Enable SSL for HTTPS servers (wss://)
 #define WS_USE_SSL true
@@ -83,9 +83,9 @@ WebSocket mode allows ESP32 to receive real-time status updates from a central s
 
 **Production server (vibemon.io):**
 ```cpp
-#define WS_HOST "vibemon.io"
+#define WS_HOST "ws.vibemon.io"
 #define WS_PORT 443
-#define WS_PATH "/api/ws"
+#define WS_PATH "/"
 #define WS_USE_SSL true
 ```
 
@@ -93,7 +93,7 @@ WebSocket mode allows ESP32 to receive real-time status updates from a central s
 ```cpp
 #define WS_HOST "192.168.1.100"  // Your PC's IP address
 #define WS_PORT 3000
-#define WS_PATH "/api/ws"
+#define WS_PATH "/"
 #define WS_USE_SSL false
 ```
 
