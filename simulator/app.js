@@ -8,9 +8,6 @@ let currentState = 'start';
 let currentCharacter = 'clawd';
 let iconType = 'emoji';
 
-// Cached DOM elements (initialized once in init())
-let domCache = null;
-
 // Parse URL parameters
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search);
@@ -25,44 +22,19 @@ function getUrlParams() {
   };
 }
 
-// Initialize DOM cache
-function initDomCache() {
-  return {
-    display: document.getElementById('display'),
-    titleText: null, // Not used in simulator
-    statusText: document.getElementById('status-text'),
-    loadingDots: document.getElementById('loading-dots'),
-    projectLine: document.getElementById('project-line'),
-    toolLine: document.getElementById('tool-line'),
-    modelLine: document.getElementById('model-line'),
-    memoryLine: document.getElementById('memory-line'),
-    projectValue: document.getElementById('project-value'),
-    toolValue: document.getElementById('tool-value'),
-    modelValue: document.getElementById('model-value'),
-    memoryValue: document.getElementById('memory-value'),
-    memoryBar: document.getElementById('memory-bar'),
-    memoryBarContainer: document.getElementById('memory-bar-container'),
-    infoTexts: document.querySelectorAll('.info-text'),
-    infoLabels: document.querySelectorAll('.info-label'),
-    infoValues: document.querySelectorAll('.info-value'),
-    dots: document.querySelectorAll('.dot'),
-    // Simulator-specific elements
-    currentStateDisplay: document.getElementById('current-state-display'),
-    jsonPreview: document.getElementById('json-preview'),
-    toolInput: document.getElementById('tool-input'),
-    projectInput: document.getElementById('project-input'),
-    modelInput: document.getElementById('model-input'),
-    memoryInput: document.getElementById('memory-input')
-  };
-}
-
 // Initialize
 async function init() {
-  const canvas = document.getElementById('character-canvas');
-  domCache = initDomCache();
+  const container = document.getElementById('vibemon-display');
 
-  // Create and initialize VibeMon engine
-  vibeMonEngine = createVibeMonEngine(canvas, domCache, { useEmoji: iconType === 'emoji' });
+  // Create and initialize VibeMon engine with local character images
+  vibeMonEngine = createVibeMonEngine(container, {
+    useEmoji: iconType === 'emoji',
+    characterImageUrls: {
+      clawd: '../desktop/assets/characters/clawd-128.png',
+      kiro: '../desktop/assets/characters/kiro-128.png',
+      claw: '../desktop/assets/characters/claw-128.png'
+    }
+  });
   await vibeMonEngine.init();
 
   // Get URL parameters
@@ -94,19 +66,25 @@ async function init() {
     characterSelect.appendChild(option);
   });
 
+  // Get input elements
+  const projectInput = document.getElementById('project-input');
+  const toolInput = document.getElementById('tool-input');
+  const modelInput = document.getElementById('model-input');
+  const memoryInput = document.getElementById('memory-input');
+
   // Project: use URL param or default
   if (urlParams.project) {
-    domCache.projectInput.value = urlParams.project;
+    projectInput.value = urlParams.project;
   }
 
   // Tool: use URL param or default
   if (urlParams.tool) {
-    domCache.toolInput.value = urlParams.tool;
+    toolInput.value = urlParams.tool;
   }
 
   // Model: use URL param or default
   if (urlParams.model) {
-    domCache.modelInput.value = urlParams.model;
+    modelInput.value = urlParams.model;
   }
 
   // Memory: use URL param (0-100) or random (10-90%)
@@ -117,7 +95,7 @@ async function init() {
   } else {
     memoryValue = Math.floor(Math.random() * 81) + 10;
   }
-  domCache.memoryInput.value = memoryValue;
+  memoryInput.value = memoryValue;
   document.getElementById('memory-display').textContent = memoryValue + '%';
 
   // Icon type: use URL param or default
@@ -157,13 +135,16 @@ window.updateMemorySlider = function(value) {
 
 // Update display
 window.updateDisplay = function() {
-  const d = domCache;
+  const projectInput = document.getElementById('project-input');
+  const toolInput = document.getElementById('tool-input');
+  const modelInput = document.getElementById('model-input');
+  const memoryInput = document.getElementById('memory-input');
 
   // Get values from inputs
-  const projectName = d.projectInput.value.trim();
-  const toolName = d.toolInput.value;
-  const modelName = d.modelInput.value.trim();
-  const memoryValue = parseInt(d.memoryInput.value, 10) || 0;
+  const projectName = projectInput.value.trim();
+  const toolName = toolInput.value;
+  const modelName = modelInput.value.trim();
+  const memoryValue = parseInt(memoryInput.value, 10) || 0;
 
   // Update VibeMon engine state
   vibeMonEngine.setState({
@@ -179,7 +160,7 @@ window.updateDisplay = function() {
   vibeMonEngine.render();
 
   // Update simulator-specific UI
-  d.currentStateDisplay.textContent = currentState;
+  document.getElementById('current-state-display').textContent = currentState;
 
   // Update JSON preview
   const json = {
@@ -190,7 +171,7 @@ window.updateDisplay = function() {
     memory: memoryValue,
     character: currentCharacter
   };
-  d.jsonPreview.textContent = JSON.stringify(json, null, 2);
+  document.getElementById('json-preview').textContent = JSON.stringify(json, null, 2);
 };
 
 // Initialize on load

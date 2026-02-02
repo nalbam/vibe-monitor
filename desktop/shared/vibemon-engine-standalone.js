@@ -68,7 +68,7 @@ const ENGINE_STYLES = `
   image-rendering: pixelated;
 }
 
-.vibemon-display #character-canvas {
+.vibemon-display .vibemon-canvas {
   position: absolute;
   top: 20px;
   left: 22px;
@@ -78,7 +78,7 @@ const ENGINE_STYLES = `
   transition: top 0.1s ease-out, left 0.1s ease-out;
 }
 
-.vibemon-display .status-text {
+.vibemon-display .vibemon-status-text {
   position: absolute;
   top: 160px;
   width: 100%;
@@ -89,7 +89,7 @@ const ENGINE_STYLES = `
   color: white;
 }
 
-.vibemon-display .loading-dots {
+.vibemon-display .vibemon-loading-dots {
   position: absolute;
   top: 190px;
   width: 100%;
@@ -98,7 +98,7 @@ const ENGINE_STYLES = `
   gap: 8px;
 }
 
-.vibemon-display .dot {
+.vibemon-display .vibemon-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -106,11 +106,11 @@ const ENGINE_STYLES = `
   transition: background 0.1s;
 }
 
-.vibemon-display .dot.dim {
+.vibemon-display .vibemon-dot.dim {
   background: #3a3a3a;
 }
 
-.vibemon-display .info-text {
+.vibemon-display .vibemon-info-text {
   position: absolute;
   font-family: 'Courier New', monospace;
   font-size: 10px;
@@ -118,12 +118,12 @@ const ENGINE_STYLES = `
   left: 10px;
 }
 
-.vibemon-display .project-text { top: 220px; }
-.vibemon-display .tool-text { top: 235px; }
-.vibemon-display .model-text { top: 250px; }
-.vibemon-display .memory-text { top: 265px; }
+.vibemon-display .vibemon-project-text { top: 220px; }
+.vibemon-display .vibemon-tool-text { top: 235px; }
+.vibemon-display .vibemon-model-text { top: 250px; }
+.vibemon-display .vibemon-memory-text { top: 265px; }
 
-.vibemon-display .memory-bar-container {
+.vibemon-display .vibemon-memory-bar-container {
   position: absolute;
   top: 285px;
   left: 10px;
@@ -135,23 +135,23 @@ const ENGINE_STYLES = `
   box-sizing: border-box;
 }
 
-.vibemon-display .memory-bar {
+.vibemon-display .vibemon-memory-bar {
   height: 100%;
   border-radius: 0px;
   transition: width 0.3s, background 0.3s;
 }
 
-.vibemon-display .info-label {
+.vibemon-display .vibemon-info-label {
   color: white;
   display: inline-flex;
   align-items: center;
 }
 
-.vibemon-display .info-value {
+.vibemon-display .vibemon-info-value {
   color: #aaa;
 }
 
-.vibemon-display .pixel-icon {
+.vibemon-display .vibemon-pixel-icon {
   width: 8px;
   height: 8px;
   margin-right: 2px;
@@ -160,7 +160,7 @@ const ENGINE_STYLES = `
   display: none;
 }
 
-.vibemon-display .emoji-icon {
+.vibemon-display .vibemon-emoji-icon {
   display: inline;
 }
 `;
@@ -430,14 +430,14 @@ function needsAnimationRedraw(state, animFrame, blinkFrame) {
 let iconCache = null;
 
 function initIconCache() {
-  const iconProject = document.getElementById('icon-project');
-  const iconTool = document.getElementById('icon-tool');
-  const iconModel = document.getElementById('icon-model');
-  const iconMemory = document.getElementById('icon-memory');
+  const iconProject = document.getElementById('vibemon-icon-project');
+  const iconTool = document.getElementById('vibemon-icon-tool');
+  const iconModel = document.getElementById('vibemon-icon-model');
+  const iconMemory = document.getElementById('vibemon-icon-memory');
 
   iconCache = {
-    emojiIcons: document.querySelectorAll('.emoji-icon'),
-    pixelIcons: document.querySelectorAll('.pixel-icon'),
+    emojiIcons: document.querySelectorAll('.vibemon-emoji-icon'),
+    pixelIcons: document.querySelectorAll('.vibemon-pixel-icon'),
     canvases: [
       { canvas: iconProject, ctx: iconProject?.getContext('2d') },
       { canvas: iconTool, ctx: iconTool?.getContext('2d') },
@@ -764,16 +764,48 @@ class CharacterRenderer {
 }
 
 // =============================================================================
+// HTML TEMPLATE
+// =============================================================================
+
+const DISPLAY_HTML = `
+<canvas class="vibemon-canvas" width="128" height="128"></canvas>
+<div class="vibemon-status-text">Ready</div>
+<div class="vibemon-loading-dots">
+  <div class="vibemon-dot dim"></div>
+  <div class="vibemon-dot dim"></div>
+  <div class="vibemon-dot dim"></div>
+  <div class="vibemon-dot dim"></div>
+</div>
+<div class="vibemon-info-text vibemon-project-text">
+  <span class="vibemon-info-label"><span class="vibemon-emoji-icon">📂 </span><canvas class="vibemon-pixel-icon vibemon-icon-project" width="8" height="8"></canvas></span>
+  <span class="vibemon-info-value vibemon-project-value">-</span>
+</div>
+<div class="vibemon-info-text vibemon-tool-text">
+  <span class="vibemon-info-label"><span class="vibemon-emoji-icon">🛠️ </span><canvas class="vibemon-pixel-icon vibemon-icon-tool" width="8" height="8"></canvas></span>
+  <span class="vibemon-info-value vibemon-tool-value">-</span>
+</div>
+<div class="vibemon-info-text vibemon-model-text">
+  <span class="vibemon-info-label"><span class="vibemon-emoji-icon">🤖 </span><canvas class="vibemon-pixel-icon vibemon-icon-model" width="8" height="8"></canvas></span>
+  <span class="vibemon-info-value vibemon-model-value">-</span>
+</div>
+<div class="vibemon-info-text vibemon-memory-text">
+  <span class="vibemon-info-label"><span class="vibemon-emoji-icon">🧠 </span><canvas class="vibemon-pixel-icon vibemon-icon-memory" width="8" height="8"></canvas></span>
+  <span class="vibemon-info-value vibemon-memory-value">-</span>
+</div>
+<div class="vibemon-memory-bar-container">
+  <div class="vibemon-memory-bar"></div>
+</div>
+`;
+
+// =============================================================================
 // EXPORTS
 // =============================================================================
 
 export class VibeMonEngine {
-  constructor(canvas, domElements, options = {}) {
-    this.canvas = canvas;
-    this.ctx = canvas?.getContext('2d');
-    this.dom = domElements;
+  constructor(container, options = {}) {
+    this.container = container;
     this.useEmoji = options.useEmoji || false;
-    
+
     // Default character image URLs from static server
     // Can be overridden by options.characterImageUrls
     const defaultImageUrls = options.characterImageUrls || {
@@ -782,6 +814,10 @@ export class VibeMonEngine {
       claw: 'https://static.vibemon.io/characters/claw.png'
     };
     this.characterImageUrls = defaultImageUrls;
+
+    this.canvas = null;
+    this.ctx = null;
+    this.dom = {};
 
     this.currentState = 'start';
     this.currentCharacter = 'clawd';
@@ -799,9 +835,51 @@ export class VibeMonEngine {
     this.characterRenderer = null;
   }
 
+  _buildDOM() {
+    // Insert HTML template
+    this.container.innerHTML = DISPLAY_HTML;
+
+    // Query DOM elements using class selectors (no IDs needed)
+    const q = (sel) => this.container.querySelector(sel);
+    const qa = (sel) => this.container.querySelectorAll(sel);
+
+    this.canvas = q('.vibemon-canvas');
+    this.ctx = this.canvas?.getContext('2d');
+
+    this.dom = {
+      display: this.container,
+      statusText: q('.vibemon-status-text'),
+      loadingDots: q('.vibemon-loading-dots'),
+      projectLine: q('.vibemon-project-text'),
+      toolLine: q('.vibemon-tool-text'),
+      modelLine: q('.vibemon-model-text'),
+      memoryLine: q('.vibemon-memory-text'),
+      projectValue: q('.vibemon-project-value'),
+      toolValue: q('.vibemon-tool-value'),
+      modelValue: q('.vibemon-model-value'),
+      memoryValue: q('.vibemon-memory-value'),
+      memoryBar: q('.vibemon-memory-bar'),
+      memoryBarContainer: q('.vibemon-memory-bar-container'),
+      infoTexts: qa('.vibemon-info-text'),
+      infoLabels: qa('.vibemon-info-label'),
+      infoValues: qa('.vibemon-info-value'),
+      dots: qa('.vibemon-dot'),
+      // Icon canvases for pixel art mode
+      iconProject: q('.vibemon-icon-project'),
+      iconTool: q('.vibemon-icon-tool'),
+      iconModel: q('.vibemon-icon-model'),
+      iconMemory: q('.vibemon-icon-memory'),
+    };
+  }
+
   async init() {
     // Inject styles automatically
     injectStyles();
+
+    // Build DOM if container is empty
+    if (this.container && !this.container.querySelector('.vibemon-canvas')) {
+      this._buildDOM();
+    }
 
     if (this.ctx) {
       this.characterRenderer = new CharacterRenderer(this.ctx);
@@ -959,7 +1037,36 @@ export class VibeMonEngine {
 
   renderIcons() {
     const state = STATES[this.currentState] || STATES.idle;
-    drawInfoIcons(state.textColor, state.bgColor, this.useEmoji);
+    const color = state.textColor;
+    const bgColor = state.bgColor;
+
+    // Toggle emoji/pixel icons
+    const emojiIcons = this.container.querySelectorAll('.vibemon-emoji-icon');
+    const pixelIcons = this.container.querySelectorAll('.vibemon-pixel-icon');
+
+    emojiIcons.forEach(el => el.style.display = this.useEmoji ? 'inline' : 'none');
+    pixelIcons.forEach(el => el.style.display = this.useEmoji ? 'none' : 'inline-block');
+
+    // Draw pixel icons if not using emoji
+    if (!this.useEmoji) {
+      const iconCanvases = [
+        { el: this.dom.iconProject, draw: drawFolderIcon },
+        { el: this.dom.iconTool, draw: drawToolIcon },
+        { el: this.dom.iconModel, draw: drawRobotIcon },
+        { el: this.dom.iconMemory, draw: drawBrainIcon },
+      ];
+
+      iconCanvases.forEach(({ el, draw }) => {
+        if (el) {
+          const ctx = el.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, 8, 8);
+            draw(ctx, color);
+          }
+        }
+      });
+    }
   }
 
   renderCharacter() {
