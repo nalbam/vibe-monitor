@@ -166,6 +166,11 @@ export VIBEMON_HTTP_URLS="http://127.0.0.1:19280"
 
 # ESP32 USB Serial port (optional)
 # export VIBEMON_SERIAL_PORT="/dev/cu.usbmodem*"
+
+# VibeMon API (optional) - Send status to vibemon.io
+# Get your token from the VibeMon dashboard
+# export VIBEMON_URL="https://vibemon.io"
+# export VIBEMON_TOKEN="vbm_xxxxxxxxxxxxxxxxxxxx"
 ```
 
 ### Kiro Hook Events
@@ -215,7 +220,10 @@ cp config/openclaw/extensions/* ~/.openclaw/extensions/vibemon-bridge/
           "character": "claw",
           "serialEnabled": true,
           "httpEnabled": true,
+          "httpUrls": ["http://127.0.0.1:19280", "http://192.168.0.185"],
           "autoLaunch": true,
+          "vibemonUrl": "https://vibemon.io",
+          "vibemonToken": "",
           "debug": false
         }
       }
@@ -280,7 +288,7 @@ Commands try targets in order and stop on first success:
 | `VIBEMON_SERIAL_PORT` | ESP32 USB Serial port (supports wildcards) | `/dev/cu.usbmodem*` |
 | `VIBEMON_URL` | VibeMon API URL | `https://vibemon.io` |
 | `VIBEMON_TOKEN` | VibeMon API authentication token | `vbm_xxxxxxxxxxxxxxxxxxxx` |
-| `VIBEMON_WS_URL` | WebSocket server URL (Desktop App only) | `wss://your-server.com/ws` |
+| `VIBEMON_WS_URL` | WebSocket server URL (Desktop App only) | `wss://your-server.com/` |
 | `VIBEMON_WS_TOKEN` | WebSocket authentication token (Desktop App only) | `your-secret-token` |
 
 ---
