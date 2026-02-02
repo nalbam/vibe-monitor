@@ -21,7 +21,7 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | `model` | 50 chars | String |
 | `memory` | - | Integer 0-100 |
 | `character` | - | `clawd`, `kiro`, or `claw` |
-| `terminalId` | - | Terminal session ID from `ITERM_SESSION_ID` (e.g., `w0t4p0:UUID`) or `GHOSTTY_PID` (e.g., `12345`) env |
+| `terminalId` | 100 chars | Terminal session ID from `ITERM_SESSION_ID` (e.g., `w0t4p0:UUID`) or `GHOSTTY_PID` (e.g., `12345`) env |
 
 ---
 
