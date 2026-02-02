@@ -153,19 +153,17 @@ const CHARACTER_CONFIG = {
 };
 
 const TEXTS = {
-  "thinking": ["Thinking", "Hmm...", "Let me see"],
-  "planning": ["Planning", "Designing", "Drafting"],
   "tools": {
-    "bash": ["Running", "Executing", "Processing"],
-    "read": ["Reading", "Scanning", "Checking"],
-    "edit": ["Editing", "Modifying", "Fixing"],
-    "write": ["Writing", "Creating", "Saving"],
-    "grep": ["Searching", "Finding", "Looking"],
-    "glob": ["Scanning", "Browsing", "Finding"],
-    "task": ["Thinking", "Working", "Planning"],
-    "webfetch": ["Fetching", "Loading", "Getting"],
-    "websearch": ["Searching", "Googling", "Looking"],
-    "default": ["Working", "Busy", "Coding"]
+    "bash": "Running",
+    "read": "Reading",
+    "edit": "Editing",
+    "write": "Writing",
+    "grep": "Searching",
+    "glob": "Scanning",
+    "task": "Working",
+    "webfetch": "Fetching",
+    "websearch": "Searching",
+    "default": "Working"
   }
 };
 
@@ -178,17 +176,16 @@ const DARK_BG_COLORS = Object.values(STATES)
 // =============================================================================
 
 function getThinkingText() {
-  return TEXTS.thinking[Math.floor(Math.random() * TEXTS.thinking.length)];
+  return STATES.thinking.text;
 }
 
 function getPlanningText() {
-  return TEXTS.planning[Math.floor(Math.random() * TEXTS.planning.length)];
+  return STATES.planning.text;
 }
 
 function getWorkingText(tool) {
   const key = (tool || '').toLowerCase();
-  const texts = TEXTS.tools[key] || TEXTS.tools['default'];
-  return texts[Math.floor(Math.random() * texts.length)];
+  return TEXTS.tools[key] || TEXTS.tools['default'];
 }
 
 function lerpColor(color1, color2, ratio) {

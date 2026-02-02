@@ -59,5 +59,27 @@
     "disabled": "Disabled"
   },
 
-  "ACTIVE_STATES": ["thinking", "planning", "working", "notification", "packing"]
+  "ACTIVE_STATES": ["thinking", "planning", "working", "notification", "packing"],
+
+  "VALID_STATES": ["start", "idle", "thinking", "planning", "working", "packing", "notification", "sleep", "done"],
+
+  "CHARACTER_NAMES": ["clawd", "kiro", "claw"],
+
+  "CHARACTER_COLORS": {
+    "clawd": "#D97757",
+    "kiro": "#FFFFFF",
+    "claw": "#DD4444"
+  },
+
+  "STATE_COLORS": {
+    "start": "#00CCCC",
+    "idle": "#00AA00",
+    "thinking": "#9933FF",
+    "planning": "#008888",
+    "working": "#0066CC",
+    "packing": "#AAAAAA",
+    "notification": "#FFCC00",
+    "sleep": "#111144",
+    "done": "#00AA00"
+  }
 }
