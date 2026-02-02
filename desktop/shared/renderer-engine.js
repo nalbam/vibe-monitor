@@ -360,7 +360,6 @@ export class RendererEngine {
   stopAnimation() {
     this.animationRunning = false;
     if (this.animationFrameId) {
-      // eslint-disable-next-line no-undef
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }

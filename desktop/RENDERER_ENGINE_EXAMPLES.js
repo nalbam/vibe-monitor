@@ -81,7 +81,7 @@ function updateStateExample(engine) {
 function changeCharacterExample(engine) {
   // Switch to different character
   engine.setState({
-    character: 'kiro', // or 'claw'
+    character: 'kiro', // or 'clawd' or 'claw'
     state: 'thinking'
   });
 
