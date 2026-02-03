@@ -135,10 +135,6 @@ See [Features](docs/features.md) for lock modes and CLI commands.
 - **Snap to corner** - Auto-snaps near screen edges
 - **Click to focus** - Switch to iTerm2/Ghostty tab (macOS)
 
-## ESP32 Hardware
-
-See [ESP32 Setup](docs/esp32.md) for hardware setup instructions.
-
 ## Troubleshooting
 
 | Issue | Solution |
@@ -149,10 +145,8 @@ See [ESP32 Setup](docs/esp32.md) for hardware setup instructions.
 
 ## Documentation
 
-- [Integration Guide](docs/integration.md) - Claude Code, Kiro & OpenClaw setup
 - [Features](docs/features.md) - States, animations, window modes
 - [API Reference](docs/api.md) - All HTTP endpoints
-- [ESP32 Setup](docs/esp32.md) - Hardware setup
 - [Desktop App (npm)](desktop/README.md) - npm package README
 
 ## Version History
