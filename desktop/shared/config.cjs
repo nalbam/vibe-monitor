@@ -15,7 +15,7 @@ const constants = require('./constants.cjs');
 // =============================================================================
 // WebSocket Configuration (from environment variables)
 // =============================================================================
-const WS_URL = process.env.VIBEMON_WS_URL || null;
+const WS_URL = process.env.VIBEMON_WS_URL || 'wss://ws.vibemon.io';
 const WS_TOKEN = process.env.VIBEMON_WS_TOKEN || null;
 
 // =============================================================================
