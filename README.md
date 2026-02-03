@@ -37,47 +37,9 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 
 ![Vibe Monitor Demo](screenshots/demo.gif)
 
-## Prerequisites
+## Documentation
 
-| Tool | Required For | Install |
-|------|--------------|---------|
-| **Python 3** | Hook scripts | Built-in on macOS/Linux |
-| **Node.js** | Desktop App | `brew install node` / `apt install nodejs npm` |
-
-## Quick Start
-
-### Desktop App
-
-```bash
-npx vibe-monitor@latest
-```
-
-Or install globally:
-
-```bash
-npm install -g vibe-monitor
-vibe-monitor
-```
-
-## Integration
-
-### Quick Install (Recommended)
-
-**Python version** (requires Python 3):
-```bash
-curl -fsSL https://nalbam.github.io/vibe-monitor/install.py | python3
-```
-
-**Shell version** (requires Bash):
-```bash
-curl -fsSL https://nalbam.github.io/vibe-monitor/install.sh | bash
-```
-
-The script configures hooks for Claude Code, Kiro, or OpenClaw automatically.
-
-### Manual Setup
-
-See [Integration Guide](docs/integration.md) for detailed manual setup instructions.
+For installation and setup instructions, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
 
 ## States
 

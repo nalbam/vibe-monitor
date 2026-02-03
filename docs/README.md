@@ -1,12 +1,11 @@
 # Documentation
 
-## Guides
+For installation and setup instructions, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
 
-- [Integration Guide](integration.md) - Claude Code, Kiro & OpenClaw setup (manual)
+## Reference
+
 - [Features](features.md) - States, animations, window modes, project lock
 - [HTTP API Reference](api.md) - All API endpoints
-- [ESP32 Setup](esp32.md) - Hardware setup
-- [Desktop App (npm)](../desktop/README.md) - npm package README
 
 ## Quick Links
 

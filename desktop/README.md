@@ -25,46 +25,9 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 - **HTTP API** - Easy integration with hooks
 - **Auto-launch** - Hook scripts auto-start via `npx vibe-monitor`
 
-## Installation
+## Documentation
 
-### npx (Recommended)
-
-```bash
-npx vibe-monitor@latest
-```
-
-### Global Install
-
-```bash
-npm install -g vibe-monitor
-vibe-monitor
-```
-
-## IDE Integration
-
-### Quick Install (Recommended)
-
-**Python version** (requires Python 3):
-```bash
-curl -fsSL https://nalbam.github.io/vibe-monitor/install.py | python3
-```
-
-**Shell version** (requires Bash):
-```bash
-curl -fsSL https://nalbam.github.io/vibe-monitor/install.sh | bash
-```
-
-This will configure hooks for Claude Code, Kiro, or OpenClaw automatically.
-
-### Manual Setup
-
-See the [full documentation](https://github.com/nalbam/vibe-monitor#integration) for manual setup instructions.
-
-## Stop
-
-```bash
-curl -X POST http://127.0.0.1:19280/quit
-```
+For installation and setup instructions, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
 
 ## Links
 
