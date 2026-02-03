@@ -174,16 +174,47 @@ EVENT_STATE_MAP: dict[str, str] = {
 }
 
 
+def get_git_root(directory: str) -> str | None:
+    """Get git repository root directory."""
+    if not directory:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", directory, "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+    return None
+
+
 def get_project_name(cwd: str, transcript_path: str) -> str:
-    """Extract project name from cwd or transcript path."""
+    """Extract project name from git root, cwd, or transcript path."""
+    # 1. Try git root first (handles subdirectory cases like vibemon/terraform)
+    if cwd:
+        git_root = get_git_root(cwd)
+        if git_root:
+            name = os.path.basename(git_root)
+            if name:
+                return name
+
+    # 2. Fallback to cwd basename
     if cwd:
         name = os.path.basename(cwd.rstrip("/"))
         if name:
             return name
+
+    # 3. Fallback to transcript path
     if transcript_path:
         name = os.path.basename(os.path.dirname(transcript_path))
         if name:
             return name
+
+    # 4. Final fallback to current working directory
     name = os.path.basename(os.getcwd().rstrip("/"))
     return name if name else "default"
 

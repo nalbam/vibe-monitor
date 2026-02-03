@@ -163,6 +163,41 @@ def get_state(event_type: str) -> str:
     return EVENT_STATE_MAP.get(event_type, "working")
 
 
+def get_git_root(directory: str) -> str | None:
+    """Get git repository root directory."""
+    if not directory:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", directory, "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+    return None
+
+
+def get_project_name(directory: str) -> str:
+    """Get project name from git root or directory basename."""
+    if not directory:
+        return "default"
+
+    # Try git root first (handles subdirectory cases)
+    git_root = get_git_root(directory)
+    if git_root:
+        name = os.path.basename(git_root)
+        if name:
+            return name
+
+    # Fallback to directory basename
+    name = os.path.basename(directory.rstrip("/"))
+    return name if name else "default"
+
+
 def build_payload(state: str, project: str, event: str | None = None) -> dict[str, Any]:
     """Build payload dict for sending to monitor."""
     payload: dict[str, Any] = {
@@ -743,8 +778,8 @@ def main() -> None:
     # Get state from event type
     state = get_state(event_type)
 
-    # Get project name from current directory
-    project_name = os.path.basename(os.getcwd().rstrip("/")) or "default"
+    # Get project name from git root or current directory
+    project_name = get_project_name(os.getcwd())
 
     debug_log(f"Event: {event_type}, State: {state}, Project: {project_name}")
 

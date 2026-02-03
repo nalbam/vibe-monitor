@@ -123,6 +123,40 @@ def get_branch_emoji(branch: str) -> str:
     # Default emoji
     return "🌿"
 
+def get_git_root(directory: str) -> str | None:
+    """Get git repository root directory."""
+    if not directory:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", directory, "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+    return None
+
+
+def get_project_name(directory: str) -> str:
+    """Get project name from git root or directory basename."""
+    if not directory:
+        return ""
+
+    # Try git root first (handles subdirectory cases)
+    git_root = get_git_root(directory)
+    if git_root:
+        name = os.path.basename(git_root)
+        if name:
+            return name
+
+    # Fallback to directory basename
+    return os.path.basename(directory)
+
+
 def get_git_info(directory: str) -> str:
     """Get git branch and status information.
 
@@ -527,7 +561,7 @@ def main() -> None:
     # Extract workspace info
     workspace_data = data.get("workspace", {})
     current_dir = workspace_data.get("current_dir", "") if isinstance(workspace_data, dict) else ""
-    dir_name = os.path.basename(current_dir) if current_dir else ""
+    dir_name = get_project_name(current_dir) if current_dir else ""
 
     # Get additional info
     git_info = get_git_info(current_dir)
