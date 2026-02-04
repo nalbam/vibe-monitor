@@ -1,5 +1,5 @@
 /**
- * Jest configuration for Vibe Monitor
+ * Jest configuration for Vibemon View
  */
 
 module.exports = {

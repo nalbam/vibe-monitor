@@ -134,23 +134,23 @@ Lock the monitor to a specific project to prevent display updates from other pro
 
 ```bash
 # Lock current project
-python3 ~/.claude/hooks/vibe-monitor.py --lock
+python3 ~/.claude/hooks/vibemon-view.py --lock
 
 # Lock specific project
-python3 ~/.claude/hooks/vibe-monitor.py --lock my-project
+python3 ~/.claude/hooks/vibemon-view.py --lock my-project
 
 # Unlock
-python3 ~/.claude/hooks/vibe-monitor.py --unlock
+python3 ~/.claude/hooks/vibemon-view.py --unlock
 
 # Get current status
-python3 ~/.claude/hooks/vibe-monitor.py --status
+python3 ~/.claude/hooks/vibemon-view.py --status
 
 # Get/Set lock mode
-python3 ~/.claude/hooks/vibe-monitor.py --lock-mode
-python3 ~/.claude/hooks/vibe-monitor.py --lock-mode on-thinking
+python3 ~/.claude/hooks/vibemon-view.py --lock-mode
+python3 ~/.claude/hooks/vibemon-view.py --lock-mode on-thinking
 
 # Reboot ESP32 device
-python3 ~/.claude/hooks/vibe-monitor.py --reboot
+python3 ~/.claude/hooks/vibemon-view.py --reboot
 ```
 
 ## Desktop App Features
@@ -179,7 +179,7 @@ Change via system tray menu: Always on Top → Select mode
 
 ### Click to Focus Terminal (macOS)
 
-When running Claude Code in multiple terminal tabs, clicking a Vibe Monitor window automatically switches to the corresponding terminal tab.
+When running Claude Code in multiple terminal tabs, clicking a Vibemon View window automatically switches to the corresponding terminal tab.
 
 **Supported Terminals:**
 - iTerm2 (full tab switching support)

@@ -1,8 +1,8 @@
-# Vibe Monitor
+# Vibemon View
 
-[![npm version](https://img.shields.io/npm/v/vibe-monitor.svg)](https://www.npmjs.com/package/vibe-monitor)
-[![npm downloads](https://img.shields.io/npm/dm/vibe-monitor.svg)](https://www.npmjs.com/package/vibe-monitor)
-[![license](https://img.shields.io/npm/l/vibe-monitor.svg)](https://github.com/nalbam/vibe-monitor/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/vibemon-view.svg)](https://www.npmjs.com/package/vibemon-view)
+[![npm downloads](https://img.shields.io/npm/dm/vibemon-view.svg)](https://www.npmjs.com/package/vibemon-view)
+[![license](https://img.shields.io/npm/l/vibemon-view.svg)](https://github.com/nalbam/vibemon-view/blob/main/LICENSE)
 
 **Real-time status monitor for AI assistants with pixel art character display.**
 
@@ -21,7 +21,7 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 | Field | Description | Example |
 |-------|-------------|---------|
 | **State** | Current activity state | `working`, `idle`, `notification` |
-| **Project** | Active project directory | `vibe-monitor` |
+| **Project** | Active project directory | `vibemon-view` |
 | **Tool** | Currently executing tool | `Bash`, `Read`, `Edit` |
 | **Model** | Active model | `Opus 4.5`, `Sonnet` |
 | **Memory** | Context window usage | `45%` |
@@ -35,7 +35,7 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 
 ## Preview
 
-![Vibe Monitor Demo](screenshots/demo.gif)
+![Vibemon View Demo](screenshots/demo.gif)
 
 ## Documentation
 
@@ -118,10 +118,10 @@ Lock the monitor to a specific project (single-window mode only):
 
 ```bash
 # Lock
-python3 ~/.claude/hooks/vibe-monitor.py --lock
+python3 ~/.claude/hooks/vibemon-view.py --lock
 
 # Unlock
-python3 ~/.claude/hooks/vibe-monitor.py --unlock
+python3 ~/.claude/hooks/vibemon-view.py --unlock
 ```
 
 See [Features](docs/features.md) for lock modes and CLI commands.
