@@ -1,5 +1,5 @@
 /**
- * ESLint flat config for Vibemon View
+ * ESLint flat config for VibeMon
  */
 
 const nodeGlobals = {

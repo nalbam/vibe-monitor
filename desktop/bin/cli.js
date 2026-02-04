@@ -13,4 +13,4 @@ const child = spawn(electron, [appPath], {
 
 child.unref();
 
-console.log('Vibemon View started (http://127.0.0.1:19280)');
+console.log('VibeMon started (http://127.0.0.1:19280)');

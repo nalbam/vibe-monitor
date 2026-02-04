@@ -1,5 +1,5 @@
 /**
- * Jest configuration for Vibemon View
+ * Jest configuration for VibeMon
  */
 
 module.exports = {

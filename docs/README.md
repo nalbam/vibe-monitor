@@ -10,4 +10,4 @@ For installation and setup instructions, visit **[vibemon.io/docs](https://vibem
 ## Quick Links
 
 - [Main README](../README.md)
-- [npm Package](https://www.npmjs.com/package/vibemon-view)
+- [npm Package](https://www.npmjs.com/package/vibemon)
