@@ -1,5 +1,5 @@
 // KIRO character image (128x128)
-// Generated from kiro-128.png
+// Generated from kiro.png
 #define IMG_KIRO_WIDTH 128
 #define IMG_KIRO_HEIGHT 128
 

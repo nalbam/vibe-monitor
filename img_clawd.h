@@ -1,5 +1,5 @@
 // CLAWD character image (128x128)
-// Generated from clawd-128.png
+// Generated from clawd.png
 #define IMG_CLAWD_WIDTH 128
 #define IMG_CLAWD_HEIGHT 128
 

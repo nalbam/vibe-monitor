@@ -1,5 +1,5 @@
 // CLAW character image (128x128)
-// Generated from claw-128.png
+// Generated from claw.png
 #define IMG_CLAW_WIDTH 128
 #define IMG_CLAW_HEIGHT 128
 

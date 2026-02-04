@@ -4,8 +4,8 @@ PNG to RGB565 C Array Converter for ESP32
 Converts PNG images to RGB565 format C header files for TFT_eSPI library.
 
 Usage:
-    python png_to_rgb565.py ../images/clawd-128.png clawd  -> img_clawd.h (IMG_CLAWD)
-    python png_to_rgb565.py ../images/kiro-128.png kiro    -> img_kiro.h (IMG_KIRO)
+    python png_to_rgb565.py ../images/clawd.png clawd  -> img_clawd.h (IMG_CLAWD)
+    python png_to_rgb565.py ../images/kiro.png kiro    -> img_kiro.h (IMG_KIRO)
 """
 
 import sys
@@ -68,7 +68,7 @@ def convert_png_to_rgb565(input_path, name, target_size=128):
 def main():
     if len(sys.argv) < 3:
         print("Usage: python png_to_rgb565.py <input.png> <name>")
-        print("Example: python png_to_rgb565.py ../images/clawd-128.png clawd  -> img_clawd.h")
+        print("Example: python png_to_rgb565.py ../images/clawd.png clawd  -> img_clawd.h")
         sys.exit(1)
 
     input_path = sys.argv[1]
