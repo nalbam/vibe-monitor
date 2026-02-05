@@ -1,5 +1,5 @@
 /**
- * Vibe Monitor - Main Process Entry Point
+ * VibeMon - Main Process Entry Point
  *
  * This file orchestrates the application by connecting modules:
  * - StateManager: State and timer management (per-project timers)
@@ -304,7 +304,7 @@ app.whenReady().then(() => {
   httpServer.onError = (err) => {
     if (err.code === 'EADDRINUSE') {
       dialog.showErrorBox(
-        'Vibe Monitor - Port Conflict',
+        'VibeMon - Port Conflict',
         'Port 19280 is already in use.\nAnother instance may be running.\n\nThe app will continue but HTTP API won\'t work.'
       );
     }

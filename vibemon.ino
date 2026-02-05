@@ -1,5 +1,5 @@
 /*
- * Vibe Monitor
+ * VibeMon
  * ESP32-C6-LCD-1.47 (172x320, ST7789V2)
  *
  * Pixel art character (128x128) with animated states
@@ -198,7 +198,7 @@ void setLockMode(int mode) {
     lockedProject[0] = '\0';  // Reset lock when mode changes
 
     // Persist to flash storage
-    preferences.begin("vibe-monitor", false);  // Read-write mode
+    preferences.begin("vibemon", false);  // Read-write mode
     preferences.putInt("lockMode", lockMode);
     preferences.end();
 
@@ -247,7 +247,7 @@ void setup() {
   Serial.begin(115200);
 
   // Load settings from persistent storage
-  preferences.begin("vibe-monitor", true);  // Read-only mode
+  preferences.begin("vibemon", true);  // Read-only mode
   lockMode = preferences.getInt("lockMode", LOCK_MODE_ON_THINKING);
   preferences.end();
 
