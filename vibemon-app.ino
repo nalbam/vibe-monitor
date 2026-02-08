@@ -743,7 +743,7 @@ void drawStatus() {
 
     if (strlen(currentProject) > 0) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1.3);
+      tft.setTextSize(1.5);
       drawFolderIcon(tft, 10, PROJECT_Y, textColor);
       tft.setCursor(24, PROJECT_Y);
 
@@ -763,7 +763,7 @@ void drawStatus() {
     // Tool name (working state only)
     if (strlen(currentTool) > 0 && currentState == STATE_WORKING) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1.3);
+      tft.setTextSize(1.5);
       drawToolIcon(tft, 10, TOOL_Y, textColor);
       tft.setCursor(24, TOOL_Y);
       tft.println(currentTool);
@@ -772,7 +772,7 @@ void drawStatus() {
     // Model name
     if (strlen(currentModel) > 0) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1.3);
+      tft.setTextSize(1.5);
       drawRobotIcon(tft, 10, MODEL_Y, textColor);
       tft.setCursor(24, MODEL_Y);
 
@@ -792,7 +792,7 @@ void drawStatus() {
     // Memory usage (hide on start state)
     if (currentMemory > 0 && currentState != STATE_START) {
       tft.setTextColor(textColor);
-      tft.setTextSize(1.3);
+      tft.setTextSize(1.5);
       drawBrainIcon(tft, 10, MEMORY_Y, textColor);
       tft.setCursor(24, MEMORY_Y);
       tft.print(currentMemory);
