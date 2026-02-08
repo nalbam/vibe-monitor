@@ -744,8 +744,8 @@ void drawStatus() {
     if (strlen(currentProject) > 0) {
       tft.setTextColor(textColor);
       tft.setTextSize(1.5);
-      drawFolderIcon(tft, 10, PROJECT_Y, textColor);
-      tft.setCursor(24, PROJECT_Y);
+      drawFolderIcon(tft, 10, PROJECT_Y + 1, textColor);
+      tft.setCursor(26, PROJECT_Y);
 
       char displayProject[20];
       size_t maxDisplay = sizeof(displayProject) - 1;
@@ -764,8 +764,8 @@ void drawStatus() {
     if (strlen(currentTool) > 0 && currentState == STATE_WORKING) {
       tft.setTextColor(textColor);
       tft.setTextSize(1.5);
-      drawToolIcon(tft, 10, TOOL_Y, textColor);
-      tft.setCursor(24, TOOL_Y);
+      drawToolIcon(tft, 10, TOOL_Y + 1, textColor);
+      tft.setCursor(26, TOOL_Y);
       tft.println(currentTool);
     }
 
@@ -773,8 +773,8 @@ void drawStatus() {
     if (strlen(currentModel) > 0) {
       tft.setTextColor(textColor);
       tft.setTextSize(1.5);
-      drawRobotIcon(tft, 10, MODEL_Y, textColor);
-      tft.setCursor(24, MODEL_Y);
+      drawRobotIcon(tft, 10, MODEL_Y + 1, textColor);
+      tft.setCursor(26, MODEL_Y);
 
       char displayModel[20];
       size_t maxModel = sizeof(displayModel) - 1;
@@ -793,8 +793,8 @@ void drawStatus() {
     if (currentMemory > 0 && currentState != STATE_START) {
       tft.setTextColor(textColor);
       tft.setTextSize(1.5);
-      drawBrainIcon(tft, 10, MEMORY_Y, textColor);
-      tft.setCursor(24, MEMORY_Y);
+      drawBrainIcon(tft, 10, MEMORY_Y + 1, textColor);
+      tft.setCursor(26, MEMORY_Y);
       tft.print(currentMemory);
       tft.println("%");
 

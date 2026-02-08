@@ -768,49 +768,53 @@ void getStatusTextEnum(AppState state, char* buf, size_t bufSize) {
 
 // Draw folder icon (📂) - 8x7 pixels
 void drawFolderIcon(TFT_eSPI &tft, int x, int y, uint16_t color) {
-  // Folder tab (top)
-  tft.fillRect(x, y, 3, 1, color);
+  // Folder tab (top-left)
+  tft.fillRect(x, y, 4, 2, color);
   // Folder body
-  tft.fillRect(x, y + 1, 8, 6, color);
+  tft.fillRect(x, y + 2, 10, 8, color);
   // Inner fold line
-  tft.fillRect(x + 1, y + 2, 6, 1, 0x0000);
+  tft.fillRect(x + 1, y + 4, 8, 1, 0x0000);
 }
 
-// Draw tool/wrench icon (🛠️) - 8x8 pixels
+// Draw tool/wrench icon (🔧) - 10x10 pixels
 void drawToolIcon(TFT_eSPI &tft, int x, int y, uint16_t color) {
   // Wrench head (top)
-  tft.fillRect(x + 1, y, 6, 3, color);
-  tft.fillRect(x + 3, y, 2, 1, 0x0000);  // Notch
-  // Handle (diagonal)
-  tft.fillRect(x + 3, y + 3, 2, 5, color);
+  tft.fillRect(x + 2, y, 6, 4, color);
+  tft.fillRect(x + 4, y, 2, 1, 0x0000);  // Notch
+  // Handle
+  tft.fillRect(x + 4, y + 4, 2, 6, color);
 }
 
-// Draw robot icon (🤖) - 8x8 pixels
+// Draw robot icon (🤖) - 10x10 pixels
 void drawRobotIcon(TFT_eSPI &tft, int x, int y, uint16_t color) {
   // Antenna
-  tft.fillRect(x + 3, y, 2, 1, color);
+  tft.fillRect(x + 4, y, 2, 2, color);
   // Head
-  tft.fillRect(x + 1, y + 1, 6, 5, color);
+  tft.fillRect(x + 1, y + 2, 8, 6, color);
   // Eyes
-  tft.fillRect(x + 2, y + 2, 1, 2, 0x0000);
-  tft.fillRect(x + 5, y + 2, 1, 2, 0x0000);
+  tft.fillRect(x + 3, y + 4, 1, 2, 0x0000);
+  tft.fillRect(x + 6, y + 4, 1, 2, 0x0000);
   // Mouth
-  tft.fillRect(x + 2, y + 5, 4, 1, 0x0000);
+  tft.fillRect(x + 3, y + 7, 4, 1, 0x0000);
   // Ears
-  tft.fillRect(x, y + 2, 1, 2, color);
-  tft.fillRect(x + 7, y + 2, 1, 2, color);
+  tft.fillRect(x, y + 3, 1, 3, color);
+  tft.fillRect(x + 9, y + 3, 1, 3, color);
 }
 
-// Draw brain icon (🧠) - 8x7 pixels
+// Draw brain icon (🧠) - 10x10 pixels
 void drawBrainIcon(TFT_eSPI &tft, int x, int y, uint16_t color) {
-  // Brain shape (simplified)
-  tft.fillRect(x + 1, y, 6, 7, color);
-  tft.fillRect(x, y + 1, 8, 5, color);
+  // Brain shape
+  tft.fillRect(x + 1, y, 8, 10, color);
+  tft.fillRect(x, y + 2, 10, 6, color);
   // Brain folds (center line)
-  tft.fillRect(x + 4, y + 1, 1, 5, 0x0000);
+  tft.fillRect(x + 5, y + 1, 1, 8, 0x0000);
+  // Left fold
+  tft.fillRect(x + 3, y + 3, 1, 3, 0x0000);
+  // Right fold
+  tft.fillRect(x + 7, y + 4, 1, 3, 0x0000);
   // Top bumps
-  tft.fillRect(x + 2, y, 1, 1, 0x0000);
-  tft.fillRect(x + 5, y, 1, 1, 0x0000);
+  tft.fillRect(x + 3, y, 1, 1, 0x0000);
+  tft.fillRect(x + 7, y, 1, 1, 0x0000);
 }
 
 // Draw eyes to sprite based on eye type
