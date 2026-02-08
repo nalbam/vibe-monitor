@@ -645,8 +645,8 @@ void drawStartScreen() {
   uint16_t bgColor = TFT_BLACK;
   tft.fillScreen(bgColor);
 
-  // Draw character in idle state (128x128) using sprite buffer
-  const CharacterGeometry* character = getCharacterByName(currentCharacter);
+  // Draw random character on start screen (esp_random: hardware RNG)
+  const CharacterGeometry* character = ALL_CHARACTERS[esp_random() % CHARACTER_COUNT];
   if (spriteInitialized) {
     drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
     charSprite.pushSprite(CHAR_X_BASE, CHAR_Y_BASE);
