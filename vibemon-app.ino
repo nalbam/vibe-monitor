@@ -28,13 +28,27 @@ const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 WebServer server(80);
 
+// WiFi connection monitoring
+const unsigned long WIFI_CHECK_INTERVAL = 10000;  // Check every 10 seconds
+unsigned long lastWifiCheck = 0;
+bool wifiWasConnected = false;
+
 // WebSocket client (optional, requires USE_WIFI)
 #ifdef USE_WEBSOCKET
 #include <WebSocketsClient.h>
 WebSocketsClient webSocket;
 bool wsConnected = false;
-unsigned long lastWsReconnect = 0;
-const unsigned long WS_RECONNECT_INTERVAL = 5000;  // 5 seconds
+
+// Exponential backoff for reconnection (server-friendly)
+const unsigned long WS_RECONNECT_INITIAL = 5000;   // 5 seconds
+const unsigned long WS_RECONNECT_MAX = 60000;       // 60 seconds
+const float WS_RECONNECT_MULTIPLIER = 1.5;
+unsigned long wsReconnectDelay = WS_RECONNECT_INITIAL;
+
+// Heartbeat to detect stale connections
+const unsigned long WS_HEARTBEAT_INTERVAL = 15000;  // Ping every 15s
+const unsigned long WS_HEARTBEAT_TIMEOUT = 3000;    // Pong timeout 3s
+const uint8_t WS_HEARTBEAT_FAILURES = 2;            // Disconnect after 2 missed
 #endif
 #endif
 
@@ -112,7 +126,7 @@ unsigned long lastActivityTime = 0;
 #define JSON_BUFFER_SIZE 512
 
 // Version string
-#define VERSION "v1.4.0"
+#define VERSION "v1.5.0"
 
 // Helper: Parse state string to enum
 AppState parseState(const char* stateStr) {
@@ -251,6 +265,14 @@ void setup() {
   lockMode = preferences.getInt("lockMode", LOCK_MODE_ON_THINKING);
   preferences.end();
 
+  // Validate loaded lockMode (flash corruption safety)
+  if (lockMode != LOCK_MODE_FIRST_PROJECT && lockMode != LOCK_MODE_ON_THINKING) {
+    lockMode = LOCK_MODE_ON_THINKING;
+    preferences.begin("vibemon", false);
+    preferences.putInt("lockMode", lockMode);
+    preferences.end();
+  }
+
   // TFT init
   tft.init();
   tft.setRotation(0);  // Portrait mode
@@ -301,6 +323,7 @@ void loop() {
   }
 
 #ifdef USE_WIFI
+  checkWiFiConnection();
   server.handleClient();
 #ifdef USE_WEBSOCKET
   webSocket.loop();
@@ -888,6 +911,8 @@ void updateBlink() {
 
 #ifdef USE_WIFI
 void setupWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(ssid, password);
 
   tft.setCursor(10, BRAND_Y - 35);
@@ -907,6 +932,10 @@ void setupWiFi() {
     tft.setCursor(10, BRAND_Y - 20);
     tft.print("IP: ");
     tft.println(WiFi.localIP());
+    wifiWasConnected = true;
+
+    // Disable WiFi power saving for stable WebSocket connection
+    WiFi.setSleep(false);
 
     // HTTP server setup
     server.on("/status", HTTP_POST, handleStatus);
@@ -1021,6 +1050,37 @@ void handleReboot() {
   ESP.restart();
 }
 
+// Monitor WiFi connection and recover if dropped
+void checkWiFiConnection() {
+  unsigned long now = millis();
+  if (now - lastWifiCheck < WIFI_CHECK_INTERVAL) return;
+  lastWifiCheck = now;
+
+  bool currentlyConnected = (WiFi.status() == WL_CONNECTED);
+
+  if (!currentlyConnected && wifiWasConnected) {
+    // WiFi just dropped
+    wifiWasConnected = false;
+    Serial.print("{\"wifi\":\"disconnected\",\"heap\":");
+    Serial.print(ESP.getFreeHeap());
+    Serial.println("}");
+  } else if (currentlyConnected && !wifiWasConnected) {
+    // WiFi recovered
+    wifiWasConnected = true;
+    Serial.print("{\"wifi\":\"reconnected\",\"ip\":\"");
+    Serial.print(WiFi.localIP());
+    Serial.print("\",\"heap\":");
+    Serial.print(ESP.getFreeHeap());
+    Serial.println("}");
+#ifdef USE_WEBSOCKET
+    // Reset backoff and restart WebSocket after WiFi recovery
+    wsReconnectDelay = WS_RECONNECT_INITIAL;
+    webSocket.disconnect();
+    setupWebSocket();
+#endif
+  }
+}
+
 #ifdef USE_WEBSOCKET
 void setupWebSocket() {
   // Build path with token query parameter for API Gateway authentication
@@ -1041,24 +1101,45 @@ void setupWebSocket() {
   // Set event handler
   webSocket.onEvent(webSocketEvent);
 
-  // Set reconnect interval
-  webSocket.setReconnectInterval(WS_RECONNECT_INTERVAL);
+  // Set initial reconnect interval (adjusted by exponential backoff)
+  webSocket.setReconnectInterval(wsReconnectDelay);
 
-  Serial.println("{\"websocket\":\"connecting\"}");
+  // Enable heartbeat to detect stale connections
+  // Ping every 15s, timeout after 3s, disconnect after 2 missed pongs
+  webSocket.enableHeartbeat(WS_HEARTBEAT_INTERVAL, WS_HEARTBEAT_TIMEOUT, WS_HEARTBEAT_FAILURES);
+
+  Serial.print("{\"websocket\":\"connecting\",\"heap\":");
+  Serial.print(ESP.getFreeHeap());
+  Serial.println("}");
 }
 
 void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   switch (type) {
     case WStype_DISCONNECTED:
       wsConnected = false;
-      Serial.println("{\"websocket\":\"disconnected\"}");
+      // Exponential backoff: increase delay for next reconnection
+      {
+        unsigned long newDelay = (unsigned long)(wsReconnectDelay * WS_RECONNECT_MULTIPLIER);
+        wsReconnectDelay = (newDelay > WS_RECONNECT_MAX) ? WS_RECONNECT_MAX : newDelay;
+      }
+      webSocket.setReconnectInterval(wsReconnectDelay);
+      Serial.print("{\"websocket\":\"disconnected\",\"nextRetry\":");
+      Serial.print(wsReconnectDelay);
+      Serial.print(",\"heap\":");
+      Serial.print(ESP.getFreeHeap());
+      Serial.println("}");
       break;
 
     case WStype_CONNECTED:
       wsConnected = true;
+      // Reset backoff on successful connection
+      wsReconnectDelay = WS_RECONNECT_INITIAL;
+      webSocket.setReconnectInterval(wsReconnectDelay);
       Serial.print("{\"websocket\":\"connected\",\"url\":\"");
       Serial.print((char*)payload);
-      Serial.println("\"}");
+      Serial.print("\",\"heap\":");
+      Serial.print(ESP.getFreeHeap());
+      Serial.println("}");
 
       // Send authentication message if token is configured
       if (strlen(WS_TOKEN) > 0) {
@@ -1075,7 +1156,9 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       break;
 
     case WStype_ERROR:
-      Serial.println("{\"websocket\":\"error\"}");
+      Serial.print("{\"websocket\":\"error\",\"heap\":");
+      Serial.print(ESP.getFreeHeap());
+      Serial.println("}");
       break;
 
     default:

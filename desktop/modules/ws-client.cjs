@@ -12,6 +12,9 @@ const RECONNECT_INITIAL_DELAY = 5000;   // 5 seconds
 const RECONNECT_MAX_DELAY = 30000;      // 30 seconds
 const RECONNECT_MULTIPLIER = 1.5;
 
+// Heartbeat configuration
+const PING_INTERVAL = 30000;            // Ping every 30 seconds
+
 class WsClient {
   constructor() {
     this.ws = null;
@@ -21,6 +24,8 @@ class WsClient {
     this.isConnecting = false;
     this.isConnected = false;
     this.shouldReconnect = true;
+    this.pingTimer = null;
+    this.pongReceived = true;
 
     // Persistent storage for token
     this.store = new Store({
@@ -158,7 +163,12 @@ class WsClient {
         this.isConnecting = false;
         this.isConnected = true;
         this.reconnectDelay = RECONNECT_INITIAL_DELAY;
+        this.startHeartbeat();
         this.notifyConnectionChange();
+      });
+
+      this.ws.on('pong', () => {
+        this.pongReceived = true;
       });
 
       this.ws.on('message', (data) => {
@@ -237,12 +247,45 @@ class WsClient {
   }
 
   /**
+   * Start heartbeat ping to detect stale connections
+   */
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.pongReceived = true;
+
+    this.pingTimer = setInterval(() => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+      if (!this.pongReceived) {
+        // Server didn't respond to last ping - connection is stale
+        console.log('WebSocket heartbeat timeout, reconnecting...');
+        this.ws.terminate();
+        return;
+      }
+
+      this.pongReceived = false;
+      this.ws.ping();
+    }, PING_INTERVAL);
+  }
+
+  /**
+   * Stop heartbeat ping
+   */
+  stopHeartbeat() {
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer);
+      this.pingTimer = null;
+    }
+  }
+
+  /**
    * Handle disconnection and schedule reconnect
    */
   handleDisconnect() {
     this.isConnecting = false;
     this.isConnected = false;
     this.ws = null;
+    this.stopHeartbeat();
     this.notifyConnectionChange();
 
     if (this.shouldReconnect) {
@@ -286,6 +329,7 @@ class WsClient {
    */
   disconnect() {
     this.shouldReconnect = false;
+    this.stopHeartbeat();
 
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);

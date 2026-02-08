@@ -10,9 +10,9 @@ const TOOL_MAX_LENGTH = 50;
 const MODEL_MAX_LENGTH = 50;
 const TERMINAL_ID_MAX_LENGTH = 100;
 // Memory is now a number (0-100), not a string
-// iTerm2: w0t0p0:UUID format, Ghostty: numeric PID
-const ITERM2_SESSION_PATTERN = /^w\d+t\d+p\d+:[0-9A-Fa-f-]{36}$/;
-const GHOSTTY_PID_PATTERN = /^\d{1,10}$/;
+// iTerm2: iterm2:w0t0p0:UUID format, Ghostty: ghostty:PID format
+const ITERM2_SESSION_PATTERN = /^iterm2:w\d+t\d+p\d+:[0-9A-Fa-f-]{36}$/;
+const GHOSTTY_PID_PATTERN = /^ghostty:\d{1,10}$/;
 
 /**
  * Validate state value
