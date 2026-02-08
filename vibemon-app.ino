@@ -69,15 +69,15 @@ bool spriteInitialized = false;
 #define FLOAT_AMPLITUDE_Y 5  // Floating animation amplitude Y (pixels)
 #define STATUS_TEXT_Y 160
 #define LOADING_Y     192
-#define PROJECT_Y     212
-#define TOOL_Y        228
-#define MODEL_Y       244
-#define MEMORY_Y      260
+#define PROJECT_Y     216
+#define TOOL_Y        236
+#define MODEL_Y       256
+#define MEMORY_Y      276
 #define MEMORY_BAR_X  10
-#define MEMORY_BAR_Y  276
+#define MEMORY_BAR_Y  294
 #define MEMORY_BAR_W  152
 #define MEMORY_BAR_H  8
-#define BRAND_Y       298
+#define BRAND_Y       306
 
 // State variables (char arrays instead of String for memory efficiency)
 // Note: AppState enum is defined in sprites.h
@@ -645,8 +645,10 @@ void drawStartScreen() {
   uint16_t bgColor = TFT_BLACK;
   tft.fillScreen(bgColor);
 
-  // Draw random character on start screen (esp_random: hardware RNG)
+  // Set random character for start screen (esp_random: hardware RNG)
   const CharacterGeometry* character = ALL_CHARACTERS[esp_random() % CHARACTER_COUNT];
+  strncpy(currentCharacter, character->name, sizeof(currentCharacter) - 1);
+  currentCharacter[sizeof(currentCharacter) - 1] = '\0';
   if (spriteInitialized) {
     drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
     charSprite.pushSprite(CHAR_X_BASE, CHAR_Y_BASE);
@@ -742,7 +744,7 @@ void drawStatus() {
     // Clear info region when only info changed (not full redraw)
     // This prevents text overlap/ghosting
     if (dirtyInfo && !needsRedraw) {
-      tft.fillRect(0, PROJECT_Y, SCREEN_WIDTH, BRAND_Y - PROJECT_Y, bgColor);
+      tft.fillRect(0, PROJECT_Y, SCREEN_WIDTH, SCREEN_HEIGHT - PROJECT_Y, bgColor);
     }
 
     if (strlen(currentProject) > 0) {
