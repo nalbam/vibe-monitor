@@ -633,10 +633,10 @@ void drawConnectionIndicator() {
   int cx = SCREEN_WIDTH / 2;
   int cy = 5;
   int r = 3;
-  if (connected) {
-    tft.fillCircle(cx, cy, r, 0x07E0);  // Green
+  if (!connected) {
+    tft.fillCircle(cx, cy, r, TFT_RED);  // Red when disconnected
   } else {
-    tft.fillCircle(cx, cy, r, bgColor);  // Clear with background
+    tft.fillCircle(cx, cy, r, bgColor);  // Clear when connected
   }
 #endif
 }
