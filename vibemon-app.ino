@@ -156,7 +156,7 @@ unsigned long lastActivityTime = 0;
 #define JSON_BUFFER_SIZE 512
 
 // Version string
-#define VERSION "v1.5.0"
+#define VERSION "v1.6.0"
 
 // Helper: Parse state string to enum
 AppState parseState(const char* stateStr) {
@@ -1411,7 +1411,7 @@ void setupWiFi() {
     server.on("/lock-mode", HTTP_GET, handleLockModeGet);
     server.on("/lock-mode", HTTP_POST, handleLockModePost);
     server.on("/reboot", HTTP_POST, handleReboot);
-    
+
     // Add WiFi reset endpoint
     server.on("/wifi-reset", HTTP_POST, []() {
       preferences.begin("vibemon", false);
@@ -1422,7 +1422,7 @@ void setupWiFi() {
       delay(1000);
       ESP.restart();
     });
-    
+
     server.begin();
   } else {
     tft.println("Failed");
@@ -1431,12 +1431,12 @@ void setupWiFi() {
     tft.setCursor(10, wifiY + 18);
     tft.println("Starting setup...");
     delay(2000);
-    
+
     preferences.begin("vibemon", false);
     preferences.remove("wifiSSID");
     preferences.remove("wifiPassword");
     preferences.end();
-    
+
     ESP.restart();
   }
 }
