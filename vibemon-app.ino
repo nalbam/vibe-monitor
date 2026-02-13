@@ -59,6 +59,16 @@ bool wifiWasConnected = false;
 WebSocketsClient webSocket;
 bool wsConnected = false;
 
+// WebSocket token storage
+char wsToken[128] = "";
+
+// Fallback to credentials.h if defined
+#ifdef WS_TOKEN
+const char* defaultWSToken = WS_TOKEN;
+#else
+const char* defaultWSToken = "";
+#endif
+
 // Exponential backoff for reconnection (server-friendly)
 const unsigned long WS_RECONNECT_INITIAL = 5000;   // 5 seconds
 const unsigned long WS_RECONNECT_MAX = 60000;       // 60 seconds
@@ -993,6 +1003,33 @@ void saveWiFiCredentials(const char* ssid, const char* password) {
   strncpy(wifiPassword, password, sizeof(wifiPassword) - 1);
 }
 
+#ifdef USE_WEBSOCKET
+// Load WebSocket token from Preferences
+void loadWebSocketToken() {
+  preferences.begin("vibemon", true);  // Read-only
+  preferences.getString("wsToken", wsToken, sizeof(wsToken));
+  preferences.end();
+
+  // If no saved token, try using default from credentials.h
+  if (strlen(wsToken) == 0 && strlen(defaultWSToken) > 0) {
+    strncpy(wsToken, defaultWSToken, sizeof(wsToken) - 1);
+  }
+}
+
+// Save WebSocket token to Preferences
+void saveWebSocketToken(const char* token) {
+  preferences.begin("vibemon", false);  // Read-write
+  preferences.putString("wsToken", token);
+  preferences.end();
+
+  strncpy(wsToken, token, sizeof(wsToken) - 1);
+}
+#endif
+
+  strncpy(wifiSSID, ssid, sizeof(wifiSSID) - 1);
+  strncpy(wifiPassword, password, sizeof(wifiPassword) - 1);
+}
+
 // Start Access Point for WiFi provisioning
 void startProvisioningMode() {
   provisioningMode = true;
@@ -1055,6 +1092,14 @@ void setupProvisioningServer() {
       String password = server.arg("password");
 
       saveWiFiCredentials(ssid.c_str(), password.c_str());
+
+#ifdef USE_WEBSOCKET
+      // Also save WebSocket token if provided
+      if (server.hasArg("token")) {
+        String token = server.arg("token");
+        saveWebSocketToken(token.c_str());
+      }
+#endif
 
       server.send(200, "application/json", "{\"success\":true,\"message\":\"Credentials saved. Rebooting...\"}");
 
@@ -1210,6 +1255,11 @@ String getConfigPage() {
         <input type="password" id="password" required placeholder="Enter WiFi password">
       </div>
 
+      <div class="form-group">
+        <label for="token">VibeMon Token (Optional)</label>
+        <input type="text" id="token" placeholder="Enter WebSocket token (leave empty if not needed)">
+      </div>
+
       <button type="submit" id="save-btn">💾 Save & Connect</button>
     </form>
 
@@ -1264,6 +1314,7 @@ String getConfigPage() {
 
       const ssid = document.getElementById('ssid').value;
       const password = document.getElementById('password').value;
+      const token = document.getElementById('token').value;
       const saveBtn = document.getElementById('save-btn');
 
       saveBtn.disabled = true;
@@ -1272,6 +1323,9 @@ String getConfigPage() {
       const formData = new URLSearchParams();
       formData.append('ssid', ssid);
       formData.append('password', password);
+      if (token) {
+        formData.append('token', token);
+      }
 
       fetch('/save', {
         method: 'POST',
@@ -1516,10 +1570,15 @@ void checkWiFiConnection() {
 
 #ifdef USE_WEBSOCKET
 void setupWebSocket() {
+  // Load token from preferences if not already loaded
+  if (strlen(wsToken) == 0) {
+    loadWebSocketToken();
+  }
+
   // Build path with token query parameter for API Gateway authentication
   char wsPath[256];
-  if (strlen(WS_TOKEN) > 0) {
-    snprintf(wsPath, sizeof(wsPath), "%s?token=%s", WS_PATH, WS_TOKEN);
+  if (strlen(wsToken) > 0) {
+    snprintf(wsPath, sizeof(wsPath), "%s?token=%s", WS_PATH, wsToken);
   } else {
     strncpy(wsPath, WS_PATH, sizeof(wsPath));
   }
@@ -1577,9 +1636,9 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       Serial.println("}");
 
       // Send authentication message if token is configured
-      if (strlen(WS_TOKEN) > 0) {
+      if (strlen(wsToken) > 0) {
         char authMsg[128];
-        snprintf(authMsg, sizeof(authMsg), "{\"type\":\"auth\",\"token\":\"%s\"}", WS_TOKEN);
+        snprintf(authMsg, sizeof(authMsg), "{\"type\":\"auth\",\"token\":\"%s\"}", wsToken);
         webSocket.sendTXT(authMsg);
         Serial.println("{\"websocket\":\"auth_sent\"}");
       }
