@@ -16,6 +16,7 @@
    - 자동으로 열림 (또는 http://192.168.4.1 접속)
    - "네트워크 스캔" 클릭
    - WiFi 선택 및 비밀번호 입력
+   - (선택사항) VibeMon 토큰 입력
    - "저장 및 연결" 클릭
 
 4. **완료**
@@ -51,6 +52,7 @@ curl -X POST http://기기IP주소/wifi-reset
    - Opens automatically (or navigate to http://192.168.4.1)
    - Click "Scan Networks"
    - Select WiFi and enter password
+   - (Optional) Enter VibeMon token
    - Click "Save & Connect"
 
 4. **Done**
@@ -137,7 +139,7 @@ IP: 192.168.x.x
 ## Security Notes
 
 - ⚠️ AP password "vibemon123" is default - only active during setup
-- 🔒 WiFi credentials stored in NVS flash (persists across reboots)
+- 🔒 WiFi credentials and WebSocket token stored in NVS flash (persists across reboots)
 - 🔓 NVS encryption not enabled by default
 - 🌐 Configuration page uses HTTP (local only)
 
@@ -145,14 +147,14 @@ IP: 192.168.x.x
 
 - **Location**: ESP32 NVS (Non-Volatile Storage)
 - **Namespace**: `vibemon`
-- **Keys**: `wifiSSID`, `wifiPassword`
+- **Keys**: `wifiSSID`, `wifiPassword`, `wsToken`
 - **Persistence**: Survives reboots and power cycles
 
 ## Common Scenarios
 
 ### Scenario 1: New Device
 1. Boot → Provisioning mode (no credentials)
-2. User configures WiFi
+2. User configures WiFi and optionally token
 3. Device connects → Normal mode
 
 ### Scenario 2: Wrong Password

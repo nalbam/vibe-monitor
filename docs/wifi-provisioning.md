@@ -1,6 +1,6 @@
 # WiFi Provisioning
 
-VibeMon ESP32 devices support automatic WiFi provisioning through a captive portal interface. This makes it easy to configure WiFi credentials without hardcoding them in the firmware.
+VibeMon ESP32 devices support automatic WiFi provisioning through a captive portal interface. This makes it easy to configure WiFi credentials and WebSocket token without hardcoding them in the firmware.
 
 ## How It Works
 
@@ -13,10 +13,11 @@ When the ESP32 device has no saved WiFi credentials, it automatically enters **P
 2. **Captive Portal**: Connect to the network and a configuration page opens automatically
    - If it doesn't open, navigate to: `http://192.168.4.1`
 
-3. **Configure WiFi**: 
+3. **Configure Settings**: 
    - Scan for available networks
    - Select your WiFi network
-   - Enter the password
+   - Enter the WiFi password
+   - (Optional) Enter VibeMon WebSocket token
    - Click "Save & Connect"
 
 4. **Automatic Connection**: Device saves credentials and reboots to connect to your WiFi
@@ -35,7 +36,7 @@ When the ESP32 device has no saved WiFi credentials, it automatically enters **P
 
 1. Copy `credentials.h.example` to `credentials.h`
 2. Uncomment `#define USE_WIFI`
-3. Set `WIFI_SSID` and `WIFI_PASSWORD`
+3. Set `WIFI_SSID`, `WIFI_PASSWORD`, and optionally `WS_TOKEN`
 4. Flash the firmware
 5. Device will connect automatically
 
@@ -85,14 +86,14 @@ Returns:
 
 ## Credential Storage
 
-WiFi credentials are stored in the ESP32's NVS (Non-Volatile Storage) flash memory and persist across:
+WiFi credentials and WebSocket token are stored in the ESP32's NVS (Non-Volatile Storage) flash memory and persist across:
 - Device reboots
 - Power cycles
 - Firmware updates (if not doing a full flash erase)
 
 Storage location:
 - Namespace: `vibemon`
-- Keys: `wifiSSID`, `wifiPassword`
+- Keys: `wifiSSID`, `wifiPassword`, `wsToken`
 
 ## Security Considerations
 
@@ -100,7 +101,7 @@ Storage location:
 
 2. **HTTPS**: The configuration page uses HTTP (not HTTPS) since it's served locally from the device.
 
-3. **Credential Storage**: WiFi passwords are stored in flash memory. While ESP32's NVS has encryption support, it's not enabled by default in this implementation.
+3. **Credential Storage**: WiFi passwords and WebSocket tokens are stored in flash memory. While ESP32's NVS has encryption support, it's not enabled by default in this implementation.
 
 4. **Network Security**: Once connected to your WiFi, ensure your network has WPA2/WPA3 encryption enabled.
 

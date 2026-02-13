@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation adds automatic WiFi provisioning capability to the VibeMon ESP32 device, allowing users to configure WiFi credentials through a captive portal web interface without needing to hardcode them in the firmware.
+This implementation adds automatic WiFi provisioning capability to the VibeMon ESP32 device, allowing users to configure WiFi credentials and WebSocket token through a captive portal web interface without needing to hardcode them in the firmware.
 
 ## Korean Summary (한국어 요약)
 
@@ -11,9 +11,10 @@ ESP32 장치에 WiFi 설정이 없을 때:
 2. 사용자가 이 네트워크에 접속합니다
 3. 자동으로 설정 페이지가 열립니다 (또는 192.168.4.1로 접속)
 4. 사용자가 접속할 WiFi 네트워크를 선택하고 비밀번호를 입력합니다
-5. 장치가 해당 WiFi에 접속하여 서비스를 제공합니다
+5. (선택사항) VibeMon WebSocket 토큰을 입력합니다
+6. 장치가 해당 WiFi에 접속하여 서비스를 제공합니다
 
-설정된 WiFi 정보는 플래시 메모리에 저장되어 재부팅 후에도 유지됩니다.
+설정된 WiFi 정보와 토큰은 플래시 메모리에 저장되어 재부팅 후에도 유지됩니다.
 
 ## Features Implemented
 
@@ -36,6 +37,7 @@ ESP32 장치에 WiFi 설정이 없을 때:
 - WiFi network scanning with auto-scan on load
 - Visual signal strength indicators (▰▰▰▰ to ▰▱▱▱)
 - Security indicator (🔒 for protected networks)
+- WebSocket token input field (optional)
 - Form validation
 - Loading states with animations
 - Success/error feedback
@@ -49,18 +51,26 @@ ESP32 장치에 WiFi 설정이 없을 때:
 
 ### 5. Credential Storage
 - Uses ESP32 Preferences (NVS flash)
+- Stores WiFi credentials and WebSocket token
 - Persistent across reboots
 - Automatic save on successful connection
 - Automatic clear on connection failure
 
-### 6. WiFi Reset Endpoint
+### 6. WebSocket Token Configuration
+- Optional token field in provisioning interface
+- Stored in NVS flash memory
+- Automatically loaded on WebSocket setup
+- Fallback to WS_TOKEN define if not set
+- Used for WebSocket authentication
+
+### 7. WiFi Reset Endpoint
 - HTTP POST to `/wifi-reset`
 - Clears saved credentials
 - Reboots device to provisioning mode
 - Useful for reconfiguration
 
-### 7. Fallback to Hardcoded Credentials
-- Supports optional WIFI_SSID/PASSWORD in credentials.h
+### 8. Fallback to Hardcoded Credentials
+- Supports optional WIFI_SSID/PASSWORD/WS_TOKEN in credentials.h
 - Used as default if no saved credentials exist
 - Maintains backward compatibility
 
@@ -71,19 +81,26 @@ ESP32 장치에 WiFi 설정이 없을 때:
 1. **vibemon-app.ino** (main firmware)
    - Added DNSServer include and configuration
    - Added WiFi credential storage variables
+   - Added WebSocket token storage variable (wsToken)
    - Implemented `loadWiFiCredentials()`
    - Implemented `saveWiFiCredentials()`
+   - Implemented `loadWebSocketToken()`
+   - Implemented `saveWebSocketToken()`
    - Implemented `startProvisioningMode()`
    - Implemented `setupProvisioningServer()`
    - Implemented `getConfigPage()` with full HTML/CSS/JS
    - Modified `setupWiFi()` to support provisioning
+   - Modified `setupWebSocket()` to use stored token
+   - Updated WebSocket auth message to use stored token
    - Added DNS server handling in `loop()`
    - Added `/wifi-reset` endpoint
+   - Added token parameter to `/save` endpoint
    - Added JSON escaping for security
 
 2. **credentials.h.example** (template)
    - Added provisioning mode documentation
-   - Made WIFI_SSID/PASSWORD optional
+   - Made WIFI_SSID/PASSWORD/WS_TOKEN optional
+   - Documented token configuration via web interface
    - Added usage instructions
 
 3. **README.md** (documentation index)
