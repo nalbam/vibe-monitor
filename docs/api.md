@@ -43,6 +43,7 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | GET /stats | ✓ | - |
 | GET /stats/data | ✓ | - |
 | POST /reboot | - | ✓ |
+| POST /wifi-reset | - | ✓ |
 
 ## Status
 
@@ -322,6 +323,26 @@ Reboot the ESP32 device.
 ```bash
 curl -X POST http://192.168.0.185/reboot
 ```
+
+### POST /wifi-reset (ESP32 only)
+
+Clear saved WiFi credentials and return to provisioning mode.
+
+```bash
+curl -X POST http://192.168.0.185/wifi-reset
+```
+
+**Response:**
+```json
+{"success": true, "message": "WiFi credentials cleared. Rebooting..."}
+```
+
+**Behavior:**
+- Clears `wifiSSID`, `wifiPassword`, `wsToken` from NVS
+- Device reboots automatically
+- Enters provisioning mode (creates `VibeMon-Setup` AP)
+
+See [ESP32 Setup Guide](esp32-setup.md#reset-wifi-settings) for details.
 
 ---
 
