@@ -7,25 +7,25 @@ VibeMon ESP32 devices support automatic WiFi and WebSocket token configuration t
 ### First-Time Setup (Recommended)
 
 1. **Flash Firmware**
-   ```bash
-   cp credentials.h.example credentials.h
-   # Flash to ESP32 (WiFi and WebSocket enabled by default)
-   ```
+```bash
+cp credentials.h.example credentials.h
+# Flash to ESP32 (WiFi and WebSocket enabled by default)
+```
 
 2. **Connect to Setup Network**
-   - SSID: `VibeMon-Setup`
-   - Password: `vibemon123`
+- SSID: `VibeMon-Setup`
+- Password: `vibemon123`
 
 3. **Configure via Web Interface**
-   - Captive portal opens automatically (or go to `http://192.168.4.1`)
-   - Scan and select your WiFi network
-   - Enter WiFi password
-   - (Optional) Enter VibeMon WebSocket token
-   - Click "Save & Connect"
+- Captive portal opens automatically (or go to `http://192.168.4.1`)
+- Scan and select your WiFi network
+- Enter WiFi password
+- (Optional) Enter VibeMon WebSocket token
+- Click "Save & Connect"
 
 4. **Done!**
-   - Device reboots and connects to your WiFi
-   - Settings persist across reboots
+- Device reboots and connects to your WiFi
+- Settings persist across reboots
 
 ## How It Works
 
@@ -109,7 +109,7 @@ cp credentials.h.example credentials.h
 
 #define WIFI_SSID "MyNetwork"
 #define WIFI_PASSWORD "MyPassword"
-#define WS_TOKEN "my-secret-token"  // Optional
+#define WS_TOKEN "vbm-secret-token"  // Optional
 ```
 
 These are used as **defaults** if no saved credentials exist.
@@ -219,9 +219,9 @@ The token is used for **authentication** when connecting to VibeMon WebSocket se
 2. Use `/wifi-reset` endpoint to clear credentials
 3. Power cycle the device
 4. Manually erase NVS:
-   ```bash
-   esptool.py --port /dev/ttyUSB0 erase_region 0x9000 0x6000
-   ```
+```bash
+esptool.py --port /dev/ttyUSB0 erase_region 0x9000 0x6000
+```
 
 ## Technical Details
 
@@ -258,14 +258,14 @@ The token is used for **authentication** when connecting to VibeMon WebSocket se
 void setup() {
   // Load WiFi credentials from NVS
   loadWiFiCredentials();
-  
+
   if (strlen(wifiSSID) == 0) {
     // No credentials → Start provisioning
     startProvisioningMode();
   } else {
     // Try to connect
     WiFi.begin(wifiSSID, wifiPassword);
-    
+
     if (connection fails) {
       // Clear NVS and restart provisioning
       clearCredentials();
@@ -277,10 +277,10 @@ void setup() {
 void setupWebSocket() {
   // Load token from NVS (or use WS_TOKEN define as fallback)
   loadWebSocketToken();
-  
+
   // Add token to WebSocket URL
   snprintf(wsPath, "/?token=%s", wsToken);
-  
+
   // Connect to WebSocket server
   webSocket.beginSSL(WS_HOST, WS_PORT, wsPath);
 }

@@ -682,24 +682,28 @@ void drawStartScreen() {
   const CharacterGeometry* character = ALL_CHARACTERS[esp_random() % CHARACTER_COUNT];
   strncpy(currentCharacter, character->name, sizeof(currentCharacter) - 1);
   currentCharacter[sizeof(currentCharacter) - 1] = '\0';
+
+  // Draw character slightly higher for better balance
+  int startCharY = 15;
   if (spriteInitialized) {
     drawCharacterToSprite(charSprite, EYE_NORMAL, EFFECT_NONE, bgColor, character);
-    charSprite.pushSprite(CHAR_X_BASE, CHAR_Y_BASE);
+    charSprite.pushSprite(CHAR_X_BASE, startCharY);
   } else {
-    drawCharacter(tft, CHAR_X_BASE, CHAR_Y_BASE, EYE_NORMAL, EFFECT_NONE, bgColor, character);
+    drawCharacter(tft, CHAR_X_BASE, startCharY, EYE_NORMAL, EFFECT_NONE, bgColor, character);
   }
 
-  // Title (centered)
+  // Title (centered, below character with reasonable gap)
+  int titleY = startCharY + 128 + 15;  // Character height (128) + 15px gap
   tft.setTextColor(COLOR_TEXT_WHITE);
   tft.setTextSize(2);
   int titleX = (SCREEN_WIDTH - 7 * 12) / 2;  // "VibeMon" = 7 chars * 12px (size 2)
-  tft.setCursor(titleX, STATUS_TEXT_Y);
+  tft.setCursor(titleX, titleY);
   tft.println("VibeMon");
 
-  // "Waiting..." centered between title bottom and brand
+  // "Waiting..." below title with moderate gap
+  int waitY = titleY + 16 + 25;  // Title height (16) + 25px gap
   tft.setTextSize(1);
   tft.setTextColor(COLOR_TEXT_DIM);
-  int waitY = (STATUS_TEXT_Y + 16 + BRAND_Y) / 2 - 4;
   int waitX = (SCREEN_WIDTH - 10 * 6) / 2;  // "Waiting..." = 10 chars * 6px (size 1)
   tft.setCursor(waitX, waitY);
   tft.println("Waiting...");
@@ -1030,7 +1034,9 @@ void saveWebSocketToken(const char* token) {
 void startProvisioningMode() {
   provisioningMode = true;
 
-  tft.setCursor(10, BRAND_Y - 60);
+  // Display setup information starting from Y=230 for better visibility
+  int setupY = 230;
+  tft.setCursor(10, setupY);
   tft.setTextColor(COLOR_TEXT_DIM);
   tft.setTextSize(1.3);
   tft.println("Setup Mode");
@@ -1039,13 +1045,13 @@ void startProvisioningMode() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
 
-  tft.setCursor(10, BRAND_Y - 45);
+  tft.setCursor(10, setupY + 18);
   tft.print("SSID: ");
   tft.println(AP_SSID);
-  tft.setCursor(10, BRAND_Y - 30);
+  tft.setCursor(10, setupY + 36);
   tft.print("Password: ");
   tft.println(AP_PASSWORD);
-  tft.setCursor(10, BRAND_Y - 15);
+  tft.setCursor(10, setupY + 54);
   tft.print("IP: ");
   tft.println(WiFi.softAPIP());
 
@@ -1372,7 +1378,9 @@ void setupWiFi() {
   WiFi.setAutoReconnect(true);
   WiFi.begin(wifiSSID, wifiPassword);
 
-  tft.setCursor(10, BRAND_Y - 35);
+  // Display WiFi status at Y=230 for better visibility
+  int wifiY = 230;
+  tft.setCursor(10, wifiY);
   tft.setTextColor(COLOR_TEXT_DIM);
   tft.setTextSize(1.3);
   tft.print("WiFi: ");
@@ -1386,7 +1394,7 @@ void setupWiFi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     tft.println("OK");
-    tft.setCursor(10, BRAND_Y - 20);
+    tft.setCursor(10, wifiY + 18);
     tft.print("IP: ");
     tft.println(WiFi.localIP());
     wifiWasConnected = true;
@@ -1418,9 +1426,9 @@ void setupWiFi() {
     server.begin();
   } else {
     tft.println("Failed");
-    
+
     // Connection failed - clear credentials and start provisioning
-    tft.setCursor(10, BRAND_Y - 20);
+    tft.setCursor(10, wifiY + 18);
     tft.println("Starting setup...");
     delay(2000);
     
