@@ -173,16 +173,6 @@ See [Features](docs/features.md) for lock modes and CLI commands.
 
 See [ESP32 Setup Guide](docs/esp32-setup.md) for detailed troubleshooting.
 
-## Documentation
-
-**Setup & Configuration:**
-- [ESP32 Setup Guide](docs/esp32-setup.md) - WiFi provisioning & WebSocket token
-- [Desktop App](desktop/README.md) - npm package installation
-
-**Reference:**
-- [Features](docs/features.md) - States, animations, window modes
-- [API Reference](docs/api.md) - Complete HTTP API documentation
-
 ## Version History
 
 - **v1.5**: WebSocket support, new apto character, static engine CDN
