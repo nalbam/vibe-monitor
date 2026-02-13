@@ -1111,7 +1111,7 @@ void setupProvisioningServer() {
 
 // HTML page for WiFi configuration
 String getConfigPage() {
-  String html = R"(
+  String html = R"HTML(
 <!DOCTYPE html>
 <html>
 <head>
@@ -1286,8 +1286,8 @@ String getConfigPage() {
             const option = document.createElement('option');
             option.value = network.ssid;
             const signal = network.rssi > -50 ? '▰▰▰▰' : network.rssi > -60 ? '▰▰▰▱' : network.rssi > -70 ? '▰▰▱▱' : '▰▱▱▱';
-            const lock = network.secure ? '🔒' : '';
-            option.textContent = `${signal} ${network.ssid} ${lock}`;
+            const lock = network.secure ? '🔒' : "";
+            option.textContent = signal + ' ' + network.ssid + ' ' + lock;
             select.appendChild(option);
           });
 
@@ -1352,7 +1352,7 @@ String getConfigPage() {
   </script>
 </body>
 </html>
-)";
+)HTML";
   return html;
 }
 
