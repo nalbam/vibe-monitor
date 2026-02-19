@@ -99,14 +99,14 @@ bool spriteInitialized = false;
 #define FLOAT_AMPLITUDE_Y 5  // Floating animation amplitude Y (pixels)
 #define STATUS_TEXT_Y 160  // size 3 (24px) → bottom 184
 #define LOADING_Y     190  // dots after status text (gap 6px)
-#define PROJECT_Y     204  // info rows: 26px spacing (icon 20px + 6px gap)
-#define TOOL_Y        230
-#define MODEL_Y       256
-#define MEMORY_Y      282
+#define PROJECT_Y     204  // info rows: 18px spacing (font ~14px + 4px gap)
+#define TOOL_Y        222
+#define MODEL_Y       240
+#define MEMORY_Y      258
 #define MEMORY_BAR_X  10
-#define MEMORY_BAR_Y  306  // 4px below memory text bottom (282+20+4)
+#define MEMORY_BAR_Y  278  // 4px below memory text bottom (258+14+2+4)
 #define MEMORY_BAR_W  152
-#define MEMORY_BAR_H  6    // bar bottom 312 → 8px bottom margin
+#define MEMORY_BAR_H  6    // bar bottom 284 → 36px bottom margin
 #define BRAND_Y       308  // start screen only (size 1, 8px)
 
 // State variables (char arrays instead of String for memory efficiency)
@@ -746,15 +746,17 @@ void truncateText(const char* src, char* dst, size_t dstSize, int maxLen, int tr
 }
 
 // Helper: Draw icon + truncated text as a single info row
-// Icon scale=2 (20x20px) matches setTextSize(2) (16px); text x=34, y+2 centers in 20px row
+// FreeSans9pt7b ~14px height; icon scale=1 (10px), centered at y+2; text at x=24
 void drawInfoRow(int y, void (*iconFn)(TFT_eSPI&, int, int, uint16_t, int, uint16_t), const char* text, uint16_t textColor, uint16_t bgColor) {
   tft.setTextColor(textColor);
-  tft.setTextSize(2);
-  iconFn(tft, 10, y, textColor, 2, bgColor);
-  tft.setCursor(34, y + 2);
+  tft.setFont(&fonts::FreeSans9pt7b);
+  tft.setTextSize(1);
+  iconFn(tft, 10, y + 2, textColor, 1, bgColor);
+  tft.setCursor(24, y);
   char display[20];
-  truncateText(text, display, sizeof(display), 12, 9);
+  truncateText(text, display, sizeof(display), 15, 12);
   tft.print(display);
+  tft.setFont(nullptr);
 }
 
 void drawStatus() {
@@ -841,11 +843,13 @@ void drawStatus() {
     // Memory usage (hide on start state)
     if (currentMemory > 0 && currentState != STATE_START) {
       tft.setTextColor(textColor);
-      tft.setTextSize(2);
-      drawBrainIcon(tft, 10, MEMORY_Y, textColor, 2, bgColor);
-      tft.setCursor(34, MEMORY_Y + 2);
+      tft.setFont(&fonts::FreeSans9pt7b);
+      tft.setTextSize(1);
+      drawBrainIcon(tft, 10, MEMORY_Y + 2, textColor, 1, bgColor);
+      tft.setCursor(24, MEMORY_Y);
       tft.print(currentMemory);
       tft.print("%");
+      tft.setFont(nullptr);
 
       // Memory bar (below percentage)
       drawMemoryBar(tft, MEMORY_BAR_X, MEMORY_BAR_Y, MEMORY_BAR_W, MEMORY_BAR_H, currentMemory, bgColor);
