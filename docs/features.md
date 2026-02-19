@@ -73,7 +73,7 @@ The `working` state displays context-aware text based on the active tool:
 - **Loading dots**: Thinking/planning/packing/working states show animated progress dots
   - Thinking/planning/packing: 3x slower animation for contemplative feel
   - Working: Normal speed animation
-- **Matrix rain**: Working state shows falling green code effect
+- **Matrix rain**: Working state shows falling green code effect (Desktop only)
 - **Sunglasses**: Working state character wears Matrix-style sunglasses
 - **Sparkle**: Session start and working states show rotating sparkle effect
 - **Thought bubble**: Thinking, planning, and packing states show animated thought bubble

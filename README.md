@@ -175,6 +175,7 @@ See [ESP32 Setup Guide](docs/esp32-setup.md) for detailed troubleshooting.
 
 ## Version History
 
+- **v1.6**: ESP32 display layout improvements, code refactoring
 - **v1.5**: WebSocket support, new apto character, static engine CDN
 - **v1.4**: New claw character, ESP32 claw support, image-based character rendering
 - **v1.3**: Multi-window mode, window mode API, enhanced lock modes
