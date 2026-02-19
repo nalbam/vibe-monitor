@@ -69,14 +69,14 @@ The `working` state displays context-aware text based on the active tool:
 ## Animations
 
 - **Floating**: Gentle motion (±3px horizontal, ±5px vertical, ~3.2s cycle)
-- **Blink**: Idle state blinks every 3 seconds
+- **Blink**: Idle state blinks every 3.2 seconds
 - **Loading dots**: Thinking/planning/packing/working states show animated progress dots
   - Thinking/planning/packing: 3x slower animation for contemplative feel
   - Working: Normal speed animation
 - **Matrix rain**: Working state shows falling green code effect
 - **Sunglasses**: Working state character wears Matrix-style sunglasses
-- **Sparkle**: Session start shows rotating sparkle effect
-- **Thought bubble**: Thinking state shows animated thought bubble
+- **Sparkle**: Session start and working states show rotating sparkle effect
+- **Thought bubble**: Thinking, planning, and packing states show animated thought bubble
 - **Zzz**: Sleep state shows blinking Z animation
 - **Memory bar**: Gradient colors based on usage thresholds:
   - 0-74%: Green

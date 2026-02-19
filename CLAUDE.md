@@ -139,4 +139,4 @@ echo '{"state":"working","tool":"Bash","project":"my-project"}' > /dev/ttyACM0
 
 - ESP32: Uses LovyanGFX library with `LGFX_ESP32C6.hpp` configuration (TFT_eSPI not required)
 - JSON payload must end with LF (`\n`)
-- WiFi mode: Create `credentials.h` from example, uncomment `#define USE_WIFI` in credentials.h
+- WiFi mode: Create `credentials.h` from example (WiFi and WebSocket are enabled by default)
