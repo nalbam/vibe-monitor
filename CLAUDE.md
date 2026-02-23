@@ -47,7 +47,7 @@ npm start
 - **State-based rendering**: `state` → color, eyeType, text
 - **Animation**: `animFrame % N` approach (100ms tick)
 - **Floating**: Cosine/Sine wave offset (X: ±3px, Y: ±5px, ~3.2s cycle)
-- **Working text**: Tool-based random selection via `getWorkingText(tool)`
+- **Working text**: Tool-based fixed text via `getWorkingText(tool)` (Bash→Running, Read→Reading, Edit→Editing, Write→Writing, Grep/WebSearch→Searching, Glob→Scanning, WebFetch→Fetching, Task→Tasking, default→Working)
 - **JSON fields**: `{"state", "tool", "project", "model", "memory", "character", "terminalId"}`
 - **Characters**: `apto` (gray-purple), `clawd` (orange), `kiro` (white ghost), `claw` (red)
 - **Memory hidden on start**: Memory not displayed during `start` state

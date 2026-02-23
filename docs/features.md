@@ -25,31 +25,21 @@ All characters use **image-based rendering** (128x128 PNG). Character is **auto-
 | `done` | Green | > < | Done! | Tool completed |
 | `sleep` | Navy | ─ ─ + Z | Zzz... | 5min inactivity |
 
-### Thinking/Planning State Text
-
-The `thinking` and `planning` states display randomly selected text:
-
-| State | Possible Text |
-|-------|---------------|
-| Thinking | Thinking, Hmm..., Let me see |
-| Planning | Planning, Designing, Drafting |
-
 ### Working State Text
 
-The `working` state displays context-aware text based on the active tool:
+The `working` state displays fixed text based on the active tool:
 
-| Tool | Possible Text |
-|------|---------------|
-| Bash | Running, Executing, Processing |
-| Read | Reading, Scanning, Checking |
-| Edit | Editing, Modifying, Fixing |
-| Write | Writing, Creating, Saving |
-| Grep | Searching, Finding, Looking |
-| Glob | Scanning, Browsing, Finding |
-| Task | Thinking, Working, Planning |
-| WebFetch | Fetching, Loading, Getting |
-| WebSearch | Searching, Googling, Looking |
-| Default | Working, Busy, Coding |
+| Tool | Text |
+|------|------|
+| Bash | Running |
+| Read | Reading |
+| Edit | Editing |
+| Write | Writing |
+| Grep / WebSearch | Searching |
+| Glob | Scanning |
+| WebFetch | Fetching |
+| Task | Tasking |
+| Default | Working |
 
 ### State Timeout
 
