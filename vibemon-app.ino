@@ -38,7 +38,7 @@
 // =============================================================================
 
 // Version string
-#define VERSION "v1.6.2"
+#define VERSION "v1.7.0"
 
 // Screen size
 #define SCREEN_WIDTH  172
