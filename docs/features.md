@@ -185,10 +185,12 @@ When running Claude Code in multiple terminal tabs, clicking a VibeMon window au
 - View active windows and their states
 - Manually change state (per window)
 - Switch character (Apto/Clawd/Kiro/Claw)
-- Toggle window mode (Multi/Single)
-- Project lock (in single mode)
+- Rearrange windows (multi-window mode only)
 - Toggle Always on Top
-- Rearrange (multi-window mode only)
+- Toggle window mode (Multi/Single)
+- Open at Login toggle
+- Project lock (in single mode)
+- Claude Stats
 - Quit
 
 ## Build

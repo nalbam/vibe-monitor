@@ -58,6 +58,7 @@ npm start
 - **Snap to corner**: Window snaps to screen corners when dragged within 30px of edges (150ms debounce)
 - **Window close timer**: Desktop window auto-closes after 10min in sleep state; reopens on new status
 - **Click to focus terminal**: Click window to switch to corresponding iTerm2 or Ghostty tab (macOS only, uses `terminalId` from `ITERM_SESSION_ID` or `GHOSTTY_PID`)
+- **Open at Login**: Configurable via system tray menu; uses Electron `app.setLoginItemSettings()` to auto-start on macOS login
 - **State-based always on top**: Active states (thinking, planning, working, packing, notification) keep window on top; inactive states (start, idle, done, sleep) disable always on top to reduce screen obstruction
 - **Always on Top Modes**: `active-only` (default), `all`, `disabled` - configurable via system tray menu
 - **Always on Top**: Active states enable on top immediately; inactive states disable on top immediately (no grace period, prevents focus stealing)
