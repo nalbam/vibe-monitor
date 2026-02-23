@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """
 PNG to RGB565 C Array Converter for ESP32
-Converts PNG images to RGB565 format C header files for TFT_eSPI library.
+Converts images/img_*.png to RGB565 format C header files.
 
 Usage:
-    python png_to_rgb565.py ../desktop/assets/characters/clawd.png clawd  -> img_clawd.h (IMG_CLAWD)
-    python png_to_rgb565.py ../desktop/assets/characters/kiro.png kiro    -> img_kiro.h (IMG_KIRO)
+    python png_to_rgb565.py         -> convert all images/img_*.png
+    python png_to_rgb565.py kiro    -> convert images/img_kiro.png -> img_kiro.h
 """
 
-import sys
-from PIL import Image
+import glob
 import os
+import sys
+
+from PIL import Image
+
+TRANSPARENT_COLOR = 0xF81F  # Magenta as transparent marker
 
 
 def rgb_to_rgb565(r, g, b):
@@ -18,20 +22,16 @@ def rgb_to_rgb565(r, g, b):
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
 
 
-def convert_png_to_rgb565(input_path, name, target_size=128):
-    """Convert PNG image to RGB565 C array."""
-    img = Image.open(input_path).convert('RGBA')
+def build_header(input_path, name, target_size=128):
+    """Convert PNG image to RGB565 C array string."""
+    img = Image.open(input_path).convert("RGBA")
     width, height = img.size
 
-    # Resize to target size if needed
     if width != target_size or height != target_size:
         print(f"Resizing from {width}x{height} to {target_size}x{target_size}...")
         img = img.resize((target_size, target_size), Image.Resampling.LANCZOS)
         width, height = target_size, target_size
 
-    print(f"Converting {input_path} ({width}x{height}) to RGB565...")
-
-    # Generate C array
     lines = []
     lines.append(f"// {name.upper()} character image ({width}x{height})")
     lines.append(f"// Generated from {os.path.basename(input_path)}")
@@ -40,51 +40,54 @@ def convert_png_to_rgb565(input_path, name, target_size=128):
     lines.append("")
     lines.append(f"const uint16_t IMG_{name.upper()}[{width * height}] PROGMEM = {{")
 
-    pixel_values = []
-    transparent_color = 0xF81F  # Magenta as transparent marker
-
     for y in range(height):
         row_values = []
         for x in range(width):
             r, g, b, a = img.getpixel((x, y))
-
-            if a < 128:  # Transparent pixel
-                # Use magenta as transparent marker (common convention for sprite transparency)
-                rgb565 = transparent_color
-            else:
-                rgb565 = rgb_to_rgb565(r, g, b)
-
+            rgb565 = TRANSPARENT_COLOR if a < 128 else rgb_to_rgb565(r, g, b)
             row_values.append(f"0x{rgb565:04X}")
+        lines.append("  " + ", ".join(row_values) + ",")
 
-        pixel_values.append("  " + ", ".join(row_values) + ",")
-
-    lines.extend(pixel_values)
     lines.append("};")
     lines.append("")
 
     return "\n".join(lines)
 
 
-def main():
-    if len(sys.argv) < 3:
-        print("Usage: python png_to_rgb565.py <input.png> <name>")
-        print("Example: python png_to_rgb565.py ../desktop/assets/characters/clawd.png clawd  -> img_clawd.h")
-        sys.exit(1)
-
-    input_path = sys.argv[1]
-    name = sys.argv[2]
-
+def convert(name, base_dir):
+    """Convert images/img_<name>.png to img_<name>.h."""
+    input_path = os.path.join(base_dir, "images", f"img_{name}.png")
     if not os.path.exists(input_path):
         print(f"Error: File not found: {input_path}")
-        sys.exit(1)
+        return
 
-    c_code = convert_png_to_rgb565(input_path, name)
+    output_path = os.path.join(base_dir, f"img_{name}.h")
+    with open(output_path, "w") as f:
+        f.write(build_header(input_path, name))
+    print(f"  images/img_{name}.png -> img_{name}.h")
 
-    output_path = f"img_{name}.h"
-    with open(output_path, 'w') as f:
-        f.write(c_code)
 
-    print(f"Generated: {output_path}")
+def main():
+    # Project root is one level up from tools/
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if len(sys.argv) >= 2:
+        names = sys.argv[1:]
+    else:
+        pattern = os.path.join(base_dir, "images", "img_*.png")
+        names = [
+            os.path.basename(p)[4:-4]  # img_kiro.png -> kiro
+            for p in sorted(glob.glob(pattern))
+        ]
+
+    if not names:
+        print("No images/img_*.png files found.")
+        return
+
+    print(f"Converting {len(names)} file(s)...")
+    for name in names:
+        convert(name, base_dir)
+    print("Done.")
 
 
 if __name__ == "__main__":
