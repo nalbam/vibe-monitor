@@ -567,17 +567,17 @@ class TrayManager {
         label: 'Windows',
         submenu: this.buildWindowsSubmenu()
       },
-      { type: 'separator' },
-      {
-        label: 'Always on Top',
-        submenu: this.buildAlwaysOnTopSubmenu()
-      },
       {
         label: 'Rearrange',
         enabled: windowCount > 1 && this.windowManager.isMultiMode(),
         click: () => {
           this.windowManager.arrangeWindowsByName();
         }
+      },
+      { type: 'separator' },
+      {
+        label: 'Always on Top',
+        submenu: this.buildAlwaysOnTopSubmenu()
       },
       {
         label: 'Multi-Window Mode',
