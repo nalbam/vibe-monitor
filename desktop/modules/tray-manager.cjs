@@ -589,6 +589,16 @@ class TrayManager {
           this.updateMenu();
         }
       },
+      {
+        label: 'Open at Login',
+        type: 'checkbox',
+        checked: this.app.getLoginItemSettings().openAtLogin,
+        click: () => {
+          const current = this.app.getLoginItemSettings().openAtLogin;
+          this.app.setLoginItemSettings({ openAtLogin: !current });
+          this.updateMenu();
+        }
+      },
       ...(this.windowManager.isMultiMode() ? [] : [{
         label: 'Project Lock',
         submenu: this.buildProjectLockSubmenu()
