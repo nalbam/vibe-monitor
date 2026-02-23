@@ -44,7 +44,7 @@ See [ESP32 Setup Guide](docs/esp32-setup.md) for detailed instructions.
 
 ## Preview
 
-![VibeMon Demo](screenshots/demo.gif)
+![VibeMon Demo](images/demo.gif)
 
 ## Documentation
 

@@ -8,7 +8,7 @@
 
 See at a glance what your AI assistant is doing — thinking, working, or waiting for input. A cute pixel art character visually represents the current state.
 
-![Demo](https://raw.githubusercontent.com/nalbam/vibemon-app/main/screenshots/demo.gif)
+![Demo](https://raw.githubusercontent.com/nalbam/vibemon-app/main/images/demo.gif)
 
 ## Supported Tools
 
