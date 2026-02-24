@@ -71,6 +71,7 @@ For detailed installation instructions, visit **[vibemon.io/docs](https://vibemo
 | `notification` | Yellow | User input needed |
 | `done` | Green | Tool completed |
 | `sleep` | Navy | 5min inactivity |
+| `error` | Red | Critical error/failure |
 
 See [Features](docs/features.md) for animations, working state text, and more.
 
