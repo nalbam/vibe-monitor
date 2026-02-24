@@ -205,6 +205,7 @@ AppState parseState(const char* stateStr) {
   if (strcmp(stateStr, "notification") == 0) return STATE_NOTIFICATION;
   if (strcmp(stateStr, "done") == 0) return STATE_DONE;
   if (strcmp(stateStr, "sleep") == 0) return STATE_SLEEP;
+  if (strcmp(stateStr, "error") == 0) return STATE_ERROR;
   return STATE_IDLE;  // default
 }
 
