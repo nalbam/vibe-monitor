@@ -177,6 +177,8 @@ See [ESP32 Setup Guide](docs/esp32-setup.md) for detailed troubleshooting.
 
 ## Version History
 
+- **v1.8**: Alert state (red, always-on-top), exclamation mark effect on ESP32
+- **v1.7**: Open at Login option, Always on Top menu reordering, working state text standardized
 - **v1.6**: ESP32 display layout improvements, code refactoring
 - **v1.5**: WebSocket support, new apto character, static engine CDN
 - **v1.4**: New claw character, ESP32 claw support, image-based character rendering
