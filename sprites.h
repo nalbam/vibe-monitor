@@ -22,7 +22,8 @@ enum AppState {
   STATE_PACKING,
   STATE_NOTIFICATION,
   STATE_DONE,
-  STATE_SLEEP
+  STATE_SLEEP,
+  STATE_ERROR
 };
 
 // =============================================================================
@@ -84,11 +85,12 @@ enum EyeType {
 
 // Effect types (visual effects around character)
 enum EffectType {
-  EFFECT_NONE,     // No effect
-  EFFECT_SPARKLE,  // Sparkle effect (start/working state)
-  EFFECT_THINKING, // Thought bubble (thinking/planning state)
-  EFFECT_ALERT,    // Question mark (notification state)
-  EFFECT_ZZZ       // Zzz animation (sleep state)
+  EFFECT_NONE,        // No effect
+  EFFECT_SPARKLE,     // Sparkle effect (start/working state)
+  EFFECT_THINKING,    // Thought bubble (thinking/planning state)
+  EFFECT_ALERT,       // Question mark (notification state)
+  EFFECT_ZZZ,         // Zzz animation (sleep state)
+  EFFECT_EXCLAMATION  // Exclamation mark (error state)
 };
 
 // Animation frame counter (defined in .ino)
