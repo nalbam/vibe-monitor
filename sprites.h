@@ -261,6 +261,7 @@ uint16_t getBackgroundColorEnum(AppState state) {
     case STATE_NOTIFICATION: return COLOR_BG_NOTIFY;
     case STATE_DONE: return COLOR_BG_DONE;
     case STATE_SLEEP: return COLOR_BG_SLEEP;
+    case STATE_ERROR: return 0xD800;  // RGB565 for #DD0000
     default: return COLOR_BG_IDLE;
   }
 }
