@@ -84,8 +84,9 @@ class StateManager {
       }, IDLE_TIMEOUT);
       this.stateTimeoutTimers.set(projectId, timer);
     } else if (currentState === 'planning' || currentState === 'thinking' ||
-               currentState === 'working' || currentState === 'notification') {
-      // planning/thinking/working/notification -> idle after 5 minutes
+               currentState === 'working' || currentState === 'notification' ||
+               currentState === 'error') {
+      // planning/thinking/working/notification/error -> idle after 5 minutes
       const timer = setTimeout(() => {
         this.stateTimeoutTimers.delete(projectId);
         if (this.onStateTimeout) {
