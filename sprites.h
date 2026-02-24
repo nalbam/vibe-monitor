@@ -23,7 +23,7 @@ enum AppState {
   STATE_NOTIFICATION,
   STATE_DONE,
   STATE_SLEEP,
-  STATE_ERROR
+  STATE_ALERT
 };
 
 // =============================================================================
@@ -51,6 +51,7 @@ enum AppState {
 #define COLOR_BG_NOTIFY   0xFE60  // #FFCC00 Yellow
 #define COLOR_BG_DONE     0x0540  // #00AA00 Green
 #define COLOR_BG_SLEEP    0x1088  // #111144 Navy blue
+#define COLOR_BG_ALERT    0xD800  // #DD0000 Red
 
 // Text colors
 #define COLOR_TEXT_WHITE  0xFFFF
@@ -88,9 +89,9 @@ enum EffectType {
   EFFECT_NONE,        // No effect
   EFFECT_SPARKLE,     // Sparkle effect (start/working state)
   EFFECT_THINKING,    // Thought bubble (thinking/planning state)
-  EFFECT_ALERT,       // Question mark (notification state)
+  EFFECT_QUESTION,    // Question mark (notification state)
   EFFECT_ZZZ,         // Zzz animation (sleep state)
-  EFFECT_EXCLAMATION  // Exclamation mark (error state)
+  EFFECT_EXCLAMATION  // Exclamation mark (alert state)
 };
 
 // Animation frame counter (defined in .ino)
@@ -261,7 +262,7 @@ uint16_t getBackgroundColorEnum(AppState state) {
     case STATE_NOTIFICATION: return COLOR_BG_NOTIFY;
     case STATE_DONE: return COLOR_BG_DONE;
     case STATE_SLEEP: return COLOR_BG_SLEEP;
-    case STATE_ERROR: return 0xD800;  // RGB565 for #DD0000
+    case STATE_ALERT: return COLOR_BG_ALERT;
     default: return COLOR_BG_IDLE;
   }
 }
@@ -284,9 +285,9 @@ EffectType getEffectTypeEnum(AppState state) {
     case STATE_PLANNING: return EFFECT_THINKING;
     case STATE_PACKING: return EFFECT_THINKING;
     case STATE_WORKING: return EFFECT_SPARKLE;
-    case STATE_NOTIFICATION: return EFFECT_ALERT;
+    case STATE_NOTIFICATION: return EFFECT_QUESTION;
     case STATE_SLEEP: return EFFECT_ZZZ;
-    case STATE_ERROR: return EFFECT_EXCLAMATION;
+    case STATE_ALERT: return EFFECT_EXCLAMATION;
     default: return EFFECT_NONE;
   }
 }
@@ -496,16 +497,21 @@ inline void drawThoughtBubble(TFT_eSPI &tft, int x, int y, int frame, uint16_t c
   drawThoughtBubbleT(tft, x, y, frame, color);
 }
 
-// Draw exclamation mark effect (error state)
-void drawExclamationMark(TFT_eSPI& display, int x, int y, int frame, uint16_t bgColor) {
+// Draw exclamation mark effect (alert state) - template version
+template<typename T>
+void drawExclamationMarkT(T &canvas, int x, int y, int frame, uint16_t bgColor) {
   int shakeOffset = ((frame / 2) % 4 < 2) ? 2 : -2;
   int markY = y + shakeOffset;
   uint16_t white = TFT_WHITE;
   uint16_t red = 0xD800;
-  display.fillRect(x + 6, markY, 4, 20, white);
-  display.drawRect(x + 5, markY - 1, 6, 22, red);
-  display.fillRect(x + 6, markY + 24, 4, 4, white);
-  display.drawRect(x + 5, markY + 23, 6, 6, red);
+  canvas.fillRect(x + 6, markY, 4, 20, white);
+  canvas.drawRect(x + 5, markY - 1, 6, 22, red);
+  canvas.fillRect(x + 6, markY + 24, 4, 4, white);
+  canvas.drawRect(x + 5, markY + 23, 6, 6, red);
+}
+
+inline void drawExclamationMark(TFT_eSPI &tft, int x, int y, int frame, uint16_t bgColor) {
+  drawExclamationMarkT(tft, x, y, frame, bgColor);
 }
 
 // =============================================================================
@@ -571,14 +577,14 @@ void drawEffectType(TFT_eSPI &tft, int x, int y, EffectType effectType, uint16_t
     case EFFECT_THINKING:
       drawThoughtBubble(tft, effectX, effectY, animFrame, effectColor);
       break;
-    case EFFECT_ALERT:
+    case EFFECT_QUESTION:
       drawQuestionMark(tft, effectX, effectY);
       break;
     case EFFECT_ZZZ:
       drawZzz(tft, effectX, effectY, animFrame, effectColor);
       break;
     case EFFECT_EXCLAMATION:
-      drawExclamationMark(tft, x + 100, y + 10, animFrame, bgColor);
+      drawExclamationMark(tft, effectX, effectY, animFrame, bgColor);
       break;
     case EFFECT_NONE:
     default:
@@ -612,8 +618,8 @@ void drawEyeTypeToSprite(TFT_eSprite &sprite, EyeType eyeType, const CharacterGe
   }
 }
 
-// Draw effect type to sprite (sparkle, thinking, alert, zzz)
-void drawEffectTypeToSprite(TFT_eSprite &sprite, EffectType effectType, const CharacterGeometry* character = &CHAR_CLAWD) {
+// Draw effect type to sprite (sparkle, thinking, alert, zzz, exclamation)
+void drawEffectTypeToSprite(TFT_eSprite &sprite, EffectType effectType, uint16_t bgColor = 0, const CharacterGeometry* character = &CHAR_CLAWD) {
   bool isKiro = (character == &CHAR_KIRO);
   uint16_t effectColor = isKiro ? COLOR_EFFECT_ALT : COLOR_TEXT_WHITE;
 
@@ -627,11 +633,14 @@ void drawEffectTypeToSprite(TFT_eSprite &sprite, EffectType effectType, const Ch
     case EFFECT_THINKING:
       drawThoughtBubbleT(sprite, effectX, effectY, animFrame, effectColor);
       break;
-    case EFFECT_ALERT:
+    case EFFECT_QUESTION:
       drawQuestionMarkT(sprite, effectX, effectY);
       break;
     case EFFECT_ZZZ:
       drawZzzT(sprite, effectX, effectY, animFrame, effectColor);
+      break;
+    case EFFECT_EXCLAMATION:
+      drawExclamationMarkT(sprite, effectX, effectY, animFrame, bgColor);
       break;
     case EFFECT_NONE:
     default:
@@ -648,7 +657,7 @@ void drawCharacterToSprite(TFT_eSprite &sprite, EyeType eyeType, EffectType effe
   sprite.fillSprite(bgColor);
   character->drawToSprite(sprite);
   drawEyeTypeToSprite(sprite, eyeType, character);
-  drawEffectTypeToSprite(sprite, effectType, character);
+  drawEffectTypeToSprite(sprite, effectType, bgColor, character);
 }
 
 // Draw character directly to TFT at specified position (128x128)
@@ -820,8 +829,8 @@ void getStatusTextEnum(AppState state, char* buf, size_t bufSize) {
     case STATE_SLEEP:
       strncpy(buf, "Zzz...", bufSize - 1);
       break;
-    case STATE_ERROR:
-      strncpy(buf, "Error", bufSize - 1);
+    case STATE_ALERT:
+      strncpy(buf, "Alert", bufSize - 1);
       break;
     default:
       strncpy(buf, "Ready", bufSize - 1);

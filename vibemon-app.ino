@@ -205,7 +205,7 @@ AppState parseState(const char* stateStr) {
   if (strcmp(stateStr, "notification") == 0) return STATE_NOTIFICATION;
   if (strcmp(stateStr, "done") == 0) return STATE_DONE;
   if (strcmp(stateStr, "sleep") == 0) return STATE_SLEEP;
-  if (strcmp(stateStr, "error") == 0) return STATE_ERROR;
+  if (strcmp(stateStr, "alert") == 0) return STATE_ALERT;
   return STATE_IDLE;  // default
 }
 
@@ -221,7 +221,7 @@ const char* getStateString(AppState state) {
     case STATE_NOTIFICATION: return "notification";
     case STATE_DONE: return "done";
     case STATE_SLEEP: return "sleep";
-    case STATE_ERROR: return "error";
+    case STATE_ALERT: return "alert";
     default: return "idle";
   }
 }
@@ -234,7 +234,7 @@ bool isLoadingState(AppState state) {
 // Helper: True for all active states that auto-timeout to idle after 5 minutes
 bool isActiveState(AppState state) {
   return state == STATE_THINKING || state == STATE_PLANNING || state == STATE_WORKING ||
-         state == STATE_NOTIFICATION || state == STATE_PACKING || state == STATE_ERROR;
+         state == STATE_NOTIFICATION || state == STATE_PACKING || state == STATE_ALERT;
 }
 
 // Helper: Transition to newState and trigger full redraw

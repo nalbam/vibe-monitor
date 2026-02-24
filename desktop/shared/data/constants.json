@@ -59,9 +59,9 @@
     "disabled": "Disabled"
   },
 
-  "ACTIVE_STATES": ["thinking", "planning", "working", "notification", "packing", "error"],
+  "ACTIVE_STATES": ["thinking", "planning", "working", "notification", "packing", "alert"],
 
-  "VALID_STATES": ["start", "idle", "thinking", "planning", "working", "packing", "notification", "sleep", "done", "error"],
+  "VALID_STATES": ["start", "idle", "thinking", "planning", "working", "packing", "notification", "sleep", "done", "alert"],
 
   "CHARACTER_NAMES": ["apto", "clawd", "kiro", "claw"],
 
@@ -82,6 +82,6 @@
     "notification": "#FFCC00",
     "sleep": "#111144",
     "done": "#00AA00",
-    "error": "#DD0000"
+    "alert": "#DD0000"
   }
 }
