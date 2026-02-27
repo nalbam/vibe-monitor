@@ -290,7 +290,7 @@ void addProjectToList(const char* project) {
   if (projectCount >= MAX_PROJECTS) {
     // Remove oldest project (shift array)
     for (int i = 0; i < MAX_PROJECTS - 1; i++) {
-      strcpy(projectList[i], projectList[i + 1]);
+      safeCopyStr(projectList[i], projectList[i + 1]);
     }
     projectCount = MAX_PROJECTS - 1;
   }

@@ -349,6 +349,11 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  // Null callbacks first to prevent any fired timers from triggering updates
+  stateManager.onStateTimeout = null;
+  stateManager.onWindowCloseTimeout = null;
+  windowManager.onWindowClosed = null;
+
   stateManager.cleanup();
   windowManager.cleanup();
   if (trayManager) {

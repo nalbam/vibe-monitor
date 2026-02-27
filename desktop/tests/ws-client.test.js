@@ -17,6 +17,16 @@ class MockWebSocket extends EventEmitter {
     this.sentMessages.push(data);
   }
 
+  ping() {
+    // Mock ping - emit pong to simulate server response
+    this.emit('pong');
+  }
+
+  terminate() {
+    this.readyState = MockWebSocket.CLOSED;
+    this.emit('close', 1006, 'Terminated');
+  }
+
   close() {
     this.readyState = MockWebSocket.CLOSED;
     this.emit('close', 1000, 'Normal closure');
@@ -91,10 +101,7 @@ describe('WsClient', () => {
     // Cleanup all active clients to prevent timer leaks
     activeClients.forEach(client => {
       client.shouldReconnect = false;
-      if (client.reconnectTimer) {
-        clearTimeout(client.reconnectTimer);
-        client.reconnectTimer = null;
-      }
+      client.cleanup();
     });
     jest.clearAllMocks();
     jest.clearAllTimers();
@@ -290,9 +297,10 @@ describe('WsClient', () => {
 
       client.connect();
       mockWsInstance.simulateOpen();
-      mockWsInstance.simulateMessage({ type: 'auth', success: true });
+      // Server responds with 'authenticated' type (not 'auth')
+      mockWsInstance.simulateMessage({ type: 'authenticated', userId: 'test-user' });
 
-      expect(consoleSpy).toHaveBeenCalledWith('WebSocket auth successful');
+      expect(consoleSpy).toHaveBeenCalledWith('WebSocket authenticated, userId:', 'test-user');
       consoleSpy.mockRestore();
     });
 

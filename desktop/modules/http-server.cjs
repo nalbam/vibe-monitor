@@ -68,7 +68,14 @@ class HttpServer {
   }
 
   start() {
-    this.server = http.createServer((req, res) => this.handleRequest(req, res));
+    this.server = http.createServer((req, res) => {
+      this.handleRequest(req, res).catch((err) => {
+        console.error('Unhandled request error:', err.message);
+        if (!res.headersSent) {
+          sendError(res, 500, 'Internal server error');
+        }
+      });
+    });
 
     this.server.on('error', (err) => {
       console.error('HTTP Server error:', err.message);
@@ -559,7 +566,8 @@ class HttpServer {
       const html = await fsPromises.readFile(statsHtmlPath, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(html);
-    } catch {
+    } catch (err) {
+      console.error('Failed to load stats page:', err.message);
       sendError(res, 500, 'Failed to load stats page');
     }
   }

@@ -163,6 +163,7 @@ class WsClient {
         this.isConnecting = false;
         this.isConnected = true;
         this.reconnectDelay = RECONNECT_INITIAL_DELAY;
+        this.sendAuth();
         this.startHeartbeat();
         this.notifyConnectionChange();
       });
@@ -195,6 +196,10 @@ class WsClient {
    */
   sendAuth() {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    if (!this.token) {
       return;
     }
 
