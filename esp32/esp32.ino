@@ -51,6 +51,46 @@
 #endif
 
 // =============================================================================
+// Board Detection & Backlight
+// =============================================================================
+
+// Detect hardware board type by probing TCA9554 I2C expander (1.9" board only).
+// Returns BOARD_1_9 if TCA9554 found at 0x20, otherwise BOARD_1_47.
+int detectBoard() {
+  Wire.begin(TCA9554_SDA_PIN, TCA9554_SCL_PIN);
+  Wire.beginTransmission(TCA9554_I2C_ADDR);
+  bool found = (Wire.endTransmission() == 0);
+  if (!found) {
+    Wire.end();  // Release GPIO22/23 so GPIO22 can be used as PWM backlight
+  }
+  int board = found ? BOARD_1_9 : BOARD_1_47;
+  Serial.printf("{\"board\":\"%s\",\"detect\":\"%s\"}\n",
+    board == BOARD_1_9 ? "1.9" : "1.47",
+    found ? "tca9554_found" : "no_tca9554");
+  return board;
+}
+
+// Initialize backlight based on board type.
+// BOARD_1_47: LovyanGFX PWM (setBrightness).
+// BOARD_1_9:  TCA9554 I2C — configure all pins as output, set all HIGH.
+void initBacklight(int boardType) {
+  if (boardType == BOARD_1_9) {
+    // TCA9554 config register (0x03): 0x00 = all pins output
+    Wire.beginTransmission(TCA9554_I2C_ADDR);
+    Wire.write(0x03);
+    Wire.write(0x00);
+    Wire.endTransmission();
+    // TCA9554 output register (0x01): 0xFF = all pins HIGH (backlight on)
+    Wire.beginTransmission(TCA9554_I2C_ADDR);
+    Wire.write(0x01);
+    Wire.write(0xFF);
+    Wire.endTransmission();
+  } else {
+    tft.setBrightness(BACKLIGHT_NORMAL);
+  }
+}
+
+// =============================================================================
 // setup() & loop()
 // =============================================================================
 
