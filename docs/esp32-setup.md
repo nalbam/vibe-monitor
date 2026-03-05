@@ -9,6 +9,7 @@ VibeMon ESP32 devices support automatic WiFi and WebSocket token configuration t
 1. **Flash Firmware**
 ```bash
 cp credentials.h.example credentials.h
+# Edit credentials.h: uncomment BOARD_TYPE for your board (BOARD_1_47 or BOARD_1_9)
 # Flash to ESP32 (WiFi and WebSocket enabled by default)
 ```
 
@@ -91,11 +92,13 @@ Credentials are stored in ESP32's **NVS (Non-Volatile Storage)**:
 # 1. Copy credentials template
 cp credentials.h.example credentials.h
 
-# 2. Flash firmware (USE_WIFI and USE_WEBSOCKET enabled by default)
+# 2. Set BOARD_TYPE (uncomment BOARD_1_47 or BOARD_1_9)
 
-# 3. Power on device → Automatically enters provisioning mode
+# 3. Flash firmware (USE_WIFI and USE_WEBSOCKET enabled by default)
 
-# 4. Connect to VibeMon-Setup and configure via web
+# 4. Power on device → Automatically enters provisioning mode
+
+# 5. Connect to VibeMon-Setup and configure via web
 ```
 
 ### Option 2: Hardcoded Credentials
@@ -110,6 +113,8 @@ cp credentials.h.example credentials.h
 #define WIFI_SSID "MyNetwork"
 #define WIFI_PASSWORD "MyPassword"
 #define WS_TOKEN "vbm-secret-token"  // Optional
+
+#define BOARD_TYPE BOARD_1_47  // or BOARD_1_9
 ```
 
 These are used as **defaults** if no saved credentials exist.
@@ -265,20 +270,20 @@ See [API Reference](api.md) for full request/response details.
 
 ```cpp
 void setup() {
-  // Load WiFi credentials from NVS
+  // Load WiFi credentials from NVS (fallback to credentials.h defines)
   loadWiFiCredentials();
 
   if (strlen(wifiSSID) == 0) {
     // No credentials → Start provisioning
     startProvisioningMode();
   } else {
-    // Try to connect
+    // Try to connect (3 rounds × 20 attempts)
     WiFi.begin(wifiSSID, wifiPassword);
 
-    if (connection fails) {
-      // Clear NVS and restart provisioning
-      clearCredentials();
-      ESP.restart();
+    if (connection fails after all retries) {
+      // Enter provisioning mode directly
+      // Saved credentials are preserved for retry
+      startProvisioningMode();
     }
   }
 }
