@@ -184,6 +184,10 @@ void transitionToState(AppState newState, bool resetTimer = true) {
   needsRedraw = true;
   dirtyCharacter = true;
   dirtyStatus = true;
+
+#ifdef ALERT_PIN
+  digitalWrite(ALERT_PIN, (newState == STATE_ALERT) ? HIGH : LOW);
+#endif
 }
 
 // Check state timeouts for auto-transitions

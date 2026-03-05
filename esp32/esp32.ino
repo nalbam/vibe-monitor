@@ -59,6 +59,11 @@ void setup() {
   // Reduce CPU frequency to 80MHz (sufficient for animation/WiFi, reduces heat)
   setCpuFrequencyMhz(80);
 
+#ifdef ALERT_PIN
+  pinMode(ALERT_PIN, OUTPUT);
+  digitalWrite(ALERT_PIN, LOW);
+#endif
+
   // Load settings from persistent storage
   preferences.begin("vibemon", true);  // Read-only mode
   lockMode = preferences.getInt("lockMode", LOCK_MODE_ON_THINKING);
