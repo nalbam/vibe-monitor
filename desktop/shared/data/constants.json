@@ -61,7 +61,7 @@
 
   "ACTIVE_STATES": ["thinking", "planning", "working", "notification", "packing", "alert"],
 
-  "VALID_STATES": ["start", "idle", "thinking", "planning", "working", "packing", "notification", "sleep", "done", "alert"],
+  "VALID_STATES": ["start", "idle", "thinking", "planning", "working", "packing", "notification", "done", "sleep", "alert"],
 
   "CHARACTER_NAMES": ["apto", "clawd", "kiro", "claw"],
 

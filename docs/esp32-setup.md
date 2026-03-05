@@ -199,8 +199,7 @@ The token is used for **authentication** when connecting to VibeMon WebSocket se
 **What happens:**
 1. Device attempts to connect with provided credentials
 2. If connection fails after 3 rounds of 20 attempts (60 total)
-3. Credentials automatically cleared from NVS
-4. Device reboots into provisioning mode
+3. Device enters provisioning mode directly (saved credentials are preserved for retry)
 
 **Check:**
 - Correct WiFi password
