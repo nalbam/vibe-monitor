@@ -1,6 +1,7 @@
 /*
  * VibeMon
- * ESP32-C6-LCD-1.47 (172x320, ST7789V2)
+ * ESP32-C6 LCD (172x320 / 170x320, ST7789V2)
+ * Supports: ESP32-C6-LCD-1.47 and ESP32-C6-LCD-1.9 (auto-detected)
  *
  * Pixel art character (128x128) with animated states
  * USB Serial + HTTP support

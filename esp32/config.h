@@ -9,7 +9,7 @@
 // Version string
 #define VERSION "v1.9.0"
 
-// Screen size
+// Screen size (layout uses 1.47" dimensions; 1.9" board offset handled in LGFX configure())
 #define SCREEN_WIDTH  172
 #define SCREEN_HEIGHT 320
 
