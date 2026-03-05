@@ -36,18 +36,18 @@ When the device has no saved WiFi credentials, it automatically enters **Provisi
 ```
 ┌─────────────────────────────────────────┐
 │  No WiFi credentials detected           │
-│         ↓                                │
+│         ↓                               │
 │  Create Access Point                    │
 │  - SSID: VibeMon-Setup                  │
 │  - Password: vibemon123                 │
 │  - IP: 192.168.4.1                      │
-│         ↓                                │
+│         ↓                               │
 │  DNS Server (Captive Portal)            │
-│         ↓                                │
+│         ↓                               │
 │  User connects & configures             │
-│         ↓                                │
+│         ↓                               │
 │  Save to NVS Flash → Reboot             │
-│         ↓                                │
+│         ↓                               │
 │  Connect to configured WiFi             │
 └─────────────────────────────────────────┘
 ```
@@ -118,25 +118,25 @@ These are used as **defaults** if no saved credentials exist.
 
 ### Provisioning Mode
 ```
-┌─────────────────────┐
-│  Setup Mode         │
-│  SSID: VibeMon-Setup│
-│  Password: vibemon123│
-│  IP: 192.168.4.1   │
-│                     │
-│  [Character]        │
-└─────────────────────┘
+┌────────────────────────┐
+│  Setup Mode            │
+│  SSID: VibeMon-Setup   │
+│  Password: vibemon123  │
+│  IP: 192.168.4.1       │
+│                        │
+│  [Character]           │
+└────────────────────────┘
 ```
 
 ### Normal Mode
 ```
-┌─────────────────────┐
-│  WiFi: OK           │
-│  IP: 192.168.1.42   │
-│                     │
-│  [Character]        │
-│  Status: working    │
-└─────────────────────┘
+┌────────────────────────┐
+│  WiFi: OK              │
+│  IP: 192.168.1.42      │
+│                        │
+│  [Character]           │
+│  Status: working       │
+└────────────────────────┘
 ```
 
 ## WiFi Management
