@@ -212,7 +212,15 @@ void drawStatus() {
   const CharacterGeometry* character = getCharacterByName(currentCharacter);
 
   if (needsRedraw) {
-    tft.setBrightness(currentState == STATE_SLEEP ? BACKLIGHT_SLEEP : BACKLIGHT_NORMAL);
+    if (g_boardType == BOARD_1_9) {
+      // 1.9" board: TCA9554 I2C backlight (binary on/off only)
+      Wire.beginTransmission(TCA9554_I2C_ADDR);
+      Wire.write(TCA9554_REG_OUTPUT);
+      Wire.write(currentState == STATE_SLEEP ? TCA9554_ALL_LOW : TCA9554_ALL_HIGH);
+      Wire.endTransmission();
+    } else {
+      tft.setBrightness(currentState == STATE_SLEEP ? BACKLIGHT_SLEEP : BACKLIGHT_NORMAL);
+    }
     tft.fillScreen(bgColor);
   }
 

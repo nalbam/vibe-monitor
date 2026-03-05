@@ -63,6 +63,11 @@
 #define TCA9554_I2C_ADDR  0x20
 #define TCA9554_SDA_PIN   22
 #define TCA9554_SCL_PIN   23
+#define TCA9554_REG_OUTPUT  0x01   // TCA9554 output register
+#define TCA9554_REG_CONFIG  0x03   // TCA9554 configuration register
+#define TCA9554_ALL_OUTPUT  0x00   // All pins = output
+#define TCA9554_ALL_HIGH    0xFF   // All pins HIGH (backlight on)
+#define TCA9554_ALL_LOW     0x00   // All pins LOW  (backlight off)
 
 // WiFi connection
 #define WIFI_CONNECT_ATTEMPTS  20  // Max connection attempts per round

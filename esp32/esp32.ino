@@ -76,16 +76,22 @@ int detectBoard() {
 // BOARD_1_9:  TCA9554 I2C — configure all pins as output, set all HIGH.
 void initBacklight(int boardType) {
   if (boardType == BOARD_1_9) {
-    // TCA9554 config register (0x03): 0x00 = all pins output
+    // TCA9554 config register: set all pins as output
     Wire.beginTransmission(TCA9554_I2C_ADDR);
-    Wire.write(0x03);
-    Wire.write(0x00);
-    Wire.endTransmission();
-    // TCA9554 output register (0x01): 0xFF = all pins HIGH (backlight on)
+    Wire.write(TCA9554_REG_CONFIG);
+    Wire.write(TCA9554_ALL_OUTPUT);
+    uint8_t err = Wire.endTransmission();
+    if (err != 0) {
+      Serial.printf("{\"error\":\"tca9554_config\",\"code\":%d}\n", err);
+    }
+    // TCA9554 output register: all pins HIGH (backlight on)
     Wire.beginTransmission(TCA9554_I2C_ADDR);
-    Wire.write(0x01);
-    Wire.write(0xFF);
-    Wire.endTransmission();
+    Wire.write(TCA9554_REG_OUTPUT);
+    Wire.write(TCA9554_ALL_HIGH);
+    err = Wire.endTransmission();
+    if (err != 0) {
+      Serial.printf("{\"error\":\"tca9554_output\",\"code\":%d}\n", err);
+    }
   } else {
     tft.setBrightness(BACKLIGHT_NORMAL);
   }
@@ -120,12 +126,12 @@ void setup() {
   }
 
   // Board detection and TFT init
-  int boardType = detectBoard();
-  tft.configure(boardType);
+  g_boardType = detectBoard();
+  tft.configure(g_boardType);
   tft.init();
   tft.setRotation(0);   // Portrait mode
   tft.setSwapBytes(true);  // Swap bytes for pushImage (ESP32 little-endian)
-  initBacklight(boardType);
+  initBacklight(g_boardType);
   tft.fillScreen(TFT_BLACK);
 
   // Initialize sprite buffer for character (128x128)
