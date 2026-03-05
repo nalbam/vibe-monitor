@@ -307,6 +307,31 @@ void setupWebSocket() {
 3. Use strong WebSocket tokens
 4. Consider enabling NVS encryption for production
 
+## Alert Light (Optional)
+
+Connect a physical alert light (e.g., warning beacon) to an available GPIO pin. The light turns ON when the device enters `alert` state and OFF when the state changes.
+
+### Wiring
+
+```
+ESP32 GPIO pin ──── Alert light (+)
+ESP32 GND      ──── Alert light (-)
+```
+
+> **Note:** ESP32-C6 GPIO output is 3.3V, max ~40mA. Ensure your light operates within these limits. For higher voltage lights (5V/12V/24V), use a relay module.
+
+### Configuration
+
+Add to `credentials.h`:
+
+```cpp
+#define ALERT_PIN 4
+```
+
+Any unused GPIO pin can be used. Pins already in use by the LCD: 6, 7, 14, 15, 21, 22.
+
+If `ALERT_PIN` is not defined, the feature is disabled and no extra code is compiled.
+
 ## Advanced Configuration
 
 ### Disable WiFi/WebSocket

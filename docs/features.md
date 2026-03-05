@@ -24,7 +24,7 @@ All characters use **image-based rendering** (128x128 PNG). Character is **auto-
 | `notification` | Yellow | ● ● + ? | Input? | User input needed |
 | `done` | Green | > < | Done! | Tool completed |
 | `sleep` | Navy | ─ ─ + Z | Zzz... | 5min inactivity |
-| `alert` | Red | ■ ■ + ! | Alert | Critical error/failure |
+| `alert` | Red | ■ ■ + ! | Alert | Critical error/failure (ESP32: triggers alert light if configured) |
 
 ### Working State Text
 
