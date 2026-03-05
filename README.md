@@ -30,12 +30,12 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 
 | Platform | Description | Best For |
 |----------|-------------|----------|
-| **ESP32 Hardware** | Dedicated LCD display (172×320 or 170×320, auto-detected) | Primary, always-on desk companion |
+| **ESP32 Hardware** | Dedicated LCD display (172×320 or 170×320, selected via `BOARD_TYPE`) | Primary, always-on desk companion |
 | **Desktop App** | Electron app with system tray | Alternative for non-hardware users |
 
 ### ESP32 Quick Start
 
-1. Flash firmware to ESP32-C6-LCD-1.47 or ESP32-C6-LCD-1.9 (board auto-detected)
+1. Set `BOARD_TYPE` in `credentials.h` and flash firmware (ESP32-C6-LCD-1.47 or 1.9)
 2. Device creates WiFi AP: `VibeMon-Setup` (password: `vibemon123`)
 3. Connect and configure WiFi + WebSocket token via web interface
 4. Device connects and displays AI assistant status
