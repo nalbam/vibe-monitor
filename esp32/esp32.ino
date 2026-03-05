@@ -118,11 +118,13 @@ void setup() {
     preferences.end();
   }
 
-  // TFT init
+  // Board detection and TFT init
+  int boardType = detectBoard();
+  tft.configure(boardType);
   tft.init();
-  tft.setRotation(0);  // Portrait mode
+  tft.setRotation(0);   // Portrait mode
   tft.setSwapBytes(true);  // Swap bytes for pushImage (ESP32 little-endian)
-  tft.setBrightness(BACKLIGHT_NORMAL);
+  initBacklight(boardType);
   tft.fillScreen(TFT_BLACK);
 
   // Initialize sprite buffer for character (128x128)
