@@ -55,6 +55,15 @@
 #define LOCK_MODE_ON_THINKING 1
 #define MAX_PROJECTS 10
 
+// Board types (auto-detected at runtime)
+#define BOARD_1_47  0   // ESP32-C6-LCD-1.47  (172x320, GPIO22 PWM backlight)
+#define BOARD_1_9   1   // ESP32-C6-LCD-1.9   (170x320, TCA9554 I2C backlight)
+
+// TCA9554 I2C GPIO expander (present on BOARD_1_9 only)
+#define TCA9554_I2C_ADDR  0x20
+#define TCA9554_SDA_PIN   22
+#define TCA9554_SCL_PIN   23
+
 // WiFi connection
 #define WIFI_CONNECT_ATTEMPTS  20  // Max connection attempts per round
 #define WIFI_CONNECT_DELAY_MS 500  // Delay between each attempt (ms)

@@ -12,6 +12,7 @@
 
 // Use LovyanGFX instead of TFT_eSPI for ESP32-C6 compatibility
 #include "TFT_Compat.h"
+#include <Wire.h>  // I2C for board detection (TCA9554 on 1.9" board)
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
