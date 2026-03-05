@@ -241,9 +241,17 @@ esptool.py --port /dev/ttyUSB0 erase_region 0x9000 0x6000
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/wifi-reset` | POST | Clear credentials, restart provisioning |
 | `/status` | POST | Update device status |
+| `/status` | GET | Get current status |
 | `/health` | GET | Health check |
+| `/lock` | POST | Lock to a specific project |
+| `/unlock` | POST | Unlock project |
+| `/lock-mode` | GET | Get current lock mode |
+| `/lock-mode` | POST | Set lock mode |
+| `/reboot` | POST | Reboot device |
+| `/wifi-reset` | POST | Clear credentials, restart provisioning |
+
+See [API Reference](api.md) for full request/response details.
 
 ### Signal Strength Indicators
 
