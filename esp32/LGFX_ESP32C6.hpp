@@ -2,7 +2,7 @@
  * LovyanGFX configuration for ESP32-C6 LCD boards
  * Supports:
  *   BOARD_1_47 — ESP32-C6-LCD-1.47  ST7789V2 172x320 (GPIO22 PWM backlight)
- *   BOARD_1_9  — ESP32-C6-LCD-1.9   ST7789V2 170x320 (TCA9554 I2C backlight)
+ *   BOARD_1_9  — ESP32-C6-LCD-1.9   ST7789V2 170x320 (GPIO15 direct backlight, active-low)
  */
 
 #ifndef LGFX_ESP32C6_HPP
@@ -26,7 +26,7 @@ public:
       auto cfg = _bus_instance.config();
       cfg.spi_host     = SPI2_HOST;
       cfg.spi_mode     = 0;
-      cfg.freq_write   = 40000000;
+      cfg.freq_write   = (boardType == BOARD_1_9) ? 20000000 : 40000000;
       cfg.freq_read    = 16000000;
       cfg.spi_3wire    = false;
       cfg.use_lock     = true;
@@ -77,7 +77,7 @@ public:
       _panel_instance.config(cfg);
     }
 
-    // --- Backlight (1.47" only — 1.9" uses TCA9554 I2C, handled in initBacklight()) ---
+    // --- Backlight (1.47" only — 1.9" uses direct GPIO15, handled in initBacklight()) ---
     if (boardType == BOARD_1_47) {
       auto cfg = _light_instance.config();
       cfg.pin_bl      = 22;

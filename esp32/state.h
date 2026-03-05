@@ -40,8 +40,8 @@ bool needsRedraw = true;
 int lastCharX = CHAR_X_BASE;  // Track last character X for efficient redraw
 int lastCharY = CHAR_Y_BASE;  // Track last character Y for efficient redraw
 
-// Detected board type (set in setup(), used throughout)
-int g_boardType = BOARD_1_47;
+// Board type (set from BOARD_TYPE in setup(), used throughout)
+int g_boardType = BOARD_TYPE;
 
 // Project lock
 char projectList[MAX_PROJECTS][32];  // List of incoming projects

@@ -7,12 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Real-time status monitor for AI assistants (Claude Code, Kiro, OpenClaw) with pixel art character.
 
 **Platforms:**
-- ESP32 Hardware (172×320 or 170×320 LCD, auto-detected) - Primary, always-on desk companion
+- ESP32 Hardware (172×320 or 170×320 LCD, selected via BOARD_TYPE) - Primary, always-on desk companion
 - Desktop App (Electron) - Alternative for non-hardware users
 
-**Supported ESP32 boards (auto-detected at boot):**
+**Supported ESP32 boards (compile-time selection via `BOARD_TYPE` in `credentials.h`):**
 - ESP32-C6-LCD-1.47 — ST7789V2, 172×320, GPIO22 PWM backlight
-- ESP32-C6-LCD-1.9  — ST7789V2, 170×320, TCA9554 I2C backlight (touch optional)
+- ESP32-C6-LCD-1.9  — ST7789V2, 170×320, GPIO15 direct backlight active-low (touch optional)
 
 ## Development Environment
 
@@ -64,7 +64,7 @@ npm start
 - **Click to focus terminal**: Click window to switch to corresponding iTerm2 or Ghostty tab (macOS only, uses `terminalId` from `ITERM_SESSION_ID` or `GHOSTTY_PID`)
 - **Open at Login**: Configurable via system tray menu; uses Electron `app.setLoginItemSettings()` to auto-start on macOS login
 - **Alert light (ESP32)**: Optional GPIO output for physical alert light; define `ALERT_PIN` in `credentials.h` to enable; HIGH during `alert` state, LOW otherwise; use GPIO2 (safe for both boards) — GPIO4 conflicts with 1.9" board MOSI
-- **Dual-board auto-detect**: `detectBoard()` in `setup()` probes TCA9554 I2C expander (addr 0x20, SDA=22, SCL=23) — found→BOARD_1_9, not found→BOARD_1_47; configures SPI pins, panel offset, and backlight accordingly; 1.9" backlight is binary on/off (no PWM dimming)
+- **Board selection**: Set `#define BOARD_TYPE BOARD_1_9` or `BOARD_1_47` in `credentials.h`; configures SPI pins, panel offset, and backlight at compile time; 1.9" backlight is GPIO15 direct (active-low: LOW=on, HIGH=off); 1.47" backlight is GPIO22 PWM
 - **State-based always on top**: Active states (thinking, planning, working, packing, notification, alert) keep window on top; inactive states (start, idle, done, sleep) disable always on top to reduce screen obstruction
 - **Always on Top Modes**: `active-only` (default), `all`, `disabled` - configurable via system tray menu
 - **Always on Top**: Active states enable on top immediately; inactive states disable on top immediately (no grace period, prevents focus stealing)

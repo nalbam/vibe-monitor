@@ -342,7 +342,7 @@ Any unused GPIO pin can be used. Recommended: **GPIO2** (safe for both boards).
 > | Board | LCD pins in use (do NOT use for ALERT_PIN) |
 > |-------|---------------------------------------------|
 > | 1.47" | 6 (MOSI), 7 (SCK), 14 (CS), 15 (DC), 21 (RST), 22 (BL) |
-> | 1.9"  | 4 (MOSI), 5 (SCK), 6 (DC), 7 (CS), 14 (RST), 22 (SDA), 23 (SCL) |
+> | 1.9"  | 4 (MOSI), 5 (SCK), 6 (DC), 7 (CS), 14 (RST), 15 (BL) |
 >
 > GPIO4 is safe on the 1.47" board but conflicts with 1.9" MOSI — do not use it if supporting both boards.
 
@@ -350,23 +350,22 @@ If `ALERT_PIN` is not defined, the feature is disabled and no extra code is comp
 
 ## Supported Hardware
 
-The same firmware binary supports two ESP32-C6 LCD boards. The board is **auto-detected at boot** — no configuration required.
+Two ESP32-C6 LCD boards are supported. Set `BOARD_TYPE` in `credentials.h` to match your hardware:
 
-| Board | LCD | Resolution | Backlight | Serial log |
-|-------|-----|------------|-----------|------------|
-| ESP32-C6-LCD-1.47 | ST7789V2 | 172×320 | GPIO22 PWM (dimmable) | `{"board":"1.47","detect":"no_tca9554"}` |
-| ESP32-C6-LCD-1.9  | ST7789V2 | 170×320 | TCA9554 I2C (on/off) | `{"board":"1.9","detect":"tca9554_found"}` |
+```cpp
+#define BOARD_TYPE BOARD_1_47   // ESP32-C6-LCD-1.47 (default)
+#define BOARD_TYPE BOARD_1_9    // ESP32-C6-LCD-1.9
+```
 
-### How Detection Works
-
-At boot, `setup()` probes I2C address `0x20` (TCA9554 GPIO expander, present only on 1.9" board):
-
-- **TCA9554 found** → 1.9" board: SPI pins 4/5/6/7/14, TCA9554 backlight via I2C
-- **TCA9554 not found** → 1.47" board: SPI pins 6/7/14/15/21, GPIO22 PWM backlight
+| Board | LCD | Resolution | Backlight | SPI Freq | SPI Pins (MOSI/SCK/DC/CS/RST) |
+|-------|-----|------------|-----------|----------|-------------------------------|
+| ESP32-C6-LCD-1.47 | ST7789V2 | 172×320 | GPIO22 PWM | 40MHz | 6/7/15/14/21 |
+| ESP32-C6-LCD-1.9  | ST7789V2 | 170×320 | GPIO15 direct (active-low) | 20MHz | 4/5/6/7/14 |
 
 ### 1.9" Board Notes
 
-- Backlight is **binary (on/off only)** — no PWM dimming. In sleep state, backlight turns completely off instead of dimming.
+- Backlight uses **GPIO15 direct GPIO** (active-low: LOW=on, HIGH=off). In sleep state, backlight turns completely off.
+- SPI frequency: 20MHz (matching Waveshare demo; 1.47" board uses 40MHz).
 - Touch (CST816) and IMU (QMI8658) sensors are present on the board but not used by VibeMon firmware.
 
 ## Advanced Configuration

@@ -1,7 +1,7 @@
 /*
  * VibeMon
  * ESP32-C6 LCD (172x320 / 170x320, ST7789V2)
- * Supports: ESP32-C6-LCD-1.47 and ESP32-C6-LCD-1.9 (auto-detected)
+ * Supports: ESP32-C6-LCD-1.47 and ESP32-C6-LCD-1.9 (selected via BOARD_TYPE)
  *
  * Pixel art character (128x128) with animated states
  * USB Serial + HTTP support
@@ -13,7 +13,6 @@
 
 // Use LovyanGFX instead of TFT_eSPI for ESP32-C6 compatibility
 #include "TFT_Compat.h"
-#include <Wire.h>  // I2C for board detection (TCA9554 on 1.9" board)
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
@@ -52,46 +51,16 @@
 #endif
 
 // =============================================================================
-// Board Detection & Backlight
+// Backlight
 // =============================================================================
 
-// Detect hardware board type by probing TCA9554 I2C expander (1.9" board only).
-// Returns BOARD_1_9 if TCA9554 found at 0x20, otherwise BOARD_1_47.
-int detectBoard() {
-  Wire.begin(TCA9554_SDA_PIN, TCA9554_SCL_PIN);
-  Wire.beginTransmission(TCA9554_I2C_ADDR);
-  bool found = (Wire.endTransmission() == 0);
-  if (!found) {
-    Wire.end();  // Release GPIO22/23 so GPIO22 can be used as PWM backlight
-  }
-  int board = found ? BOARD_1_9 : BOARD_1_47;
-  Serial.printf("{\"board\":\"%s\",\"detect\":\"%s\"}\n",
-    board == BOARD_1_9 ? "1.9" : "1.47",
-    found ? "tca9554_found" : "no_tca9554");
-  return board;
-}
-
-// Initialize backlight based on board type.
-// BOARD_1_47: LovyanGFX PWM (setBrightness).
-// BOARD_1_9:  TCA9554 I2C — configure all pins as output, set all HIGH.
+// Initialize backlight based on board type (set at compile time via BOARD_TYPE).
+// BOARD_1_47: LovyanGFX PWM on GPIO22 (setBrightness).
+// BOARD_1_9:  Direct GPIO15 (active-low: LOW=on, HIGH=off) — matches Waveshare demo.
 void initBacklight(int boardType) {
   if (boardType == BOARD_1_9) {
-    // TCA9554 config register: set all pins as output
-    Wire.beginTransmission(TCA9554_I2C_ADDR);
-    Wire.write(TCA9554_REG_CONFIG);
-    Wire.write(TCA9554_ALL_OUTPUT);
-    uint8_t err = Wire.endTransmission();
-    if (err != 0) {
-      Serial.printf("{\"error\":\"tca9554_config\",\"code\":%d}\n", err);
-    }
-    // TCA9554 output register: all pins HIGH (backlight on)
-    Wire.beginTransmission(TCA9554_I2C_ADDR);
-    Wire.write(TCA9554_REG_OUTPUT);
-    Wire.write(TCA9554_ALL_HIGH);
-    err = Wire.endTransmission();
-    if (err != 0) {
-      Serial.printf("{\"error\":\"tca9554_output\",\"code\":%d}\n", err);
-    }
+    pinMode(BACKLIGHT_PIN_1_9, OUTPUT);
+    digitalWrite(BACKLIGHT_PIN_1_9, LOW);
   } else {
     tft.setBrightness(BACKLIGHT_NORMAL);
   }
@@ -125,8 +94,11 @@ void setup() {
     preferences.end();
   }
 
-  // Board detection and TFT init
-  g_boardType = detectBoard();
+  // Board type from compile-time BOARD_TYPE (set in credentials.h)
+  g_boardType = BOARD_TYPE;
+  Serial.printf("{\"board\":\"%s\",\"version\":\"%s\"}\n",
+    g_boardType == BOARD_1_9 ? "1.9" : "1.47", VERSION);
+
   tft.configure(g_boardType);
   tft.init();
   tft.setRotation(0);   // Portrait mode

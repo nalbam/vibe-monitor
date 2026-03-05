@@ -55,19 +55,14 @@
 #define LOCK_MODE_ON_THINKING 1
 #define MAX_PROJECTS 10
 
-// Board types (auto-detected at runtime)
+// Board types (selected at compile time via BOARD_TYPE in credentials.h)
 #define BOARD_1_47  0   // ESP32-C6-LCD-1.47  (172x320, GPIO22 PWM backlight)
-#define BOARD_1_9   1   // ESP32-C6-LCD-1.9   (170x320, TCA9554 I2C backlight)
+#define BOARD_1_9   1   // ESP32-C6-LCD-1.9   (170x320, GPIO15 direct backlight, active-low)
 
-// TCA9554 I2C GPIO expander (present on BOARD_1_9 only)
-#define TCA9554_I2C_ADDR  0x20
-#define TCA9554_SDA_PIN   22
-#define TCA9554_SCL_PIN   23
-#define TCA9554_REG_OUTPUT  0x01   // TCA9554 output register
-#define TCA9554_REG_CONFIG  0x03   // TCA9554 configuration register
-#define TCA9554_ALL_OUTPUT  0x00   // All pins = output
-#define TCA9554_ALL_HIGH    0xFF   // All pins HIGH (backlight on)
-#define TCA9554_ALL_LOW     0x00   // All pins LOW  (backlight off)
+// Default board type if not set in credentials.h
+#ifndef BOARD_TYPE
+#define BOARD_TYPE BOARD_1_47
+#endif
 
 // WiFi connection
 #define WIFI_CONNECT_ATTEMPTS  20  // Max connection attempts per round
@@ -75,8 +70,9 @@
 #define WIFI_CONNECT_RETRIES    3  // Number of full rounds before giving up
 #define WIFI_FAIL_RESTART_MS 2000  // Delay before reboot on connection failure (ms)
 
-// Backlight brightness (0-255, PWM on pin 22)
-#define BACKLIGHT_NORMAL  255
+// Backlight
+#define BACKLIGHT_PIN_1_9  15   // 1.9" board: GPIO15 direct (LOW=on, HIGH=off)
+#define BACKLIGHT_NORMAL  255   // 1.47" board: PWM brightness (0-255)
 #define BACKLIGHT_SLEEP    64
 
 // Loop delays per state category (ms)
