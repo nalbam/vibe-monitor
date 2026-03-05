@@ -7,8 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Real-time status monitor for AI assistants (Claude Code, Kiro, OpenClaw) with pixel art character.
 
 **Platforms:**
-- ESP32 Hardware (172×320 LCD) - Primary, always-on desk companion
+- ESP32 Hardware (172×320 or 170×320 LCD, auto-detected) - Primary, always-on desk companion
 - Desktop App (Electron) - Alternative for non-hardware users
+
+**Supported ESP32 boards (auto-detected at boot):**
+- ESP32-C6-LCD-1.47 — ST7789V2, 172×320, GPIO22 PWM backlight
+- ESP32-C6-LCD-1.9  — ST7789V2, 170×320, TCA9554 I2C backlight (touch optional)
 
 ## Development Environment
 
@@ -36,7 +40,7 @@ npm start
 ```
 
 ### Key Files
-- **ESP32**: `esp32.ino` (main orchestrator), `config.h` (constants), `sprites.h` (rendering), `ui_elements.h` (status text, icons), `state.h` (globals, timers), `display.h` (screen drawing), `project_lock.h` (lock logic), `input.h` (JSON parsing), `wifi_manager.h` (WiFi/HTTP/WebSocket), `wifi_portal.h` (captive portal HTML)
+- **ESP32**: `esp32.ino` (main orchestrator), `config.h` (constants), `LGFX_ESP32C6.hpp` (dual-board display driver, `configure(boardType)` called before `init()`), `sprites.h` (rendering), `ui_elements.h` (status text, icons), `state.h` (globals, timers, `g_boardType`), `display.h` (screen drawing), `project_lock.h` (lock logic), `input.h` (JSON parsing), `wifi_manager.h` (WiFi/HTTP/WebSocket), `wifi_portal.h` (captive portal HTML)
 - **Desktop**: `main.js` (entry point), `modules/*.cjs` (http-server, http-utils, multi-window-manager, state-manager, tray-manager, validators, ws-client), `renderer.js` + `index.html` (renderer)
 - **Shared**: `desktop/shared/` folder (config, constants)
 - **Config Data**: `desktop/shared/data/constants.json` (single source of truth - window dimensions, animation settings, limits)
@@ -59,7 +63,8 @@ npm start
 - **Window close timer**: Desktop window auto-closes after 10min in sleep state; reopens on new status
 - **Click to focus terminal**: Click window to switch to corresponding iTerm2 or Ghostty tab (macOS only, uses `terminalId` from `ITERM_SESSION_ID` or `GHOSTTY_PID`)
 - **Open at Login**: Configurable via system tray menu; uses Electron `app.setLoginItemSettings()` to auto-start on macOS login
-- **Alert light (ESP32)**: Optional GPIO output for physical alert light; define `ALERT_PIN` in `credentials.h` to enable; HIGH during `alert` state, LOW otherwise
+- **Alert light (ESP32)**: Optional GPIO output for physical alert light; define `ALERT_PIN` in `credentials.h` to enable; HIGH during `alert` state, LOW otherwise; use GPIO2 (safe for both boards) — GPIO4 conflicts with 1.9" board MOSI
+- **Dual-board auto-detect**: `detectBoard()` in `setup()` probes TCA9554 I2C expander (addr 0x20, SDA=22, SCL=23) — found→BOARD_1_9, not found→BOARD_1_47; configures SPI pins, panel offset, and backlight accordingly; 1.9" backlight is binary on/off (no PWM dimming)
 - **State-based always on top**: Active states (thinking, planning, working, packing, notification, alert) keep window on top; inactive states (start, idle, done, sleep) disable always on top to reduce screen obstruction
 - **Always on Top Modes**: `active-only` (default), `all`, `disabled` - configurable via system tray menu
 - **Always on Top**: Active states enable on top immediately; inactive states disable on top immediately (no grace period, prevents focus stealing)

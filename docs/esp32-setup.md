@@ -325,12 +325,42 @@ ESP32 GND      ──── Alert light (-)
 Add to `credentials.h`:
 
 ```cpp
-#define ALERT_PIN 4
+#define ALERT_PIN 2
 ```
 
-Any unused GPIO pin can be used. Pins already in use by the LCD: 6, 7, 14, 15, 21, 22.
+Any unused GPIO pin can be used. Recommended: **GPIO2** (safe for both boards).
+
+> **⚠️ Pin conflicts by board:**
+>
+> | Board | LCD pins in use (do NOT use for ALERT_PIN) |
+> |-------|---------------------------------------------|
+> | 1.47" | 6 (MOSI), 7 (SCK), 14 (CS), 15 (DC), 21 (RST), 22 (BL) |
+> | 1.9"  | 4 (MOSI), 5 (SCK), 6 (DC), 7 (CS), 14 (RST), 22 (SDA), 23 (SCL) |
+>
+> GPIO4 is safe on the 1.47" board but conflicts with 1.9" MOSI — do not use it if supporting both boards.
 
 If `ALERT_PIN` is not defined, the feature is disabled and no extra code is compiled.
+
+## Supported Hardware
+
+The same firmware binary supports two ESP32-C6 LCD boards. The board is **auto-detected at boot** — no configuration required.
+
+| Board | LCD | Resolution | Backlight | Serial log |
+|-------|-----|------------|-----------|------------|
+| ESP32-C6-LCD-1.47 | ST7789V2 | 172×320 | GPIO22 PWM (dimmable) | `{"board":"1.47","detect":"no_tca9554"}` |
+| ESP32-C6-LCD-1.9  | ST7789V2 | 170×320 | TCA9554 I2C (on/off) | `{"board":"1.9","detect":"tca9554_found"}` |
+
+### How Detection Works
+
+At boot, `setup()` probes I2C address `0x20` (TCA9554 GPIO expander, present only on 1.9" board):
+
+- **TCA9554 found** → 1.9" board: SPI pins 4/5/6/7/14, TCA9554 backlight via I2C
+- **TCA9554 not found** → 1.47" board: SPI pins 6/7/14/15/21, GPIO22 PWM backlight
+
+### 1.9" Board Notes
+
+- Backlight is **binary (on/off only)** — no PWM dimming. In sleep state, backlight turns completely off instead of dimming.
+- Touch (CST816) and IMU (QMI8658) sensors are present on the board but not used by VibeMon firmware.
 
 ## Advanced Configuration
 
