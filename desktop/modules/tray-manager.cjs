@@ -2,7 +2,7 @@
  * System tray management for Vibe Monitor
  */
 
-const { Tray, Menu, nativeImage, BrowserWindow, ipcMain } = require('electron');
+const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, shell } = require('electron');
 const { createCanvas } = require('canvas');
 const fs = require('fs');
 const path = require('path');
@@ -618,6 +618,10 @@ class TrayManager {
       {
         label: `Version: ${this.app.getVersion()}`,
         enabled: false
+      },
+      {
+        label: 'Docs',
+        click: () => shell.openExternal('https://vibemon.io/docs')
       },
       { type: 'separator' },
       {
