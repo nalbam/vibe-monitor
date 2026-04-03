@@ -192,6 +192,7 @@ When running Claude Code in multiple terminal tabs, clicking a VibeMon window au
 - Open at Login toggle
 - Project lock (in single mode)
 - Claude Stats
+- Docs (opens vibemon.io/docs in browser)
 - Quit
 
 ## Build
