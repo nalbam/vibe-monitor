@@ -26,14 +26,17 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 | **Model** | Active model | `Opus 4.5`, `Sonnet` |
 | **Memory** | Context window usage | `45%` |
 
-## Platforms
+## Quick Start
 
-| Platform | Description | Best For |
-|----------|-------------|----------|
-| **ESP32 Hardware** | Dedicated LCD display (172×320 or 170×320, selected via `BOARD_TYPE`) | Primary, always-on desk companion |
-| **Desktop App** | Electron app with system tray | Alternative for non-hardware users |
+### Desktop App
 
-### ESP32 Quick Start
+```bash
+npx vibemon
+```
+
+That's it! The app launches in the system tray and listens on `http://127.0.0.1:19280`.
+
+### ESP32 Hardware
 
 1. Set `BOARD_TYPE` in `credentials.h` and flash firmware (ESP32-C6-LCD-1.47 or 1.9)
 2. Device creates WiFi AP: `VibeMon-Setup` (password: `vibemon123`)
@@ -46,17 +49,20 @@ See [ESP32 Setup Guide](docs/esp32-setup.md) for detailed instructions.
 
 ![VibeMon Demo](images/demo.gif)
 
+## Platforms
+
+| Platform | Description | Best For |
+|----------|-------------|----------|
+| **ESP32 Hardware** | Dedicated LCD display (172×320 or 170×320, selected via `BOARD_TYPE`) | Primary, always-on desk companion |
+| **Desktop App** | Electron app with system tray | Alternative for non-hardware users |
+
 ## Documentation
 
-**Setup & Configuration:**
-- [ESP32 Setup Guide](docs/esp32-setup.md) - WiFi provisioning, WebSocket token configuration
-- [Desktop App](desktop/README.md) - npm package installation and usage
-
-**Reference:**
 - [Features](docs/features.md) - States, animations, window modes
 - [API Reference](docs/api.md) - Complete HTTP API documentation
+- [ESP32 Setup Guide](docs/esp32-setup.md) - WiFi provisioning, WebSocket token configuration
 
-For detailed installation instructions, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
+For full documentation, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
 
 ## States
 
@@ -145,35 +151,18 @@ python3 ~/.claude/hooks/vibemon.py --unlock
 
 See [Features](docs/features.md) for lock modes and CLI commands.
 
-## Desktop App Features
-
-- **Frameless window** - Clean floating design
-- **Always on Top** - Stays visible above other windows
-- **System Tray** - Quick access from menubar
-- **Multi-window** - One window per project (up to 5)
-- **Snap to corner** - Auto-snaps near screen edges
-- **Click to focus** - Switch to iTerm2/Ghostty tab (macOS)
-- **Open at Login** - Auto-start on macOS login (configurable via tray menu)
-
 ## Troubleshooting
-
-### Desktop App
 
 | Issue | Solution |
 |-------|----------|
 | Window not appearing | Check system tray, or run `curl -X POST http://127.0.0.1:19280/show` |
 | Port already in use | Check with `lsof -i :19280` |
 | Hook not working | Verify Python 3: `python3 --version` |
-
-### ESP32 Hardware
-
-| Issue | Solution |
-|-------|----------|
 | Captive portal doesn't open | Navigate to `http://192.168.4.1` manually |
 | WiFi connection fails | Check password, ensure 2.4GHz network |
 | Device won't enter setup mode | Send `POST /wifi-reset` to clear credentials |
 
-See [ESP32 Setup Guide](docs/esp32-setup.md) for detailed troubleshooting.
+See [Features](docs/features.md) for desktop app details, [ESP32 Setup Guide](docs/esp32-setup.md) for hardware troubleshooting.
 
 ## Version History
 

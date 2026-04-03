@@ -10,6 +10,14 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 
 ![Demo](https://raw.githubusercontent.com/nalbam/vibemon-app/main/images/demo.gif)
 
+## Quick Start
+
+```bash
+npx vibemon
+```
+
+The app launches in the system tray and listens on `http://127.0.0.1:19280`.
+
 ## Supported Tools
 
 - **[Claude Code](https://claude.ai/code)** - Anthropic's AI coding assistant
@@ -22,18 +30,19 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 - **Always on Top** - Always displayed above other windows
 - **System Tray** - Quick control from the menu bar
 - **Multi-window** - One window per project (up to 5)
+- **Snap to Corner** - Auto-snaps near screen edges
+- **Click to Focus** - Switch to iTerm2/Ghostty tab (macOS)
+- **Open at Login** - Auto-start on macOS login
 - **HTTP API** - Easy integration with hooks
-- **Auto-launch** - Hook scripts auto-start via `npx vibemon`
 
 ## Documentation
 
-For installation and setup instructions, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
+For full documentation, visit **[vibemon.io/docs](https://vibemon.io/docs)**.
 
 ## Links
 
 - [Homepage](https://nalbam.github.io/vibemon-app/)
 - [GitHub Repository](https://github.com/nalbam/vibemon-app)
-- [Full Documentation](https://github.com/nalbam/vibemon-app#readme)
 
 ## License
 
