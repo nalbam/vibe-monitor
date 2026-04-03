@@ -12,6 +12,7 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 
 | Tool | Description |
 |------|-------------|
+| **Apto** | Personal AI coding assistant |
 | **[Claude Code](https://claude.ai/code)** | Anthropic's official AI coding assistant |
 | **[Kiro](https://kiro.dev/)** | AWS's AI coding assistant |
 | **[OpenClaw](https://openclaw.ai/)** | Open-source computer use agent |
@@ -166,6 +167,7 @@ See [Features](docs/features.md) for desktop app details, [ESP32 Setup Guide](do
 
 ## Version History
 
+- **v1.9.1**: Docs tray menu shortcut, documentation improvements
 - **v1.9**: Electron 35 security upgrade (ASAR Integrity Bypass fix)
 - **v1.8**: Alert state (red, always-on-top), exclamation mark effect on ESP32
 - **v1.7**: Open at Login option, Always on Top menu reordering, working state text standardized

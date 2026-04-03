@@ -192,6 +192,10 @@ When running Claude Code in multiple terminal tabs, clicking a VibeMon window au
 - Open at Login toggle
 - Project lock (in single mode)
 - Claude Stats
+- WebSocket status (Connected/Disconnected)
+- Set Token (WebSocket token configuration)
+- HTTP Server port display
+- Version display
 - Docs (opens vibemon.io/docs in browser)
 - Quit
 

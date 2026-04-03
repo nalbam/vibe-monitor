@@ -20,6 +20,7 @@ The app launches in the system tray and listens on `http://127.0.0.1:19280`.
 
 ## Supported Tools
 
+- **Apto** - Personal AI coding assistant
 - **[Claude Code](https://claude.ai/code)** - Anthropic's AI coding assistant
 - **[Kiro](https://kiro.dev/)** - AWS's AI coding assistant
 - **[OpenClaw](https://openclaw.ai/)** - Open-source computer use agent
