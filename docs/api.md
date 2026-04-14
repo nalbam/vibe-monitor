@@ -31,6 +31,8 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 
 | Endpoint | Desktop | ESP32 WiFi |
 |----------|---------|------------|
+| GET / | ✓ | - |
+| GET /dashboard-data | ✓ | - |
 | POST/GET /status | ✓ | ✓ |
 | GET /windows | ✓ | - |
 | POST /close | ✓ | - |
@@ -315,6 +317,41 @@ curl -X POST http://192.168.0.185/lock-mode \
 ```
 
 > **ESP32:** Changing lock mode resets the current lock (`lockedProject` becomes null) and persists the new mode to Flash storage.
+
+---
+
+## Dashboard (Desktop only)
+
+### GET /
+
+Serve the dashboard HTML page showing all active windows and current modes.
+
+```bash
+open http://127.0.0.1:19280/
+```
+
+### GET /dashboard-data
+
+Get current dashboard data as JSON (used by the dashboard page).
+
+```bash
+curl http://127.0.0.1:19280/dashboard-data
+```
+
+**Response:**
+```json
+{
+  "health": "ok",
+  "windowCount": 2,
+  "windowMode": "multi",
+  "lockMode": "on-thinking",
+  "lockedProject": null,
+  "windows": [
+    {"project": "my-project", "state": "working"},
+    {"project": "other-project", "state": "idle"}
+  ]
+}
+```
 
 ---
 

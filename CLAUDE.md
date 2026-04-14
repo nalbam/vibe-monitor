@@ -99,6 +99,8 @@ Two modes available (`multi` or `single`):
 | `GET /window-mode` | Desktop | Get current window mode (multi/single) |
 | `POST /window-mode` | Desktop | Set window mode |
 | `GET /debug` | Desktop | Window/display debug info |
+| `GET /` | Desktop | Dashboard HTML page |
+| `GET /dashboard-data` | Desktop | Dashboard data (windows, modes, lock) |
 | `GET /stats` | Desktop | Stats dashboard page |
 | `GET /stats/data` | Desktop | Stats data from cache |
 | `POST /quit` | Desktop | Quit application |
