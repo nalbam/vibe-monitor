@@ -51,7 +51,6 @@ target/
 .prompt.md
 prompt-*.md
 prompt.md
-docs/plans/
 
 # kiro
 .kiro/specs/
