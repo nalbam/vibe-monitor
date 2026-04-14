@@ -5,12 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VibeMon Dashboard</title>
   <style>
+    :root {
+      --background: hsl(217 60% 6%);
+      --card: hsl(217 50% 10%);
+      --foreground: hsl(195 30% 96%);
+      --muted: hsl(217 40% 16%);
+      --muted-foreground: hsl(195 20% 65%);
+      --border: hsl(217 40% 18%);
+      --primary: hsl(190 100% 50%);
+      --primary-soft: hsl(190 100% 80%);
+      --destructive: hsl(0 63% 55%);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: var(--background);
       min-height: 100vh;
-      color: #e2e8f0;
+      color: var(--foreground);
       padding: 2rem 1rem;
     }
     .container { max-width: 960px; margin: 0 auto; }
@@ -18,12 +29,12 @@
     h1 {
       font-size: 2.5rem;
       font-weight: 700;
-      background: linear-gradient(90deg, #ff6b35, #f7931e, #ffcc00);
+      background: linear-gradient(90deg, var(--primary), var(--primary-soft));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .tagline { color: #a0aec0; margin-top: 0.25rem; font-size: 0.95rem; }
+    .tagline { color: var(--muted-foreground); margin-top: 0.25rem; font-size: 0.95rem; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -31,16 +42,16 @@
       margin-bottom: 1.5rem;
     }
     .card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
       padding: 1.25rem;
     }
     .card h2 {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #a0aec0;
+      color: var(--muted-foreground);
       margin-bottom: 0.75rem;
       display: flex;
       align-items: center;
@@ -49,29 +60,29 @@
     .card .value {
       font-size: 1.5rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--foreground);
     }
-    .card .sub { color: #a0aec0; font-size: 0.85rem; margin-top: 0.25rem; }
+    .card .sub { color: var(--muted-foreground); font-size: 0.85rem; margin-top: 0.25rem; }
     .status-dot {
       display: inline-block;
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #68d391;
-      box-shadow: 0 0 8px rgba(104, 211, 145, 0.6);
+      background: var(--primary);
+      box-shadow: 0 0 8px hsla(190, 100%, 50%, 0.6);
     }
-    .status-dot.offline { background: #f56565; box-shadow: 0 0 8px rgba(245, 101, 101, 0.6); }
+    .status-dot.offline { background: var(--destructive); box-shadow: 0 0 8px hsla(0, 63%, 55%, 0.6); }
     .section {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
     }
     .section h2 {
       font-size: 1.1rem;
       margin-bottom: 1rem;
-      color: #fff;
+      color: var(--foreground);
     }
     .projects-list { display: flex; flex-direction: column; gap: 0.5rem; }
     .project-row {
@@ -79,11 +90,11 @@
       align-items: center;
       justify-content: space-between;
       padding: 0.75rem 1rem;
-      background: rgba(0, 0, 0, 0.25);
-      border-radius: 8px;
+      background: var(--muted);
+      border-radius: 6px;
       font-size: 0.9rem;
     }
-    .project-row .name { font-weight: 600; color: #fff; }
+    .project-row .name { font-weight: 600; color: var(--foreground); }
     .state-badge {
       display: inline-flex;
       align-items: center;
@@ -92,7 +103,7 @@
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.08);
+      background: hsla(190, 100%, 50%, 0.08);
     }
     .state-badge .dot {
       width: 6px;
@@ -104,15 +115,15 @@
     .state-idle { color: #68d391; }
     .state-thinking { color: #c084fc; }
     .state-planning { color: #2dd4bf; }
-    .state-working { color: #60a5fa; }
+    .state-working { color: hsl(190 100% 60%); }
     .state-packing { color: #9ca3af; }
     .state-notification { color: #fcd34d; }
     .state-done { color: #34d399; }
-    .state-sleep { color: #475569; }
+    .state-sleep { color: #64748b; }
     .state-alert { color: #f87171; }
     .empty {
       text-align: center;
-      color: #718096;
+      color: var(--muted-foreground);
       padding: 1.5rem;
       font-size: 0.9rem;
     }
@@ -126,29 +137,29 @@
       align-items: center;
       gap: 0.4rem;
       padding: 0.4rem 0.6rem;
-      background: rgba(0, 0, 0, 0.25);
+      background: var(--muted);
       border-radius: 6px;
       font-size: 0.8rem;
     }
     .api-list { display: flex; flex-direction: column; gap: 0.4rem; font-family: 'SF Mono', Monaco, monospace; font-size: 0.82rem; }
-    .api-row { display: flex; gap: 0.6rem; padding: 0.4rem 0.6rem; background: rgba(0, 0, 0, 0.25); border-radius: 6px; }
+    .api-row { display: flex; gap: 0.6rem; padding: 0.4rem 0.6rem; background: var(--muted); border-radius: 6px; }
     .api-method {
       font-weight: 700;
       min-width: 48px;
     }
-    .method-GET { color: #68d391; }
-    .method-POST { color: #f7931e; }
-    .api-path { color: #e2e8f0; flex: 1; }
-    .api-desc { color: #a0aec0; font-family: inherit; }
+    .method-GET { color: var(--primary); }
+    .method-POST { color: var(--primary-soft); }
+    .api-path { color: var(--foreground); flex: 1; }
+    .api-desc { color: var(--muted-foreground); font-family: inherit; }
     footer {
       text-align: center;
-      color: #718096;
+      color: var(--muted-foreground);
       font-size: 0.8rem;
       margin-top: 2rem;
     }
     .refresh-hint {
       font-size: 0.75rem;
-      color: #718096;
+      color: var(--muted-foreground);
       text-align: right;
       margin-top: -0.5rem;
       margin-bottom: 1rem;
@@ -245,38 +256,29 @@
     }
 
     async function refresh() {
-      const [health, windows, lockMode, windowMode] = await Promise.all([
-        fetchJson('/health'),
-        fetchJson('/windows'),
-        fetchJson('/lock-mode'),
-        fetchJson('/window-mode')
-      ]);
+      const data = await fetchJson('/dashboard-data');
 
       const healthDot = document.getElementById('health-dot');
       const healthValue = document.getElementById('health-value');
-      if (health && health.status === 'ok') {
+      if (data && data.health === 'ok') {
         healthDot.classList.remove('offline');
         healthValue.textContent = 'Online';
       } else {
         healthDot.classList.add('offline');
         healthValue.textContent = 'Offline';
+        return;
       }
 
-      document.getElementById('window-count').textContent =
-        windows ? windows.windowCount : '—';
-      document.getElementById('window-mode-sub').textContent =
-        'mode: ' + (windowMode && windowMode.mode ? windowMode.mode : '—');
-
-      const lockedProject = lockMode && lockMode.lockedProject;
-      document.getElementById('lock-value').textContent = lockedProject || 'unlocked';
-      document.getElementById('lock-mode-sub').textContent =
-        'mode: ' + (lockMode && lockMode.mode ? lockMode.mode : '—');
+      document.getElementById('window-count').textContent = data.windowCount;
+      document.getElementById('window-mode-sub').textContent = 'mode: ' + data.windowMode;
+      document.getElementById('lock-value').textContent = data.lockedProject || 'unlocked';
+      document.getElementById('lock-mode-sub').textContent = 'mode: ' + data.lockMode;
 
       const list = document.getElementById('projects-list');
-      if (!windows || !windows.windows || windows.windows.length === 0) {
+      if (!data.windows || data.windows.length === 0) {
         list.innerHTML = '<div class="empty">No active projects. Send POST /status to create a window.</div>';
       } else {
-        list.innerHTML = windows.windows.map((w) => {
+        list.innerHTML = data.windows.map((w) => {
           const state = w.state || 'unknown';
           const stateClass = 'state-' + state;
           return `<div class="project-row">
@@ -288,7 +290,7 @@
     }
 
     refresh();
-    setInterval(refresh, 2000);
+    setInterval(refresh, 3000);
   </script>
 </body>
 </html>

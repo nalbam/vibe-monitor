@@ -143,6 +143,9 @@ class HttpServer {
       case 'GET /':
         await this.handleGetDashboard(res);
         break;
+      case 'GET /dashboard-data':
+        this.handleGetDashboardData(res);
+        break;
       case 'POST /status':
         await this.handlePostStatus(req, res);
         break;
@@ -559,6 +562,23 @@ class HttpServer {
       mode: this.windowManager.getWindowMode(),
       windowCount: this.windowManager.getWindowCount(),
       lockedProject: this.windowManager.getLockedProject()
+    });
+  }
+
+  handleGetDashboardData(res) {
+    const windows = this.windowManager.getWindows();
+    const windowList = Object.entries(windows).map(([projectId, info]) => ({
+      project: projectId,
+      state: info.state ? info.state.state : 'unknown'
+    }));
+
+    sendJson(res, 200, {
+      health: 'ok',
+      windowCount: windowList.length,
+      windowMode: this.windowManager.getWindowMode(),
+      lockMode: this.windowManager.getLockMode(),
+      lockedProject: this.windowManager.getLockedProject(),
+      windows: windowList
     });
   }
 
