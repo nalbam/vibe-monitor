@@ -104,6 +104,31 @@ bool handleWebSocketMessage(const char* msgType, JsonObject doc) {
     (void)processStatusData(data);  // Return value intentionally ignored (WebSocket has no response channel)
     return true;
   }
+  // Server emits {type:'delete', data:{project}} when DELETE /api/status removes
+  // a project. Keep the local project list, current display, and lock state
+  // consistent with the server. Do NOT treat this as user activity (no state
+  // transition) so a sleeping device is not woken up by a server-side cleanup.
+  if (strcmp(msgType, "delete") == 0 && doc.containsKey("data")) {
+    JsonObject data = doc["data"];
+    const char* deletedProject = data["project"] | "";
+    if (strlen(deletedProject) == 0) {
+      return true;
+    }
+    removeProjectFromList(deletedProject);
+    if (strcmp(currentProject, deletedProject) == 0) {
+      currentProject[0] = '\0';
+      currentTool[0] = '\0';
+      currentModel[0] = '\0';
+      currentMemory = 0;
+      dirtyInfo = true;
+      dirtyStatus = true;
+      needsRedraw = true;
+    }
+    if (strcmp(lockedProject, deletedProject) == 0) {
+      lockedProject[0] = '\0';
+    }
+    return true;
+  }
   return false;
 }
 

@@ -160,6 +160,22 @@ function handleWsStatusUpdate(data) {
   windowManager.sendToWindow(projectId, 'state-update', stateData);
 }
 
+/**
+ * Handle project deletion from WebSocket ({type: 'delete', data: {project}}).
+ * Closes the window for the deleted project; windowManager.onWindowClosed
+ * cascades into stateManager.cleanupProject and tray refresh, so no extra
+ * bookkeeping is needed here. No-op when the project is unknown locally.
+ */
+function handleWsStatusDelete(projectId) {
+  if (typeof projectId !== 'string' || projectId.length === 0) {
+    return;
+  }
+  if (!windowManager.getWindow(projectId)) {
+    return;
+  }
+  windowManager.closeWindow(projectId);
+}
+
 // IPC handlers
 ipcMain.handle('get-version', () => {
   return app.getVersion();
@@ -320,6 +336,9 @@ app.whenReady().then(() => {
   wsClient = new WsClient();
   wsClient.onStatusUpdate = (data) => {
     handleWsStatusUpdate(data);
+  };
+  wsClient.onStatusDelete = (projectId) => {
+    handleWsStatusDelete(projectId);
   };
   wsClient.onConnectionChange = () => {
     if (trayManager) {

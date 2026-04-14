@@ -41,6 +41,7 @@ class WsClient {
 
     // Callbacks
     this.onStatusUpdate = null;  // Called when status message received
+    this.onStatusDelete = null;  // Called when {type:'delete'} received with project name
     this.onConnectionChange = null;  // Called when connection state changes
   }
 
@@ -236,6 +237,15 @@ class WsClient {
       if (message.type === 'status' && message.data) {
         if (this.onStatusUpdate) {
           this.onStatusUpdate(message.data);
+        }
+        return;
+      }
+
+      // Handle project deletion (server sends {type: "delete", data: {project}})
+      // Emitted by DELETE /api/status?project=X on the server side.
+      if (message.type === 'delete' && message.data && typeof message.data.project === 'string') {
+        if (this.onStatusDelete) {
+          this.onStatusDelete(message.data.project);
         }
         return;
       }

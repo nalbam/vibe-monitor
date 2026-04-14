@@ -35,6 +35,23 @@ void addProjectToList(const char* project) {
   projectCount++;
 }
 
+// Remove project from list (no-op when absent).
+// Used by the WebSocket {type:'delete'} handler so the device's idea of
+// "known projects" stays in sync with the server after explicit deletions.
+void removeProjectFromList(const char* project) {
+  if (strlen(project) == 0) return;
+  for (int i = 0; i < projectCount; i++) {
+    if (strcmp(projectList[i], project) == 0) {
+      for (int j = i; j < projectCount - 1; j++) {
+        safeCopyStr(projectList[j], projectList[j + 1]);
+      }
+      projectCount--;
+      projectList[projectCount][0] = '\0';
+      return;
+    }
+  }
+}
+
 // =============================================================================
 // Lock/Unlock Functions
 // =============================================================================
