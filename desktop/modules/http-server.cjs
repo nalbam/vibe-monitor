@@ -140,6 +140,9 @@ class HttpServer {
     const route = `${req.method} ${req.url}`;
 
     switch (route) {
+      case 'GET /':
+        await this.handleGetDashboard(res);
+        break;
       case 'POST /status':
         await this.handlePostStatus(req, res);
         break;
@@ -557,6 +560,19 @@ class HttpServer {
       windowCount: this.windowManager.getWindowCount(),
       lockedProject: this.windowManager.getLockedProject()
     });
+  }
+
+  async handleGetDashboard(res) {
+    const dashboardPath = path.join(__dirname, '..', 'dashboard.html');
+
+    try {
+      const html = await fsPromises.readFile(dashboardPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (err) {
+      console.error('Failed to load dashboard page:', err.message);
+      sendError(res, 500, 'Failed to load dashboard page');
+    }
   }
 
   async handleGetStatsPage(res) {
