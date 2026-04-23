@@ -72,6 +72,18 @@ function createTrayIcon(state, character = 'clawd') {
     rect(13, 16, 3, 3, charColor);  // Right leg
     rect(7, 10, 2, 2, '#40E0D0');   // Left eye (cyan)
     rect(13, 10, 2, 2, '#40E0D0');  // Right eye (cyan)
+  } else if (charName === 'codex') {
+    // Draw codex character (green terminal robot)
+    rect(8, 2, 6, 2, charColor);    // Top cap
+    rect(6, 4, 10, 2, charColor);   // Head taper
+    rect(5, 6, 12, 9, charColor);   // Main body
+    rect(3, 9, 2, 5, charColor);    // Left arm
+    rect(17, 9, 2, 5, charColor);   // Right arm
+    rect(7, 15, 3, 4, charColor);   // Left leg
+    rect(12, 15, 3, 4, charColor);  // Right leg
+    rect(7, 9, 2, 2, COLOR_EYE);    // Left eye
+    rect(12, 9, 2, 2, COLOR_EYE);   // Right eye
+    rect(9, 12, 4, 1, COLOR_EYE);   // Mouth
   } else {
     // Draw clawd character (default)
     rect(4, 6, 14, 8, charColor);   // Body
