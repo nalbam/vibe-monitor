@@ -31,10 +31,10 @@ enum AppState {
 // =============================================================================
 
 // Character colors (RGB565)
-#define COLOR_APTO        0x7BF3  // #797C98 Apto blue-gray (121,124,152)
 #define COLOR_CLAUDE      0xDBAA  // #D97757 Claude orange (217,119,87)
 #define COLOR_KIRO        0xFFFF  // #FFFFFF White ghost
 #define COLOR_CLAW        0xDA28  // #DD4444 Claw red (221,68,68)
+#define COLOR_CODEX       0x0D0F  // #10A37F Codex green (16,163,127)
 #define COLOR_EYE         0x0000  // #000000 Black
 #define COLOR_EFFECT_ALT  0xFD20  // #FFA500 Orange for white character effects
 
@@ -102,10 +102,10 @@ extern int animFrame;
 // =============================================================================
 
 // Character image data (RGB565 format)
-#include "img_apto.h"
 #include "img_clawd.h"
 #include "img_kiro.h"
 #include "img_claw.h"
+#include "img_codex.h"
 
 // Helper: Draw PROGMEM image with transparency to TFT
 // Optimized: Uses pushImage instead of pixel-by-pixel drawing (100x faster)
@@ -114,10 +114,6 @@ void drawImageToTFT(TFT_eSPI &tft, int offsetX, int offsetY, const uint16_t* img
 }
 
 // TFT draw functions for each character
-void drawAptoImage(TFT_eSPI &tft, int x, int y) {
-  drawImageToTFT(tft, x, y, IMG_APTO, IMG_APTO_WIDTH, IMG_APTO_HEIGHT, COLOR_TRANSPARENT_MARKER);
-}
-
 void drawClawdImage(TFT_eSPI &tft, int x, int y) {
   drawImageToTFT(tft, x, y, IMG_CLAWD, IMG_CLAWD_WIDTH, IMG_CLAWD_HEIGHT, COLOR_TRANSPARENT_MARKER);
 }
@@ -130,6 +126,10 @@ void drawClawImage(TFT_eSPI &tft, int x, int y) {
   drawImageToTFT(tft, x, y, IMG_CLAW, IMG_CLAW_WIDTH, IMG_CLAW_HEIGHT, COLOR_TRANSPARENT_MARKER);
 }
 
+void drawCodexImage(TFT_eSPI &tft, int x, int y) {
+  drawImageToTFT(tft, x, y, IMG_CODEX, IMG_CODEX_WIDTH, IMG_CODEX_HEIGHT, COLOR_TRANSPARENT_MARKER);
+}
+
 // Helper: Draw PROGMEM image with transparency to sprite
 // Optimized: Uses pushImage instead of pixel-by-pixel drawing (100x faster)
 void drawImageWithTransparency(TFT_eSprite &sprite, const uint16_t* img, int width, int height, uint16_t transparentColor) {
@@ -137,10 +137,6 @@ void drawImageWithTransparency(TFT_eSprite &sprite, const uint16_t* img, int wid
 }
 
 // Sprite draw functions for each character
-void drawAptoImageToSprite(TFT_eSprite &sprite) {
-  drawImageWithTransparency(sprite, IMG_APTO, IMG_APTO_WIDTH, IMG_APTO_HEIGHT, COLOR_TRANSPARENT_MARKER);
-}
-
 void drawClawdImageToSprite(TFT_eSprite &sprite) {
   drawImageWithTransparency(sprite, IMG_CLAWD, IMG_CLAWD_WIDTH, IMG_CLAWD_HEIGHT, COLOR_TRANSPARENT_MARKER);
 }
@@ -151,6 +147,10 @@ void drawKiroImageToSprite(TFT_eSprite &sprite) {
 
 void drawClawImageToSprite(TFT_eSprite &sprite) {
   drawImageWithTransparency(sprite, IMG_CLAW, IMG_CLAW_WIDTH, IMG_CLAW_HEIGHT, COLOR_TRANSPARENT_MARKER);
+}
+
+void drawCodexImageToSprite(TFT_eSprite &sprite) {
+  drawImageWithTransparency(sprite, IMG_CODEX, IMG_CODEX_WIDTH, IMG_CODEX_HEIGHT, COLOR_TRANSPARENT_MARKER);
 }
 
 // =============================================================================
@@ -171,17 +171,6 @@ typedef struct {
 } CharacterGeometry;
 
 // Character definitions
-const CharacterGeometry CHAR_APTO = {
-  "apto",
-  COLOR_APTO,
-  // Eyes (leftX, rightX, y, w, h)
-  22, 37, 22, 6, 6,
-  // Effect position (effectX, effectY)
-  46, 6,
-  // Draw functions
-  drawAptoImage, drawAptoImageToSprite
-};
-
 const CharacterGeometry CHAR_CLAWD = {
   "clawd",
   COLOR_CLAUDE,
@@ -215,13 +204,24 @@ const CharacterGeometry CHAR_CLAW = {
   drawClawImage, drawClawImageToSprite
 };
 
+const CharacterGeometry CHAR_CODEX = {
+  "codex",
+  COLOR_CODEX,
+  // Eyes (leftX, rightX, y, w, h)
+  22, 38, 22, 4, 4,
+  // Effect position (effectX, effectY)
+  47, 3,
+  // Draw functions
+  drawCodexImage, drawCodexImageToSprite
+};
+
 // Character array for dynamic lookup
 // To add a new character, add to this array and define the CharacterGeometry above
 const CharacterGeometry* ALL_CHARACTERS[] = {
-  &CHAR_APTO,
   &CHAR_CLAWD,
   &CHAR_KIRO,
-  &CHAR_CLAW
+  &CHAR_CLAW,
+  &CHAR_CODEX
 };
 const int CHARACTER_COUNT = sizeof(ALL_CHARACTERS) / sizeof(ALL_CHARACTERS[0]);
 const CharacterGeometry* DEFAULT_CHARACTER = &CHAR_CLAWD;

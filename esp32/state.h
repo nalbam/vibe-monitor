@@ -28,7 +28,7 @@ AppState previousState = STATE_START;
 enum BlinkPhase { BLINK_NONE, BLINK_CLOSED };
 BlinkPhase blinkPhase = BLINK_NONE;
 unsigned long blinkPhaseStart = 0;
-char currentCharacter[16] = "clawd";  // "clawd", "kiro", or "claw"
+char currentCharacter[16] = "clawd";  // "clawd", "kiro", "claw", or "codex"
 char currentProject[32] = "";
 char currentTool[32] = "";
 char currentModel[32] = "";
