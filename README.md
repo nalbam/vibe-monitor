@@ -165,20 +165,6 @@ See [Features](docs/features.md) for lock modes and CLI commands.
 
 See [Features](docs/features.md) for desktop app details, [ESP32 Setup Guide](docs/esp32-setup.md) for hardware troubleshooting.
 
-## Version History
-
-- **v1.9.1**: Docs tray menu shortcut, documentation improvements
-- **v1.9**: Electron 35 security upgrade (ASAR Integrity Bypass fix)
-- **v1.8**: Alert state (red, always-on-top), exclamation mark effect on ESP32
-- **v1.7**: Open at Login option, Always on Top menu reordering, working state text standardized
-- **v1.6**: ESP32 display layout improvements, code refactoring
-- **v1.5**: WebSocket support, static engine CDN
-- **v1.4**: New claw character, ESP32 claw support, image-based character rendering
-- **v1.3**: Multi-window mode, window mode API, enhanced lock modes
-- **v1.2**: Project lock, modular architecture, npx support
-- **v1.1**: Desktop app, system tray, memory bar gradient
-- **v1.0**: Pixel art character, web simulator
-
 ## License
 
 MIT
