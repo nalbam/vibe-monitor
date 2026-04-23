@@ -306,11 +306,62 @@
       return `${minutes}m`;
     };
 
-    const getModelShortName = (model) => {
-      if (model.includes('opus')) return 'Opus 4.5';
-      if (model.includes('sonnet')) return 'Sonnet 4.5';
-      if (model.includes('haiku')) return 'Haiku';
-      return model.split('-').slice(1, 3).join(' ');
+    const titleCase = (value) => value
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+
+    const getNumericVersion = (parts, startIndex) => {
+      const versionParts = [];
+
+      for (let i = startIndex; i < parts.length; i++) {
+        const part = parts[i];
+        if (!/^\d+$/.test(part)) break;
+        // Ignore trailing release-date style suffixes like 20251101.
+        if (part.length >= 6) break;
+        versionParts.push(part);
+        if (versionParts.length === 2) break;
+      }
+
+      return versionParts.join('.');
+    };
+
+    const getModelInfo = (model) => {
+      if (!model || typeof model !== 'string') {
+        return { key: 'unknown', name: 'Unknown' };
+      }
+
+      const parts = model.toLowerCase().split('-').filter(Boolean);
+      if (parts.length === 0) {
+        return { key: model, name: model };
+      }
+
+      const provider = parts[0];
+      const family = parts[1] || 'unknown';
+      const version = getNumericVersion(parts, 2);
+      const familyName = titleCase(family);
+      const name = version ? `${familyName} ${version}` : familyName;
+      const key = [provider, family, version].filter(Boolean).join(':');
+
+      return { key, name };
+    };
+
+    const aggregateModelUsage = (modelUsage) => {
+      return Object.entries(modelUsage || {}).reduce((acc, [model, usage]) => {
+        const info = getModelInfo(model);
+        if (!acc[info.key]) {
+          acc[info.key] = { name: info.name };
+        }
+
+        Object.entries(usage || {}).forEach(([metric, value]) => {
+          if (typeof value === 'number' && Number.isFinite(value)) {
+            acc[info.key][metric] = (acc[info.key][metric] || 0) + value;
+          }
+        });
+
+        return acc;
+      }, {});
     };
 
     async function loadStats() {
@@ -502,13 +553,18 @@
 
     function renderModelList(modelUsage) {
       const container = document.getElementById('modelList');
-      const entries = Object.entries(modelUsage);
+      const entries = Object.values(aggregateModelUsage(modelUsage))
+        .sort((a, b) => {
+          const totalA = (a.inputTokens || 0) + (a.outputTokens || 0);
+          const totalB = (b.inputTokens || 0) + (b.outputTokens || 0);
+          return totalB - totalA;
+        });
 
-      container.innerHTML = entries.map(([model, usage]) => {
+      container.innerHTML = entries.map((usage) => {
         const total = (usage.inputTokens || 0) + (usage.outputTokens || 0);
         return `
           <div class="model-item">
-            <span class="model-name">${getModelShortName(model)}</span>
+            <span class="model-name">${usage.name}</span>
             <span class="model-tokens">${formatNumber(total)} tokens</span>
           </div>
         `;
