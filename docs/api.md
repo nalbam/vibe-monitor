@@ -22,7 +22,7 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | `tool` | 50 chars | String |
 | `model` | 50 chars | String |
 | `memory` | - | Integer 0-100 |
-| `character` | - | `apto`, `clawd`, `kiro`, or `claw` |
+| `character` | - | `clawd`, `codex`, `kiro`, or `claw` |
 | `terminalId` | 100 chars | Desktop only. Terminal session ID with prefix: `iterm2:w0t0p0:UUID` (from `ITERM_SESSION_ID`) or `ghostty:12345` (from `GHOSTTY_PID`) |
 
 ---
@@ -70,7 +70,7 @@ curl -X POST http://127.0.0.1:19280/status \
 | `project` | string | Project name |
 | `model` | string | Model name (e.g., `opus`, `sonnet`) |
 | `memory` | number | Memory usage (0-100) |
-| `character` | string | `apto`, `clawd`, `kiro`, or `claw` |
+| `character` | string | `clawd`, `codex`, `kiro`, or `claw` |
 | `terminalId` | string | Desktop only. Terminal ID for click-to-focus (e.g., `iterm2:w0t0p0:UUID` or `ghostty:12345`) |
 
 **Response (Desktop):**

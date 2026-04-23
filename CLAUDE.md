@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Real-time status monitor for AI assistants (Claude Code, Kiro, OpenClaw) with pixel art character.
+Real-time status monitor for AI assistants (Claude Code, Codex, Kiro, OpenClaw) with pixel art character.
 
 **Platforms:**
 - ESP32 Hardware (172×320 or 170×320 LCD, selected via BOARD_TYPE) - Primary, always-on desk companion
@@ -53,7 +53,7 @@ npm start
 - **Floating**: Cosine/Sine wave offset (X: ±3px, Y: ±5px, ~3.2s cycle)
 - **Working text**: Tool-based fixed text via `getWorkingText(tool)` (Bash→Running, Read→Reading, Edit→Editing, Write→Writing, Grep/WebSearch→Searching, Glob→Scanning, WebFetch→Fetching, Task→Tasking, default→Working)
 - **JSON fields**: `{"state", "tool", "project", "model", "memory", "character"}` (Desktop adds `"terminalId"` for click-to-focus)
-- **Characters**: `apto` (gray-purple), `clawd` (orange), `kiro` (white ghost), `claw` (red)
+- **Characters**: `clawd` (orange), `codex` (green), `kiro` (white ghost), `claw` (red)
 - **Memory hidden on start**: Memory not displayed during `start` state
 - **Project change resets**: Model/memory cleared when project changes
 - **Sparkle effect (start, working)**: Animated 4-point star sparkle

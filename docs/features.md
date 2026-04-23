@@ -4,8 +4,8 @@
 
 | Character | Color | Description | Auto-selected for |
 |-----------|-------|-------------|-------------------|
-| `apto` | Gray-Purple | Rounded character | Apto |
 | `clawd` | Orange | Default character | Claude Code |
+| `codex` | Green | Terminal robot | Codex |
 | `kiro` | White | Ghost character | Kiro |
 | `claw` | Red | Antenna character | OpenClaw |
 
@@ -185,7 +185,7 @@ When running Claude Code in multiple terminal tabs, clicking a VibeMon window au
 
 - View active windows and their states
 - Manually change state (per window)
-- Switch character (Apto/Clawd/Kiro/Claw)
+- Switch character (Clawd/Codex/Kiro/Claw)
 - Rearrange windows (multi-window mode only)
 - Toggle Always on Top
 - Toggle window mode (Multi/Single)

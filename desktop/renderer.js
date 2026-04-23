@@ -24,10 +24,10 @@ async function init() {
   vibeMonEngine = createVibeMonEngine(container, {
     useEmoji,
     characterImageUrls: {
-      apto: `${STATIC_BASE}/characters/apto.png`,
       clawd: `${STATIC_BASE}/characters/clawd.png`,
       kiro: `${STATIC_BASE}/characters/kiro.png`,
-      claw: `${STATIC_BASE}/characters/claw.png`
+      claw: `${STATIC_BASE}/characters/claw.png`,
+      codex: `${STATIC_BASE}/characters/codex.png`
     }
   });
   await vibeMonEngine.init();

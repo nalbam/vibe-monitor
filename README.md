@@ -12,8 +12,8 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 
 | Tool | Description |
 |------|-------------|
-| **Apto** | Personal AI coding assistant |
 | **[Claude Code](https://claude.ai/code)** | Anthropic's official AI coding assistant |
+| **[Codex](https://openai.com/codex)** | OpenAI's AI coding agent |
 | **[Kiro](https://kiro.dev/)** | AWS's AI coding assistant |
 | **[OpenClaw](https://openclaw.ai/)** | Open-source computer use agent |
 
@@ -86,8 +86,8 @@ See [Features](docs/features.md) for animations, working state text, and more.
 
 | Character | Color | Auto-selected for |
 |-----------|-------|-------------------|
-| `apto` | Gray-Purple | Apto |
 | `clawd` | Orange | Claude Code |
+| `codex` | Green | Codex |
 | `kiro` | White | Kiro |
 | `claw` | Red | OpenClaw |
 
@@ -172,7 +172,7 @@ See [Features](docs/features.md) for desktop app details, [ESP32 Setup Guide](do
 - **v1.8**: Alert state (red, always-on-top), exclamation mark effect on ESP32
 - **v1.7**: Open at Login option, Always on Top menu reordering, working state text standardized
 - **v1.6**: ESP32 display layout improvements, code refactoring
-- **v1.5**: WebSocket support, new apto character, static engine CDN
+- **v1.5**: WebSocket support, static engine CDN
 - **v1.4**: New claw character, ESP32 claw support, image-based character rendering
 - **v1.3**: Multi-window mode, window mode API, enhanced lock modes
 - **v1.2**: Project lock, modular architecture, npx support
