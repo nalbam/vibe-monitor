@@ -17,6 +17,24 @@ See at a glance what your AI assistant is doing — thinking, working, or waitin
 | **[Kiro](https://kiro.dev/)** | AWS's AI coding assistant |
 | **[OpenClaw](https://openclaw.ai/)** | Open-source computer use agent |
 
+## Agent Integration Model
+
+VibeMon does not talk to agent runtimes directly. Each supported agent is bridged into the same status payload and then rendered by the Desktop App or ESP32 display.
+
+| Agent | Bridge type | Tool visibility | Notes |
+|------|-------------|-----------------|-------|
+| Claude Code | Native hooks | Broad | Best documented lifecycle and tool coverage |
+| Codex | Native hooks + `codex exec --json` | Partial in interactive mode, broad in automation | Interactive hooks are experimental and currently Bash-focused |
+| Kiro | Native hooks | Broad | Good tool-level hooks with MCP-aware tool names |
+| OpenClaw | Plugin bridge | Plugin-dependent | Uses plugin SDK hooks rather than the simpler internal hook system |
+
+### Support Quality
+
+- **Claude Code**: Richest hook surface. Best fit for real-time state, permissions, compacting, and subagent-aware monitoring.
+- **Codex**: Strong support, but split by mode. Interactive sessions expose limited tool hooks today, while `codex exec --json` is better for CI and automation.
+- **Kiro**: Clean hook model for prompt, tool, and stop events. Practical fit for real-time monitoring.
+- **OpenClaw**: Best supported through plugins. Internal hooks are session/message oriented, so plugin SDK integration is the right path for VibeMon.
+
 ## What It Monitors
 
 | Field | Description | Example |
@@ -143,14 +161,16 @@ curl -X POST http://127.0.0.1:19280/window-mode \
 Lock the monitor to a specific project (single-window mode only):
 
 ```bash
-# Lock
+# Claude Code / Codex / Kiro bridge
 python3 ~/.claude/hooks/vibemon.py --lock
 
 # Unlock
 python3 ~/.claude/hooks/vibemon.py --unlock
 ```
 
-See [Features](docs/features.md) for lock modes and CLI commands.
+Use the matching bridge path for your agent (`~/.claude/hooks`, `~/.codex/hooks`, or `~/.kiro/hooks`). OpenClaw uses its plugin bridge rather than a Python hook command.
+
+See [Features](docs/features.md) for lock modes and bridge notes.
 
 ## Troubleshooting
 

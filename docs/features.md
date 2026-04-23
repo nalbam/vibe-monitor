@@ -1,5 +1,28 @@
 # Features
 
+## Agent Support
+
+VibeMon normalizes multiple agent ecosystems into one display model. The rendering layer is shared, but the integration path is not.
+
+| Agent | Integration path | Best signal source | Observability quality | Important limitation |
+|------|-------------------|--------------------|-----------------------|----------------------|
+| Claude Code | Native hooks | Session, turn, and tool hooks | High | None significant for basic monitoring |
+| Codex | Native hooks and non-interactive JSON output | Interactive hooks for sessions, `codex exec --json` for automation | Medium in interactive mode, high in automation | Interactive tool hooks are currently Bash-focused |
+| Kiro | Native hooks | Prompt, tool, and stop hooks | High | Fewer lifecycle events than Claude Code |
+| OpenClaw | Plugin bridge | Plugin SDK hooks | Medium to high | Internal hooks are not enough by themselves for full tool-loop visibility |
+
+### Bridge Types
+
+- **Native hook bridge**: Claude Code, Codex, and Kiro expose hook events that VibeMon can translate directly into `start`, `thinking`, `working`, `notification`, `packing`, and `done`.
+- **Plugin bridge**: OpenClaw support is intentionally plugin-based. Its simpler internal hooks are session and message oriented, so VibeMon uses plugin SDK lifecycle hooks for better timing.
+
+### Agent-Specific Notes
+
+- **Claude Code**: Best overall source for real-time monitoring. It exposes a broad lifecycle including prompt, tool, permission, compact, and stop events.
+- **Codex**: Good fit for VibeMon, but not symmetric with Claude Code yet. Interactive hooks are experimental and the current runtime emits Bash for `PreToolUse`, `PermissionRequest`, and `PostToolUse`. For CI or batch jobs, `codex exec --json` exposes a much richer event stream.
+- **Kiro**: Strong tool-level support with explicit `preToolUse` and `postToolUse`, plus namespaced MCP tool names.
+- **OpenClaw**: Strongest when treated as a plugin platform. The VibeMon bridge should continue to use plugin hooks instead of depending on the lighter internal hook system.
+
 ## Characters
 
 | Character | Color | Description | Auto-selected for |
@@ -9,7 +32,7 @@
 | `kiro` | White | Ghost character | Kiro |
 | `claw` | Red | Antenna character | OpenClaw |
 
-All characters use **image-based rendering** (128x128 PNG). Character is **auto-detected** based on the IDE hook events. You can also manually change it via the system tray menu.
+All characters use **image-based rendering** (128x128 PNG). Character is **auto-selected by bridge**, not by the core display runtime. You can also manually change it via the system tray menu.
 
 ## States
 
@@ -125,7 +148,7 @@ Lock the monitor to a specific project to prevent display updates from other pro
 ### CLI Commands
 
 ```bash
-# Lock current project
+# Claude Code example: lock current project
 python3 ~/.claude/hooks/vibemon.py --lock
 
 # Lock specific project
@@ -144,6 +167,15 @@ python3 ~/.claude/hooks/vibemon.py --lock-mode on-thinking
 # Reboot ESP32 device
 python3 ~/.claude/hooks/vibemon.py --reboot
 ```
+
+For Codex or Kiro, use the equivalent bridge path:
+
+```bash
+python3 ~/.codex/hooks/vibemon.py --lock
+python3 ~/.kiro/hooks/vibemon.py --lock
+```
+
+OpenClaw uses its plugin bridge instead of a Python hook CLI.
 
 ## Desktop App Features
 

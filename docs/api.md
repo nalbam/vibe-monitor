@@ -25,6 +25,8 @@ Default port: Desktop App `19280`, ESP32 WiFi `80`
 | `character` | - | `clawd`, `codex`, `kiro`, or `claw` |
 | `terminalId` | 100 chars | Desktop only. Terminal session ID with prefix: `iterm2:w0t0p0:UUID` (from `ITERM_SESSION_ID`) or `ghostty:12345` (from `GHOSTTY_PID`) |
 
+> `character` is a visual rendering choice, typically selected by the agent bridge. It is not a general agent identity field.
+
 ---
 
 ## Platform Support
@@ -72,6 +74,12 @@ curl -X POST http://127.0.0.1:19280/status \
 | `memory` | number | Memory usage (0-100) |
 | `character` | string | `clawd`, `codex`, `kiro`, or `claw` |
 | `terminalId` | string | Desktop only. Terminal ID for click-to-focus (e.g., `iterm2:w0t0p0:UUID` or `ghostty:12345`) |
+
+Agent bridges usually set `character` automatically:
+- `clawd` for Claude Code
+- `codex` for Codex
+- `kiro` for Kiro
+- `claw` for OpenClaw
 
 **Response (Desktop):**
 ```json

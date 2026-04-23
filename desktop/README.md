@@ -25,6 +25,12 @@ The app launches in the system tray and listens on `http://127.0.0.1:19280`.
 - **[Kiro](https://kiro.dev/)** - AWS's AI coding assistant
 - **[OpenClaw](https://openclaw.ai/)** - Open-source computer use agent
 
+## Integration Notes
+
+- **Claude Code** and **Kiro** are the cleanest real-time integrations because they expose direct hook events around prompts, tool use, and turn completion.
+- **Codex** is supported, but its interactive hook surface is currently narrower than Claude Code. For automation, `codex exec --json` provides richer telemetry.
+- **OpenClaw** support is plugin-based. VibeMon uses a bridge plugin because OpenClaw's simpler internal hooks are not designed around the same tool loop.
+
 ## Features
 
 - **Frameless Window** - Clean floating design
