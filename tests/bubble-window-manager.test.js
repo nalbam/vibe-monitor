@@ -1,3 +1,5 @@
+jest.mock('../src/modules/window-pointer.cjs', () => ({ trackWindowPointer: jest.fn() }));
+
 /**
  * Tests for bubble-window-manager.cjs
  */

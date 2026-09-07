@@ -10,6 +10,7 @@
 
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
+const { trackWindowPointer } = require('./window-pointer.cjs');
 const Store = require('electron-store');
 const {
   WINDOW_WIDTH,
@@ -695,6 +696,7 @@ class CharacterWindowManager {
     }
 
     const window = new BrowserWindow(windowOptions);
+    trackWindowPointer(window);
 
     if (typeof window.webContents.setWindowOpenHandler === 'function') {
       window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

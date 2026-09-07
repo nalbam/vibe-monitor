@@ -10,6 +10,7 @@
 
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
+const { trackWindowPointer } = require('./window-pointer.cjs');
 const { STATE_COLORS, STATE_TEXTS, TOOL_TEXTS, LOADING_STATES } = require('../shared/config.cjs');
 
 // The character sprite's center offset and collision radius within a
@@ -201,6 +202,7 @@ class BubbleWindowManager {
         sandbox: true
       }
     });
+    trackWindowPointer(win);
     if (typeof win.webContents.setWindowOpenHandler === 'function') {
       win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     }

@@ -1,3 +1,5 @@
+jest.mock('../src/modules/window-pointer.cjs', () => ({ trackWindowPointer: jest.fn() }));
+
 /**
  * Tests for character-window-manager.cjs
  * Scoped to plain state/bookkeeping logic that doesn't require real windows.

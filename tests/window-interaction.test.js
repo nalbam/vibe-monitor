@@ -94,3 +94,17 @@ test('transparent pointerdown is ignored and blur terminates a held drag', () =>
   events.get('blur')();
   expect(api.endWindowDrag).toHaveBeenCalledTimes(1);
 });
+
+test('native cursor updates restore input without any forwarded mousemove', () => {
+  const { installWindowInteraction, api } = loadInteraction();
+  let onPointer;
+  const unsubscribe = jest.fn();
+  api.onWindowPointer = callback => { onPointer = callback; return unsubscribe; };
+  const cleanup = installWindowInteraction({ hitTest: x => x >= 20 });
+  onPointer({ x: 25, y: 20 });
+  expect(api.setIgnoreMouseEvents).toHaveBeenLastCalledWith(false);
+  onPointer(null);
+  expect(api.setIgnoreMouseEvents).toHaveBeenLastCalledWith(true);
+  cleanup();
+  expect(unsubscribe).toHaveBeenCalledTimes(1);
+});

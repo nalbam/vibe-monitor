@@ -55,7 +55,7 @@ app.on('web-contents-created', (_event, contents) => {
 
 // A real OS click must land on the receiver behind transparent overlay pixels.
 function windowsMouse() {
-  const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'windows-mouse.ps1')]);
+  const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'windows-mouse.ps1')], { windowsHide: true });
   const pending = [];
   const lines = createInterface({ input: child.stdout });
   lines.on('line', line => {

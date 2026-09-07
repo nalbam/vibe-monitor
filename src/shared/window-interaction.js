@@ -69,6 +69,11 @@ export function installWindowInteraction({ hitTest, onInteraction = () => {} }) 
     onInteraction(false);
     refresh();
   };
+  const cleanupPointer = api.onWindowPointer?.((point) => {
+    if (point?.x === pointer?.x && point?.y === pointer?.y) return;
+    pointer = point;
+    refresh();
+  });
   // Electron's forwarding option explicitly forwards mousemove events.
   listen(document, 'mousemove', (event) => {
     remember(event);
@@ -115,6 +120,7 @@ export function installWindowInteraction({ hitTest, onInteraction = () => {} }) 
   return () => {
     end();
     cancelAnimationFrame(frame);
+    cleanupPointer?.();
     for (const remove of listeners) remove();
   };
 }

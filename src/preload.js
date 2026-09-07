@@ -34,6 +34,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('state-update', handler);
   },
   beginWindowDrag: () => ipcRenderer.send('window-drag-start'),
+  onWindowPointer: (callback) => {
+    const handler = (_event, point) => callback(point);
+    ipcRenderer.on('window-pointer', handler);
+    return () => ipcRenderer.removeListener('window-pointer', handler);
+  },
   setIgnoreMouseEvents: (ignore) => ipcRenderer.send('window-ignore-mouse', ignore),
   endWindowDrag: () => ipcRenderer.send('window-drag-end'),
   moveWindowDrag: () => ipcRenderer.send('window-drag-move'),
