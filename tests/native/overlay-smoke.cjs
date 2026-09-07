@@ -104,6 +104,13 @@ async function nativeDragTest(mouse, win, point) {
   await until(() => character.getBounds().x === origin.x + 40, 'native drag follows cursor');
   await mouse.send('up');
   await until(() => characterManager.dragOrigin === null, 'drag ends');
+  await until(() => characterManager.snapTimer === null, 'edge snapping settles');
+  await until(async () => {
+    const bubble = bubbleManager.bubbleWindows.get('test');
+    const expected = await bubbleManager.computePlacement(character, bubbleManager.lastSizes.get('test'));
+    const actual = bubble.getBounds();
+    return actual.x === expected.x && actual.y === expected.y;
+  }, 'bubble follows the settled character');
 }
 
 async function run() {
@@ -163,7 +170,6 @@ async function run() {
           await nativeClickTest(mouse, receiver, win, center, { x: 1, y: 1 });
           await nativeClickTest(mouse, receiver, bubble, { x: 30, y: 20 }, { x: 1, y: 1 });
           await nativeDragTest(mouse, win, center);
-          await delay(100);
           await nativeDragTest(mouse, bubble, { x: 30, y: 20 });
         }
         const label = `${mode}-${scale}`;
