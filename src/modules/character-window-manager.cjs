@@ -511,7 +511,7 @@ class CharacterWindowManager {
    * edge margin, so the window keeps that gap however it is dragged.
    */
   handleWindowMove() {
-    if (!this.entry || this.positionTrackingSuspended) return;
+    if (!this.entry || this.positionTrackingSuspended || this.dragOrigin) return;
     const entry = this.entry;
 
     if (this.snapTimer) {
@@ -573,6 +573,11 @@ class CharacterWindowManager {
    * math in one coordinate space. The resulting 'move' events feed the
    * usual snap/persist debounce in handleWindowMove().
    */
+  endUserDrag() {
+    this.dragOrigin = null;
+    this.handleWindowMove();
+  }
+
   moveUserDrag() {
     if (!this.dragOrigin || !this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
     const cursor = screen.getCursorScreenPoint();
@@ -663,6 +668,7 @@ class CharacterWindowManager {
       x: position.x,
       y: position.y,
       frame: false,
+      thickFrame: false,
       transparent: true,
       alwaysOnTop: this.alwaysOnTopMode !== 'disabled',
       resizable: false,
@@ -691,6 +697,8 @@ class CharacterWindowManager {
     if (typeof window.webContents.on === 'function') {
       window.webContents.on('will-navigate', (event) => event.preventDefault());
     }
+
+    window.setIgnoreMouseEvents(true, { forward: true });
 
     window.loadFile(path.join(__dirname, '..', 'index.html'));
 

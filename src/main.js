@@ -51,7 +51,8 @@ const stateManager = new StateManager();
 const windowManager = new CharacterWindowManager();
 const bubbleWindowManager = new BubbleWindowManager(
   (projectId) => windowManager.getWindow(projectId),
-  () => windowManager.getEdgeMargin()
+  () => windowManager.getEdgeMargin(),
+  () => windowManager.getDisplayOptions().characterScale / 100
 );
 const hookInstaller = new HookInstaller();
 const vibemonConfigManager = new VibemonConfigManager();
@@ -269,19 +270,33 @@ ipcMain.on('show-context-menu', (event) => {
   }
 });
 
-// Manual character-window drag: the display area is not an app-region drag
-// surface (see renderer.js), so the renderer drives dragging over IPC. Only
-// the character window itself may move the window.
-ipcMain.on('window-drag-start', (event) => {
-  if (windowManager.getProjectIdByWebContents(event.sender)) {
-    windowManager.beginUserDrag();
+// Only the active character and its bubble may control character interaction.
+function getInteractionProject(sender) {
+  const projectId = windowManager.getProjectIdByWebContents(sender);
+  if (projectId) return projectId;
+  for (const [id, win] of bubbleWindowManager.bubbleWindows) {
+    if (!win.isDestroyed() && win.webContents === sender && windowManager.getWindow(id)) return id;
   }
+  return null;
+}
+
+ipcMain.on('window-ignore-mouse', (event, ignore) => {
+  const projectId = getInteractionProject(event.sender);
+  if (!projectId || typeof ignore !== 'boolean') return;
+  const character = windowManager.getWindow(projectId);
+  const win = character.webContents === event.sender
+    ? character : bubbleWindowManager.bubbleWindows.get(projectId);
+  win.setIgnoreMouseEvents(ignore, { forward: true });
 });
 
+ipcMain.on('window-drag-start', (event) => {
+  if (getInteractionProject(event.sender)) windowManager.beginUserDrag();
+});
 ipcMain.on('window-drag-move', (event) => {
-  if (windowManager.getProjectIdByWebContents(event.sender)) {
-    windowManager.moveUserDrag();
-  }
+  if (getInteractionProject(event.sender)) windowManager.moveUserDrag();
+});
+ipcMain.on('window-drag-end', (event) => {
+  if (getInteractionProject(event.sender)) windowManager.endUserDrag();
 });
 
 // Focus terminal (iTerm2 or Ghostty on macOS)
@@ -292,7 +307,7 @@ ipcMain.handle('focus-terminal', async (event) => {
   }
 
   // Get project ID from the window that sent the request
-  const projectId = windowManager.getProjectIdByWebContents(event.sender);
+  const projectId = getInteractionProject(event.sender);
   if (!projectId) {
     return { success: false, reason: 'no-project' };
   }

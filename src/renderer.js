@@ -1,8 +1,11 @@
+import { installWindowInteraction, createCharacterHitTest } from './shared/window-interaction.js';
+
 // VibeMon engine instance (2D pixel-art or 3D pet, chosen by the persisted
 // render mode — see init())
 let vibeMonEngine = null;
 
 // IPC cleanup functions
+let cleanupInteraction = null;
 let cleanupStateListener = null;
 let cleanupDisplayOptionsListener = null;
 
@@ -70,19 +73,32 @@ async function init() {
     // (static.vibemon.io), with the bundled asset as offline fallback —
     // each entry carries its candidate URLs in order.
     const { createVibeMonEngine } = await import('./engine/vibemon-engine.js');
+    const imageUrls = await Promise.all(Object.entries(characters).map(async ([name, config]) => {
+      const localUrl = `assets/characters/${config.image}`;
+      try {
+        const response = await window.fetch(`${staticBaseUrl}/characters/${config.image}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return [name, [URL.createObjectURL(await response.blob()), localUrl]];
+      } catch (error) {
+        console.warn(`Using bundled character ${name}:`, error.message);
+        return [name, [localUrl]];
+      }
+    }));
     vibeMonEngine = createVibeMonEngine(container, {
       characters,
       defaultCharacter,
-      characterImageUrls: Object.fromEntries(
-        Object.entries(characters).map(([name, config]) => [name, [
-          `${staticBaseUrl}/characters/${config.image}`,
-          `assets/characters/${config.image}`
-        ]])
-      ),
+      characterImageUrls: Object.fromEntries(imageUrls),
       states
     });
+    try {
+      await vibeMonEngine.init();
+    } finally {
+      for (const [, urls] of imageUrls) {
+        if (urls[0].startsWith('blob:')) URL.revokeObjectURL(urls[0]);
+      }
+    }
   }
-  await vibeMonEngine.init();
+  if (renderMode === '3d') await vibeMonEngine.init();
 
   // Initial render and start animation
   vibeMonEngine.render();
@@ -109,72 +125,16 @@ async function init() {
     });
   }
 
-  // Manual window drag + interaction expression. pointerdown shows the
-  // 'done' expression and anchors the drag in the main process, pointermove
-  // moves the window along with the cursor, pointerup restores the
-  // expression. The window follows the cursor, so the pointer stays inside
-  // it and keeps receiving events for the whole drag.
-  const DRAG_CLICK_SUPPRESS_PX = 4;
-  let pointerDragging = false;
-  let dragMoved = false;
-  let dragStartX = 0;
-  let dragStartY = 0;
-
-  document.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0) return;
-    pointerDragging = true;
-    dragMoved = false;
-    dragStartX = e.screenX;
-    dragStartY = e.screenY;
-    setInteractionActive(true);
-    window.electronAPI?.beginWindowDrag?.();
-  });
-
-  document.addEventListener('pointermove', (e) => {
-    if (!pointerDragging || (e.buttons & 1) === 0) return;
-    if (Math.abs(e.screenX - dragStartX) > DRAG_CLICK_SUPPRESS_PX ||
-        Math.abs(e.screenY - dragStartY) > DRAG_CLICK_SUPPRESS_PX) {
-      dragMoved = true;
-    }
-    window.electronAPI?.moveWindowDrag?.();
-  });
-
-  const endPointerDrag = () => {
-    pointerDragging = false;
-    setInteractionActive(false);
-  };
-  document.addEventListener('pointerup', (e) => {
-    if (e.button !== 0) return;
-    endPointerDrag();
-  });
-  document.addEventListener('pointercancel', endPointerDrag);
-
-  // Right-click context menu (works on all platforms)
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    if (window.electronAPI?.showContextMenu) {
-      window.electronAPI.showContextMenu();
-    }
-  });
-
-  // Click to focus terminal (iTerm2/Ghostty on macOS)
-  document.addEventListener('click', (e) => {
-    // Ignore right-click and clicks that dragged the window
-    if (e.button !== 0 || dragMoved) return;
-    if (window.electronAPI?.focusTerminal) {
-      window.electronAPI.focusTerminal()
-        .then((result) => {
-          if (result && !result.success) {
-            console.warn('Focus terminal failed:', result.reason);
-          }
-        })
-        .catch((err) => console.warn('Focus terminal failed:', err));
-    }
+  cleanupInteraction = installWindowInteraction({
+    hitTest: createCharacterHitTest(vibeMonEngine),
+    onInteraction: setInteractionActive
   });
 }
 
 // Cleanup on unload
 function cleanup() {
+  cleanupInteraction?.();
+  cleanupInteraction = null;
   if (vibeMonEngine) {
     vibeMonEngine.cleanup();
     vibeMonEngine = null;

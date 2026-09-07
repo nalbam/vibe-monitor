@@ -61,6 +61,12 @@
   </div>
 
   <script type="module">
+    import { installWindowInteraction, hitTestBubble } from './shared/window-interaction.js';
+    const cleanupInteraction = installWindowInteraction({
+      hitTest: (x, y) => hitTestBubble(document.getElementById('bubble'), x, y)
+    });
+    window.addEventListener('unload', cleanupInteraction);
+
     import { renderBubble } from './bubble/vibemon-bubble.js';
 
     // Called from the main process via webContents.executeJavaScript(). See

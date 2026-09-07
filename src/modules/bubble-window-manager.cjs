@@ -10,7 +10,7 @@
 
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
-const { STATE_COLORS, STATE_TEXTS, TOOL_TEXTS, LOADING_STATES, WINDOW_WIDTH } = require('../shared/config.cjs');
+const { STATE_COLORS, STATE_TEXTS, TOOL_TEXTS, LOADING_STATES } = require('../shared/config.cjs');
 
 // The character sprite's center offset and collision radius within a
 // full-size character window, matching the rendering engine's layout
@@ -19,7 +19,7 @@ const { STATE_COLORS, STATE_TEXTS, TOOL_TEXTS, LOADING_STATES, WINDOW_WIDTH } = 
 // (measured opaque sprite bounds span nearly the full 128x128 canvas for some
 // characters) since the bubble now has the whole screen to move in.
 // The Character Size setting shrinks the window, so both are scaled by the
-// window's actual width in computePlacement().
+// configured render scale in computePlacement().
 const CHARACTER_OFFSET = { x: 67, y: 69 };
 const CHARACTER_RADIUS = 70;
 const BUBBLE_COLLIDE_PADDING = 4;
@@ -36,10 +36,6 @@ const EDGE_PIN_EPSILON = 2;
 // Must match character-window-manager.cjs's ALWAYS_ON_TOP_LEVEL so the
 // bubble stacks at the same level as its character window.
 const ALWAYS_ON_TOP_LEVEL = process.platform === 'darwin' ? 'floating' : 'screen-saver';
-
-// Animate the bubble sliding to a new position instead of teleporting there.
-const MOVE_ANIMATION_STEPS = 10;
-const MOVE_ANIMATION_INTERVAL_MS = 16;
 
 // Backstop for a bubble window that never fires 'did-finish-load' or
 // 'did-fail-load' (e.g. loadFile hangs) — destroy it so ensureBubbleWindow()
@@ -144,16 +140,18 @@ class BubbleWindowManager {
    *   screen's edges, shared with the character window: it widens the
    *   pinned-edge check and is the bubble's own minimum distance from an edge
    */
-  constructor(getCharacterWindow, getEdgeMargin = () => 0) {
+  constructor(getCharacterWindow, getEdgeMargin = () => 0, getCharacterScale = () => 1) {
     this.getCharacterWindow = getCharacterWindow;
     this.getEdgeMargin = getEdgeMargin;
+    this.getCharacterScale = getCharacterScale;
     this.bubbleWindows = new Map(); // Map<projectId, BrowserWindow>
     this.lastSizes = new Map(); // Map<projectId, {width, height}>
     this.lastFields = new Map(); // Map<projectId, Object> — needed so reposition() can re-render the tail
     this.lastBgColors = new Map(); // Map<projectId, string> — same, for the state-colored background
-    this.animationTimers = new Map(); // Map<projectId, NodeJS.Timeout>
     this.loadingWindows = new Map(); // Map<projectId, Promise<boolean>> — in-flight bubble.html load
     this.d3ForceModule = null;
+    this.placementRequests = new Map();
+    this.contentRequests = new Map();
   }
 
   async getD3Force() {
@@ -187,6 +185,7 @@ class BubbleWindowManager {
       x: 0,
       y: 0,
       frame: false,
+      thickFrame: false,
       transparent: true,
       alwaysOnTop: startsOnTop,
       resizable: false,
@@ -195,6 +194,7 @@ class BubbleWindowManager {
       focusable: false,
       show: false,
       webPreferences: {
+        preload: path.join(__dirname, '..', 'preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true
@@ -207,11 +207,12 @@ class BubbleWindowManager {
       win.webContents.on('will-navigate', (event) => event.preventDefault());
     }
     if (startsOnTop) win.setAlwaysOnTop(true, ALWAYS_ON_TOP_LEVEL);
-    win.setIgnoreMouseEvents(true);
+    win.setIgnoreMouseEvents(true, { forward: true });
     this.bubbleWindows.set(projectId, win);
 
     win.on('closed', () => {
-      this.stopAnimation(projectId);
+      this.contentRequests.delete(projectId);
+      this.placementRequests.delete(projectId);
       this.bubbleWindows.delete(projectId);
       this.loadingWindows.delete(projectId);
       this.lastSizes.delete(projectId);
@@ -277,6 +278,10 @@ class BubbleWindowManager {
    * @param {{state: Object|null, speechBubbleFields: Object}} options
    */
   async update(projectId, { state, speechBubbleFields }) {
+    const request = {};
+    this.contentRequests.set(projectId, request);
+    this.placementRequests.delete(projectId);
+    const isCurrent = () => this.contentRequests.get(projectId) === request;
     const fields = buildFieldPayload(state, speechBubbleFields);
 
     if (Object.keys(fields).length === 0 || !this.isWindowValid(this.getCharacterWindow(projectId))) {
@@ -287,6 +292,7 @@ class BubbleWindowManager {
     const bgColor = resolveBgColor(state);
 
     const win = await this.ensureBubbleWindow(projectId);
+    if (!isCurrent()) return;
     if (!this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) {
       this.destroy(projectId);
       return;
@@ -298,16 +304,18 @@ class BubbleWindowManager {
       win,
       `window.__setBubbleContent(${JSON.stringify(fields)}, 0, 'bottom', ${JSON.stringify(bgColor)})`
     );
+    if (!isCurrent()) return;
     if (!size || !this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) {
       this.destroy(projectId);
       return;
     }
+    this.placementRequests.delete(projectId);
     this.lastSizes.set(projectId, size);
     this.lastFields.set(projectId, fields);
     this.lastBgColors.set(projectId, bgColor);
 
-    const wasVisible = win.isVisible();
     const placement = await this.computePlacement(this.getCharacterWindow(projectId), size);
+    if (!isCurrent()) return;
     if (!placement || !this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) {
       this.destroy(projectId);
       return;
@@ -319,18 +327,22 @@ class BubbleWindowManager {
       win,
       `window.__setBubbleContent(${JSON.stringify(fields)}, ${placement.tailOffset}, ${JSON.stringify(placement.tailSide)}, ${JSON.stringify(bgColor)})`
     );
+    if (!isCurrent()) return;
     if (!this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) {
       this.destroy(projectId);
       return;
     }
 
-    if (wasVisible) {
-      this.animateTo(projectId, win, { x: placement.x, y: placement.y, width: size.width, height: size.height });
-    } else {
-      win.setBounds({ x: placement.x, y: placement.y, width: size.width, height: size.height });
-    }
+    // Tail rendering crosses IPC; the character may have moved meanwhile.
+    const currentPlacement = await this.computePlacement(this.getCharacterWindow(projectId), size);
+    if (!isCurrent() || !currentPlacement || !this.isWindowValid(win) ||
+        !this.isWindowValid(this.getCharacterWindow(projectId))) return;
+    win.setResizable(true);
+    win.setBounds({ x: currentPlacement.x, y: currentPlacement.y, width: size.width, height: size.height });
+    win.setResizable(false);
     this.syncAlwaysOnTop(projectId);
     if (!win.isVisible()) win.showInactive();
+    this.reposition(projectId);
   }
 
   /**
@@ -349,7 +361,13 @@ class BubbleWindowManager {
     const bgColor = this.lastBgColors.get(projectId);
     if (!this.isWindowValid(win) || !this.isWindowValid(charWindow) || !size || !fields || !win.isVisible()) return;
 
+    const request = {};
+    this.placementRequests.set(projectId, request);
+    const isCurrent = () => this.placementRequests.get(projectId) === request &&
+      this.bubbleWindows.get(projectId) === win && this.getCharacterWindow(projectId) === charWindow &&
+      this.isWindowValid(win) && this.isWindowValid(charWindow) && win.isVisible();
     this.computePlacement(charWindow, size).then(async (placement) => {
+      if (!isCurrent()) return;
       if (!placement || !this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) return;
 
       await this.execInBubble(
@@ -358,57 +376,10 @@ class BubbleWindowManager {
       );
       if (!this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) return;
 
-      this.animateTo(projectId, win, { x: placement.x, y: placement.y, width: size.width, height: size.height });
+      if (!isCurrent()) return;
+      // Follow directly: restarting easing on every move leaves the bubble behind.
+      win.setPosition(placement.x, placement.y);
     }).catch((err) => console.error('Bubble reposition failed:', err));
-  }
-
-  /**
-   * Slide a bubble window to a new position/size over a short animation
-   * instead of teleporting it there, cancelling any animation already in
-   * flight for this project.
-   * @param {string} projectId
-   * @param {Electron.BrowserWindow} win
-   * @param {{x: number, y: number, width: number, height: number}} target
-   */
-  animateTo(projectId, win, target) {
-    this.stopAnimation(projectId);
-
-    const start = win.getBounds();
-    let step = 0;
-
-    const timer = setInterval(() => {
-      step++;
-      if (!this.isWindowValid(win)) {
-        this.stopAnimation(projectId);
-        return;
-      }
-
-      const t = Math.min(1, step / MOVE_ANIMATION_STEPS);
-      const eased = 1 - (1 - t) * (1 - t); // ease-out
-      win.setBounds({
-        x: Math.round(start.x + (target.x - start.x) * eased),
-        y: Math.round(start.y + (target.y - start.y) * eased),
-        width: Math.round(start.width + (target.width - start.width) * eased),
-        height: Math.round(start.height + (target.height - start.height) * eased)
-      });
-
-      if (t >= 1) {
-        this.stopAnimation(projectId);
-      }
-    }, MOVE_ANIMATION_INTERVAL_MS);
-
-    this.animationTimers.set(projectId, timer);
-  }
-
-  /**
-   * @param {string} projectId
-   */
-  stopAnimation(projectId) {
-    const timer = this.animationTimers.get(projectId);
-    if (timer) {
-      clearInterval(timer);
-      this.animationTimers.delete(projectId);
-    }
   }
 
   /**
@@ -424,10 +395,9 @@ class BubbleWindowManager {
     if (!this.isWindowValid(charWindow)) return null;
 
     const charBounds = charWindow.getBounds();
-    // The window is sized WINDOW_WIDTH x WINDOW_HEIGHT times the Character
-    // Size setting, so its width recovers that scale — the sprite's anchor
-    // and collision radius shrink with it.
-    const charScale = charBounds.width / WINDOW_WIDTH;
+    // Use the rendering setting, not native window bounds: Windows frame
+    // insets and fractional-DPI rounding must not feed back into sprite scale.
+    const charScale = this.getCharacterScale();
     const charCenterX = charBounds.x + CHARACTER_OFFSET.x * charScale;
     const charCenterY = charBounds.y + CHARACTER_OFFSET.y * charScale;
     const characterRadius = CHARACTER_RADIUS * charScale;
@@ -574,7 +544,8 @@ class BubbleWindowManager {
    * @param {string} projectId
    */
   hide(projectId) {
-    this.stopAnimation(projectId);
+    this.contentRequests.delete(projectId);
+    this.placementRequests.delete(projectId);
     const win = this.bubbleWindows.get(projectId);
     if (this.isWindowValid(win) && win.isVisible()) win.hide();
   }
@@ -583,7 +554,8 @@ class BubbleWindowManager {
    * @param {string} projectId
    */
   destroy(projectId) {
-    this.stopAnimation(projectId);
+    this.contentRequests.delete(projectId);
+    this.placementRequests.delete(projectId);
     const win = this.bubbleWindows.get(projectId);
     if (this.isWindowValid(win)) win.destroy();
     this.bubbleWindows.delete(projectId);
@@ -596,12 +568,11 @@ class BubbleWindowManager {
    * Destroy all bubble windows on app quit.
    */
   cleanup() {
-    for (const projectId of this.animationTimers.keys()) {
-      this.stopAnimation(projectId);
-    }
     for (const [, win] of this.bubbleWindows) {
       if (this.isWindowValid(win)) win.destroy();
     }
+    this.contentRequests.clear();
+    this.placementRequests.clear();
     this.bubbleWindows.clear();
     this.lastSizes.clear();
     this.lastFields.clear();
