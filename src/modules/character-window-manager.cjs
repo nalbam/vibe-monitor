@@ -10,6 +10,7 @@
 
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
+const { trackWindowPointer } = require('./window-pointer.cjs');
 const Store = require('electron-store');
 const {
   WINDOW_WIDTH,
@@ -99,6 +100,8 @@ class CharacterWindowManager {
     // Anchor of an in-progress manual drag ({winX, winY, cursorX, cursorY})
     // — see beginUserDrag()/moveUserDrag().
     this.dragOrigin = null;
+    this.dragWindow = null;
+    this.dragUnavailableListener = null;
 
     this.onWindowClosed = null;  // callback: (projectId) => void
     this.onStateUpdated = null;  // callback: (projectId) => void, fires after state/info changes
@@ -344,6 +347,7 @@ class CharacterWindowManager {
     window.setResizable(true);
     window.setBounds({ x: position.x, y: position.y, width: size.width, height: size.height });
     window.setResizable(false);
+    this.positionWindow(window, position.x, position.y);
 
     // A resize on its own fires no 'move' event, so without this the speech
     // bubble keeps pointing at the old bounds.
@@ -511,7 +515,7 @@ class CharacterWindowManager {
    * edge margin, so the window keeps that gap however it is dragged.
    */
   handleWindowMove() {
-    if (!this.entry || this.positionTrackingSuspended) return;
+    if (!this.entry || this.positionTrackingSuspended || this.dragOrigin) return;
     const entry = this.entry;
 
     if (this.snapTimer) {
@@ -545,7 +549,7 @@ class CharacterWindowManager {
       }
 
       if (newX !== bounds.x || newY !== bounds.y) {
-        entry.window.setPosition(newX, newY);
+        this.positionWindow(entry.window, newX, newY);
       }
 
       this.saveWindowPosition({ x: newX, y: newY });
@@ -560,11 +564,43 @@ class CharacterWindowManager {
    * goes down), so the renderer drives dragging through the
    * window-drag-start/window-drag-move IPC.
    */
-  beginUserDrag() {
-    if (!this.isWindowValid(this.entry)) return;
+  beginUserDrag(sourceWindow = this.entry?.window) {
+    if (!this.isWindowValid(this.entry) || !sourceWindow || sourceWindow.isDestroyed() || this.positionTrackingSuspended) return;
+    this.clearUserDrag();
+    if (this.snapTimer) {
+      clearTimeout(this.snapTimer);
+      this.snapTimer = null;
+    }
     const [x, y] = this.entry.window.getPosition();
     const cursor = screen.getCursorScreenPoint();
     this.dragOrigin = { winX: x, winY: y, cursorX: cursor.x, cursorY: cursor.y };
+    this.dragWindow = sourceWindow;
+    this.dragUnavailableListener = () => this.endUserDrag(sourceWindow);
+    // A removed bubble can no longer send an authorized pointerup IPC.
+    sourceWindow.once('hide', this.dragUnavailableListener);
+    sourceWindow.once('closed', this.dragUnavailableListener);
+  }
+
+  // Electron setPosition reads the current rounded native size and writes it
+  // back, growing windows on fractional Windows DPI. Always use design sizes.
+  positionWindow(window, x, y) {
+    window.setBounds({ x, y, ...this.windowSize() });
+  }
+
+  clearUserDrag() {
+    if (this.dragWindow) {
+      this.dragWindow.removeListener('hide', this.dragUnavailableListener);
+      this.dragWindow.removeListener('closed', this.dragUnavailableListener);
+    }
+    this.dragOrigin = null;
+    this.dragWindow = null;
+    this.dragUnavailableListener = null;
+  }
+
+  endUserDrag(sourceWindow = this.dragWindow) {
+    if (!this.dragOrigin || sourceWindow !== this.dragWindow) return;
+    this.clearUserDrag();
+    this.handleWindowMove();
   }
 
   /**
@@ -573,10 +609,12 @@ class CharacterWindowManager {
    * math in one coordinate space. The resulting 'move' events feed the
    * usual snap/persist debounce in handleWindowMove().
    */
-  moveUserDrag() {
+  moveUserDrag(sourceWindow = this.dragWindow) {
+    if (sourceWindow !== this.dragWindow) return;
     if (!this.dragOrigin || !this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
     const cursor = screen.getCursorScreenPoint();
-    this.entry.window.setPosition(
+    this.positionWindow(
+      this.entry.window,
       this.dragOrigin.winX + (cursor.x - this.dragOrigin.cursorX),
       this.dragOrigin.winY + (cursor.y - this.dragOrigin.cursorY)
     );
@@ -589,6 +627,7 @@ class CharacterWindowManager {
    * persisting such a move would overwrite the user's chosen position.
    */
   suspendPositionTracking() {
+    this.clearUserDrag();
     this.positionTrackingSuspended = true;
     if (this.snapTimer) {
       clearTimeout(this.snapTimer);
@@ -624,7 +663,7 @@ class CharacterWindowManager {
 
       const [x, y] = this.entry.window.getPosition();
       if (x !== target.x || y !== target.y) {
-        this.entry.window.setPosition(target.x, target.y);
+        this.positionWindow(this.entry.window, target.x, target.y);
       }
     }, POSITION_RESTORE_DELAY_MS);
   }
@@ -663,6 +702,7 @@ class CharacterWindowManager {
       x: position.x,
       y: position.y,
       frame: false,
+      thickFrame: false,
       transparent: true,
       alwaysOnTop: this.alwaysOnTopMode !== 'disabled',
       resizable: false,
@@ -684,6 +724,8 @@ class CharacterWindowManager {
     }
 
     const window = new BrowserWindow(windowOptions);
+    this.positionWindow(window, position.x, position.y);
+    trackWindowPointer(window);
 
     if (typeof window.webContents.setWindowOpenHandler === 'function') {
       window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -691,6 +733,8 @@ class CharacterWindowManager {
     if (typeof window.webContents.on === 'function') {
       window.webContents.on('will-navigate', (event) => event.preventDefault());
     }
+
+    window.setIgnoreMouseEvents(true, { forward: true });
 
     window.loadFile(path.join(__dirname, '..', 'index.html'));
 
@@ -722,6 +766,7 @@ class CharacterWindowManager {
         clearTimeout(this.snapTimer);
         this.snapTimer = null;
       }
+      this.clearUserDrag();
       this.entry = null;
 
       if (this.onWindowClosed) {
@@ -900,6 +945,7 @@ class CharacterWindowManager {
    * Cleanup resources on app quit
    */
   cleanup() {
+    this.clearUserDrag();
     if (this.snapTimer) {
       clearTimeout(this.snapTimer);
       this.snapTimer = null;
