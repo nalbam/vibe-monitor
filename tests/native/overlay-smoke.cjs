@@ -11,6 +11,7 @@ const { CharacterWindowManager } = require('../../src/modules/character-window-m
 const { BubbleWindowManager } = require('../../src/modules/bubble-window-manager.cjs');
 const characters = require('../../src/shared/data/characters.json');
 const states = require('../../src/shared/data/states.json');
+const { CHARACTER_IMAGE_FETCH_TIMEOUT_MS } = require('../../src/shared/config.cjs');
 const root = path.resolve(__dirname, '../..');
 const output = path.join(root, 'out', 'overlay-tests', process.platform, app.commandLine.getSwitchValue('force-device-scale-factor') || 'native');
 fs.mkdirSync(output, { recursive: true });
@@ -33,7 +34,7 @@ async function until(check, label) {
   throw new Error(`Timed out: ${label}`);
 }
 
-ipcMain.handle('get-character-registry', () => ({ ...characters, staticBaseUrl: 'https://static.vibemon.io' }));
+ipcMain.handle('get-character-registry', () => ({ ...characters, staticBaseUrl: 'https://static.vibemon.io', imageFetchTimeoutMs: CHARACTER_IMAGE_FETCH_TIMEOUT_MS }));
 ipcMain.handle('get-state-registry', () => states);
 ipcMain.handle('get-render-mode', () => characterManager.getRenderMode());
 ipcMain.handle('get-display-options', () => characterManager.getDisplayOptions());
@@ -93,7 +94,12 @@ async function nativeClickTest(mouse, receiver, win, inside, outside) {
 async function run() {
   await app.whenReady();
   // Keep the remote-first image/CORS path deterministic without depending on CDN availability.
+  let stalledImage = false;
   protocol.handle('https', request => {
+    if (!stalledImage) {
+      stalledImage = true;
+      return new Promise(() => {});
+    }
     const name = path.basename(new URL(request.url).pathname);
     const asset = path.join(root, 'src/assets/characters', name);
     return new globalThis.Response(fs.readFileSync(asset), { headers: { 'Content-Type': 'image/png', 'Access-Control-Allow-Origin': '*' } });
@@ -121,7 +127,7 @@ async function run() {
           await win.webContents.executeJavaScript(`document.dispatchEvent(new MouseEvent('mousemove', { clientX: ${center.x}, clientY: ${center.y} }))`);
           return ignored.get(win.webContents.id) === false;
         }, `${mode}/${scale} renderer initialized`);
-        await win.webContents.executeJavaScript("document.dispatchEvent(new MouseEvent('mousemove', { clientX: 0, clientY: 0 }))");
+        await win.webContents.executeJavaScript("window.mouseEvents = []; for (const type of ['mousemove', 'pointermove', 'mouseleave']) document.addEventListener(type, e => { window.mouseEvents.push({ type, x: e.clientX, y: e.clientY }); if (window.mouseEvents.length > 20) window.mouseEvents.shift(); }); document.dispatchEvent(new MouseEvent('mousemove', { clientX: 0, clientY: 0 }))");
         await until(() => ignored.get(win.webContents.id) === true, 'transparent corner');
         await bubbleManager.update('test', { state: { state: 'working', project: 'Overlay test' }, speechBubbleFields: { status: true, project: true } });
         const bubble = bubbleManager.bubbleWindows.get('test');
@@ -169,8 +175,13 @@ async function run() {
 }
 
 const timeout = setTimeout(() => { console.error('Overlay verification timed out'); app.exit(1); }, 120000);
-run().then(() => { clearTimeout(timeout); app.exit(0); }).catch(error => {
-  fs.writeFileSync(path.join(output, 'failure.json'), JSON.stringify({ error: error.stack, errors, results }, null, 2));
+run().then(() => { clearTimeout(timeout); app.exit(0); }).catch(async error => {
+  const windows = [];
+  for (const win of BrowserWindow.getAllWindows()) {
+    windows.push({ bounds: win.getBounds(), visible: win.isVisible(), ignored: ignored.get(win.webContents.id), mouseEvents: await win.webContents.executeJavaScript('window.mouseEvents').catch(() => null) });
+    fs.writeFileSync(path.join(output, `failure-${win.id}.png`), (await win.webContents.capturePage()).toPNG());
+  }
+  fs.writeFileSync(path.join(output, 'failure.json'), JSON.stringify({ error: error.stack, cursor: screen.getCursorScreenPoint(), displays: screen.getAllDisplays(), windows, errors, results }, null, 2));
   console.error(error);
   app.exit(1);
 });

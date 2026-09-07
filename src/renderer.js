@@ -44,7 +44,7 @@ async function init() {
   // registry-cache.cjs in the main process), fetched via preload.js, the
   // persisted render mode selecting which engine to boot, and the display
   // options the character area is drawn with.
-  const [{ characters, default: defaultCharacter, staticBaseUrl }, { states }, renderMode, displayOptions] = await Promise.all([
+  const [{ characters, default: defaultCharacter, staticBaseUrl, imageFetchTimeoutMs }, { states }, renderMode, displayOptions] = await Promise.all([
     window.electronAPI.getCharacterRegistry(),
     window.electronAPI.getStateRegistry(),
     window.electronAPI.getRenderMode(),
@@ -76,7 +76,9 @@ async function init() {
     const imageUrls = await Promise.all(Object.entries(characters).map(async ([name, config]) => {
       const localUrl = `assets/characters/${config.image}`;
       try {
-        const response = await window.fetch(`${staticBaseUrl}/characters/${config.image}`);
+        const response = await window.fetch(`${staticBaseUrl}/characters/${config.image}`, {
+          signal: window.AbortSignal.timeout(imageFetchTimeoutMs)
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return [name, [URL.createObjectURL(await response.blob()), localUrl]];
       } catch (error) {

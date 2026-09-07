@@ -32,6 +32,7 @@ const { UsageRefresher } = require('./modules/usage-refresher.cjs');
 const { validateStatusPayload } = require('./modules/validators.cjs');
 const registryCache = require('./shared/registry-cache.cjs');
 const {
+  CHARACTER_IMAGE_FETCH_TIMEOUT_MS,
   HOOK_CHECK_INITIAL_DELAY_MS, HOOK_CHECK_INTERVAL_MS,
   UPDATE_CHECK_INITIAL_DELAY_MS, UPDATE_CHECK_INTERVAL_MS,
   USAGE_REFRESH_INITIAL_DELAY_MS, USAGE_REFRESH_INTERVAL_MS
@@ -243,7 +244,11 @@ ipcMain.handle('get-version', () => {
 // bundled fallback). staticBaseUrl lets the renderer build remote-first
 // image URLs.
 ipcMain.handle('get-character-registry', () => {
-  return { ...registryCache.charactersRegistry, staticBaseUrl: registryCache.STATIC_BASE_URL };
+  return {
+    ...registryCache.charactersRegistry,
+    staticBaseUrl: registryCache.STATIC_BASE_URL,
+    imageFetchTimeoutMs: CHARACTER_IMAGE_FETCH_TIMEOUT_MS
+  };
 });
 
 // State registry for the renderer's engine setup (canonical: vibemon-static,
