@@ -143,12 +143,16 @@ async function run() {
         bubbleManager = new BubbleWindowManager(id => characterManager.getWindow(id), () => 0, () => scale / 100);
         characterManager.onWindowMoved = id => bubbleManager.reposition(id);
         const { window: win } = characterManager.ensureWindow('test');
+        const initialState = { state: 'working', character: 'clawd', project: 'test' };
+        characterManager.entry.state = initialState;
         const center = { x: Math.round(67 * scale / 100), y: Math.round(69 * scale / 100) };
         await until(async () => {
           if (win.webContents.isLoading()) return false;
           await win.webContents.executeJavaScript(`document.dispatchEvent(new MouseEvent('mousemove', { clientX: ${center.x}, clientY: ${center.y} }))`);
           return ignored.get(win.webContents.id) === false;
         }, `${mode}/${scale} renderer initialized`);
+        const replayedState = await win.webContents.executeJavaScript('(() => { let state; const stop = window.electronAPI.onStateUpdate(value => { state = value; }); stop(); return state; })()');
+        assert.deepEqual(replayedState, initialState, 'startup state survives asynchronous image loading');
         await win.webContents.executeJavaScript("window.mouseEvents = []; for (const type of ['mousemove', 'pointermove', 'mouseleave']) document.addEventListener(type, e => { window.mouseEvents.push({ type, x: e.clientX, y: e.clientY }); if (window.mouseEvents.length > 20) window.mouseEvents.shift(); }); document.dispatchEvent(new MouseEvent('mousemove', { clientX: 0, clientY: 0 }))");
         await until(() => ignored.get(win.webContents.id) === true, 'transparent corner');
         await bubbleManager.update('test', { state: { state: 'working', project: 'Overlay test' }, speechBubbleFields: { status: true, project: true } });
