@@ -1,0 +1,49 @@
+name: Overlay Verification
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/native/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/overlay-verification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-overlays:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.25.0'
+      - run: pnpm install --frozen-lockfile
+      - run: node node_modules/electron/install.js
+      - name: Verify native display scaling
+        run: pnpm test:overlays
+      - name: Verify fractional display scaling on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          foreach ($scale in @('1.25', '1.5', '2')) {
+            pnpm test:overlays --force-device-scale-factor=$scale
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Save geometry results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: overlays-${{ matrix.os }}
+          path: out/overlay-tests/

@@ -1,3 +1,5 @@
+jest.mock('../src/modules/window-pointer.cjs', () => ({ trackWindowPointer: jest.fn() }));
+
 /**
  * Tests for character-window-manager.cjs
  * Scoped to plain state/bookkeeping logic that doesn't require real windows.
@@ -489,7 +491,7 @@ describe('window geometry (character size + edge margin)', () => {
       const window = {
         getBounds: jest.fn(() => ({ x: 2, y: 3, width: WINDOW_WIDTH, height: WINDOW_HEIGHT })),
         getPosition: jest.fn(() => [2, 3]),
-        setPosition: jest.fn(),
+        setBounds: jest.fn(),
         isDestroyed: () => false
       };
       manager.entry = { window, state: null, projectId: 'a' };
@@ -497,7 +499,7 @@ describe('window geometry (character size + edge margin)', () => {
       manager.handleWindowMove();
       jest.advanceTimersByTime(SNAP_DEBOUNCE_MS);
 
-      expect(window.setPosition).toHaveBeenCalledWith(16, 16);
+      expect(window.setBounds).toHaveBeenCalledWith({ x: 16, y: 16, ...manager.windowSize() });
       expect(manager.windowPosition).toEqual({ x: 16, y: 16 });
     } finally {
       jest.useRealTimers();
@@ -508,7 +510,6 @@ describe('window geometry (character size + edge margin)', () => {
     return {
       getPosition: jest.fn(() => [bounds.x, bounds.y]),
       getBounds: jest.fn(() => ({ ...bounds })),
-      setPosition: jest.fn(),
       setResizable: jest.fn(),
       setBounds: jest.fn(),
       isDestroyed: () => false,
@@ -609,12 +610,13 @@ describe('position tracking across lock/sleep/display changes', () => {
   const { screen } = require('electron');
 
   function makeWindow(position = [0, 0]) {
-    return {
+    const { EventEmitter } = require('node:events');
+    return Object.assign(new EventEmitter(), {
       getBounds: jest.fn(() => ({ x: position[0], y: position[1], width: 172, height: 160 })),
       getPosition: jest.fn(() => position),
-      setPosition: jest.fn(),
+      setBounds: jest.fn(),
       isDestroyed: () => false
-    };
+    });
   }
 
   beforeEach(() => {
@@ -636,7 +638,25 @@ describe('position tracking across lock/sleep/display changes', () => {
     screen.getCursorScreenPoint.mockReturnValueOnce({ x: 650, y: 430 });
     manager.moveUserDrag();
 
-    expect(window.setPosition).toHaveBeenCalledWith(550, 330);
+    expect(window.setBounds).toHaveBeenCalledWith({ x: 550, y: 330, ...manager.windowSize() });
+  });
+
+  test('a new drag cancels pending snapping and snaps only after release', () => {
+    const manager = new CharacterWindowManager();
+    const window = makeWindow([2, 2]);
+    manager.entry = { window, state: null, projectId: 'a' };
+    manager.handleWindowMove();
+    manager.beginUserDrag();
+    jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + 1);
+    manager.handleWindowMove();
+    jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + 1);
+    expect(window.setBounds).not.toHaveBeenCalled();
+    manager.endUserDrag();
+    jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + 1);
+    expect(window.setBounds).toHaveBeenCalledWith({ x: 0, y: 0, ...manager.windowSize() });
+    window.setBounds.mockClear();
+    manager.moveUserDrag();
+    expect(window.setBounds).not.toHaveBeenCalled();
   });
 
   test('drag moves without an anchored origin are ignored', () => {
@@ -646,7 +666,7 @@ describe('position tracking across lock/sleep/display changes', () => {
 
     manager.moveUserDrag();
 
-    expect(window.setPosition).not.toHaveBeenCalled();
+    expect(window.setBounds).not.toHaveBeenCalled();
   });
 
   test('drag moves while position tracking is suspended are ignored', () => {
@@ -658,7 +678,7 @@ describe('position tracking across lock/sleep/display changes', () => {
     manager.suspendPositionTracking();
     manager.moveUserDrag();
 
-    expect(window.setPosition).not.toHaveBeenCalled();
+    expect(window.setBounds).not.toHaveBeenCalled();
   });
 
   test('suspendPositionTracking cancels a pending snap so an OS move is not persisted', () => {
@@ -671,7 +691,7 @@ describe('position tracking across lock/sleep/display changes', () => {
     jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + POSITION_RESTORE_DELAY_MS);
 
     expect(manager.windowPosition).toEqual({ x: 2000, y: 100 });
-    expect(manager.entry.window.setPosition).not.toHaveBeenCalled();
+    expect(manager.entry.window.setBounds).not.toHaveBeenCalled();
   });
 
   test('moves that arrive while tracking is suspended are ignored', () => {
@@ -696,7 +716,7 @@ describe('position tracking across lock/sleep/display changes', () => {
     manager.restoreWindowPosition();
     jest.advanceTimersByTime(POSITION_RESTORE_DELAY_MS);
 
-    expect(window.setPosition).toHaveBeenCalledWith(100, 200);
+    expect(window.setBounds).toHaveBeenCalledWith({ x: 100, y: 200, ...manager.windowSize() });
     expect(manager.positionTrackingSuspended).toBe(false);
   });
 
@@ -711,7 +731,7 @@ describe('position tracking across lock/sleep/display changes', () => {
     manager.restoreWindowPosition();
     jest.advanceTimersByTime(POSITION_RESTORE_DELAY_MS);
 
-    expect(window.setPosition).not.toHaveBeenCalled();
+    expect(window.setBounds).not.toHaveBeenCalled();
     expect(manager.positionTrackingSuspended).toBe(false);
     expect(manager.windowPosition).toEqual({ x: 2500, y: 100 });
   });
@@ -725,7 +745,7 @@ describe('position tracking across lock/sleep/display changes', () => {
     manager.suspendPositionTracking();
     manager.restoreWindowPosition();
     jest.advanceTimersByTime(POSITION_RESTORE_DELAY_MS);
-    expect(window.setPosition).not.toHaveBeenCalled();
+    expect(window.setBounds).not.toHaveBeenCalled();
 
     // The second display re-enumerates: its work area now contains the
     // saved position, so the retry moves the window back.
@@ -734,6 +754,84 @@ describe('position tracking across lock/sleep/display changes', () => {
     manager.restoreWindowPosition();
     jest.advanceTimersByTime(POSITION_RESTORE_DELAY_MS);
 
-    expect(window.setPosition).toHaveBeenCalledWith(2500, 100);
+    expect(window.setBounds).toHaveBeenCalledWith({ x: 2500, y: 100, ...manager.windowSize() });
+  });
+});
+
+// Emulate a native getBounds result rounded up from the requested DIP size.
+test.each([50, 75, 100])('movement never feeds rounded native size back at character scale %s', scale => {
+  const manager = new CharacterWindowManager();
+  manager.characterScale = scale;
+  let bounds = { x: 0, y: 0, width: 200, height: 200 };
+  const window = {
+    getBounds: () => bounds,
+    setBounds: next => { bounds = { ...next, width: next.width + 1, height: next.height + 1 }; }
+  };
+  for (let i = 0; i < 100; i++) manager.positionWindow(window, -1000 + i, 200 + i);
+  const size = manager.windowSize();
+  expect(bounds).toEqual({ x: -901, y: 299, width: size.width + 1, height: size.height + 1 });
+});
+
+
+describe('drag source lifecycle', () => {
+  const { EventEmitter } = require('node:events');
+  function makeSource() {
+    return Object.assign(new EventEmitter(), {
+      isDestroyed: () => false,
+      getPosition: () => [500, 300],
+      getBounds: () => ({ x: 500, y: 300, width: 134, height: 138 }),
+      setBounds: jest.fn()
+    });
+  }
+  beforeEach(() => {
+    jest.useFakeTimers();
+    require('electron').screen.getDisplayMatching.mockReturnValue({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } });
+  });
+  afterEach(() => jest.useRealTimers());
+
+  test.each(['hide', 'closed'])('a bubble %s ends the drag without renderer IPC', event => {
+    const manager = new CharacterWindowManager();
+    const character = makeSource();
+    const bubble = makeSource();
+    manager.entry = { window: character, state: null, projectId: 'a' };
+    manager.beginUserDrag(bubble);
+    expect(manager.dragOrigin).not.toBeNull();
+    bubble.emit(event);
+    expect(manager.dragOrigin).toBeNull();
+    jest.runOnlyPendingTimers();
+    expect(manager.windowPosition).toEqual({ x: 500, y: 300 });
+    expect(bubble.listenerCount('hide')).toBe(0);
+    expect(bubble.listenerCount('closed')).toBe(0);
+  });
+
+  test('events from another overlay cannot move or end the active drag', () => {
+    const manager = new CharacterWindowManager();
+    const character = makeSource();
+    const bubble = makeSource();
+    manager.entry = { window: character, state: null, projectId: 'a' };
+    manager.beginUserDrag(bubble);
+    manager.moveUserDrag(character);
+    manager.endUserDrag(character);
+    expect(character.setBounds).not.toHaveBeenCalled();
+    expect(manager.dragOrigin).not.toBeNull();
+    manager.endUserDrag(bubble);
+    expect(manager.dragOrigin).toBeNull();
+    manager.cleanup();
+  });
+
+  test('switching drag sources and suspending remove obsolete listeners', () => {
+    const manager = new CharacterWindowManager();
+    const character = makeSource();
+    const bubble = makeSource();
+    manager.entry = { window: character, state: null, projectId: 'a' };
+    manager.beginUserDrag(bubble);
+    manager.beginUserDrag(character);
+    bubble.emit('closed');
+    expect(manager.dragOrigin).not.toBeNull();
+    expect(bubble.listenerCount('closed')).toBe(0);
+    manager.suspendPositionTracking();
+    expect(manager.dragOrigin).toBeNull();
+    expect(character.listenerCount('hide')).toBe(0);
+    expect(character.listenerCount('closed')).toBe(0);
   });
 });

@@ -1,3 +1,5 @@
+jest.mock('../src/modules/window-pointer.cjs', () => ({ trackWindowPointer: jest.fn() }));
+
 /**
  * Tests for bubble-window-manager.cjs
  */
@@ -33,6 +35,8 @@ jest.mock('electron', () => {
     isAlwaysOnTop() { return this._alwaysOnTop; }
     setIgnoreMouseEvents() {}
     getBounds() { return this._bounds; }
+    setResizable() {}
+    setPosition(x, y) { this._bounds = { ...this._bounds, x, y }; }
     setBounds(b) { this._bounds = { ...this._bounds, ...b }; }
     isVisible() { return this._visible; }
     show() { this._visible = true; }
@@ -211,4 +215,91 @@ describe('update', () => {
     await expect(updatePromise).resolves.toBeUndefined();
     expect(bubbleWin.isDestroyed()).toBe(true);
   });
+});
+
+describe('bubble movement ordering', () => {
+  function setup() {
+    const character = new BrowserWindow({ x: 500, y: 300, width: 134, height: 138 });
+    const manager = freshManager(() => character);
+    const bubble = new BrowserWindow({ x: 600, y: 200, width: 146, height: 52 });
+    bubble.showInactive();
+    manager.bubbleWindows.set('a', bubble);
+    manager.lastSizes.set('a', { width: 146, height: 52 });
+    manager.lastFields.set('a', { status: { type: 'text', text: 'Ready' } });
+    return { manager, bubble, character };
+  }
+  const flush = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
+
+  test('an older placement resolving last cannot pull the bubble back', async () => {
+    const { manager, bubble } = setup();
+    let resolveOld;
+    manager.computePlacement = jest.fn()
+      .mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }))
+      .mockResolvedValue({ x: 900, y: 400, tailOffset: 30, tailSide: 'bottom' });
+    manager.reposition('a');
+    manager.reposition('a');
+    await flush();
+    expect(bubble.getBounds()).toMatchObject({ x: 900, y: 400 });
+    resolveOld({ x: 200, y: 100, tailOffset: 30, tailSide: 'bottom' });
+    await flush();
+    expect(bubble.getBounds()).toEqual({ x: 900, y: 400, width: 146, height: 52 });
+  });
+
+  test('hiding while tail rendering is pending invalidates the move', async () => {
+    const { manager, bubble } = setup();
+    let resolveRender;
+    manager.computePlacement = jest.fn().mockResolvedValue({ x: 900, y: 400, tailOffset: 30, tailSide: 'bottom' });
+    bubble.webContents.executeJavaScript = () => new Promise(resolve => { resolveRender = resolve; });
+    manager.reposition('a');
+    await flush();
+    manager.hide('a');
+    resolveRender({});
+    await flush();
+    expect(bubble.getBounds()).toMatchObject({ x: 600, y: 200 });
+    expect(bubble.isVisible()).toBe(false);
+  });
+
+  test('repeated movement always writes the measured content size', async () => {
+    const { manager, bubble } = setup();
+    const resize = jest.spyOn(bubble, 'setBounds');
+    for (let i = 0; i < 50; i++) {
+      manager.computePlacement = jest.fn().mockResolvedValue({ x: 600 + i, y: 200 + i, tailOffset: 30, tailSide: 'bottom' });
+      manager.reposition('a');
+      await flush();
+    }
+    expect(resize).toHaveBeenCalledTimes(50);
+    for (const [bounds] of resize.mock.calls) {
+      expect(bounds).toMatchObject({ width: 146, height: 52 });
+    }
+    expect(bubble.getBounds()).toEqual({ x: 649, y: 249, width: 146, height: 52 });
+  });
+});
+
+test('native frame size changes cannot inflate the configured sprite anchor', async () => {
+  const character = new BrowserWindow({ x: 500, y: 300, width: 67, height: 69 });
+  const manager = new BubbleWindowManager(() => character, () => 0, () => 0.5);
+  const chain = {};
+  for (const name of ['force', 'stop', 'tick', 'id', 'distance', 'strength']) chain[name] = () => chain;
+  const forceSimulation = jest.fn(() => chain);
+  manager.getD3Force = async () => ({
+    forceSimulation, forceCollide: () => chain, forceLink: () => chain,
+    forceX: () => chain, forceY: () => chain
+  });
+  const before = await manager.computePlacement(character, { width: 146, height: 52 });
+  character.setBounds({ width: 83, height: 77 });
+  const after = await manager.computePlacement(character, { width: 146, height: 52 });
+  expect(after).toEqual(before);
+  for (const [nodes] of forceSimulation.mock.calls) {
+    expect(nodes[0]).toMatchObject({ x: 533.5, y: 334.5, radius: 35 });
+  }
+});
+
+test('transparent overlay construction disables the Windows thick frame', async () => {
+  const manager = freshManager();
+  const pending = manager.ensureBubbleWindow('a');
+  const win = BrowserWindow.instances[0];
+  expect(win.opts).toMatchObject({ frame: false, thickFrame: false, transparent: true });
+  win.webContents.emit('did-finish-load');
+  await pending;
+  manager.cleanup();
 });

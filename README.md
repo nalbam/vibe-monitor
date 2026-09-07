@@ -56,7 +56,7 @@ brew tap opspresso/tap
 brew install opspresso/tap/vibemon
 ```
 
-Or via npm:
+Or via npm (Node.js 24):
 
 ```bash
 npx vibemon
@@ -69,6 +69,10 @@ That's it! The app launches in the system tray and listens on `http://127.0.0.1:
 Open **Settings > AI Tools** from the tray menu and click **Install** for Claude Code, Codex CLI, Kiro IDE, or OpenClaw — this sets up the hooks and collector config for you, no separate installer needed. See [Settings Window](docs/features.md#settings-window) for details.
 
 Tool detection and hook paths honor `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `KIRO_HOME`. Kiro is detected through either `kiro` or `kiro-cli`.
+
+## Development
+
+Use Node.js 24 and pnpm. Run `nvm use` to select the version in `.nvmrc` before installing dependencies or running project commands.
 
 ## Preview
 

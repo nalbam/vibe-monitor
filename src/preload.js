@@ -1,5 +1,31 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Main-process snapshots can arrive before images finish loading. Keep one
+// latest value per channel and replay it to late renderer subscribers.
+function bufferedSubscription(channel, errorMessage) {
+  let latest;
+  const handlers = new Set();
+  ipcRenderer.on(channel, (_event, value) => {
+    latest = value;
+    for (const handler of Array.from(handlers)) handler(value);
+  });
+  return (callback) => {
+    const handler = (value) => {
+      try {
+        callback(value);
+      } catch (error) {
+        console.error(errorMessage, error);
+      }
+    };
+    handlers.add(handler);
+    if (latest !== undefined) handler(latest);
+    return () => handlers.delete(handler);
+  };
+}
+
+const onStateUpdate = bufferedSubscription('state-update', 'State update callback error:');
+const onDisplayOptions = bufferedSubscription('display-options', 'Display options callback error:');
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // Character/state registries (single sources: src/shared/data/
   // characters.json and states.json), fetched from the main process — the
@@ -8,32 +34,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStateRegistry: () => ipcRenderer.invoke('get-state-registry'),
   getRenderMode: () => ipcRenderer.invoke('get-render-mode'),
   getDisplayOptions: () => ipcRenderer.invoke('get-display-options'),
-  onDisplayOptions: (callback) => {
-    const handler = (_event, options) => {
-      try {
-        callback(options);
-      } catch (error) {
-        console.error('Display options callback error:', error);
-      }
-    };
-    ipcRenderer.on('display-options', handler);
-    return () => ipcRenderer.removeListener('display-options', handler);
-  },
+  onDisplayOptions,
   showContextMenu: () => ipcRenderer.send('show-context-menu'),
   focusTerminal: () => ipcRenderer.invoke('focus-terminal'),
-  onStateUpdate: (callback) => {
-    const handler = (_event, data) => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error('State update callback error:', error);
-      }
-    };
-    ipcRenderer.on('state-update', handler);
-    // Return cleanup function to prevent memory leaks
-    return () => ipcRenderer.removeListener('state-update', handler);
-  },
+  onStateUpdate,
   beginWindowDrag: () => ipcRenderer.send('window-drag-start'),
+  onWindowPointer: (callback) => {
+    const handler = (_event, point) => callback(point);
+    ipcRenderer.on('window-pointer', handler);
+    return () => ipcRenderer.removeListener('window-pointer', handler);
+  },
+  setIgnoreMouseEvents: (ignore) => ipcRenderer.send('window-ignore-mouse', ignore),
+  endWindowDrag: () => ipcRenderer.send('window-drag-end'),
   moveWindowDrag: () => ipcRenderer.send('window-drag-move'),
   getVersion: () => ipcRenderer.invoke('get-version'),
   getPlatform: () => process.platform

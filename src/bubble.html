@@ -18,6 +18,7 @@
      window (sized to exactly fit its content) would clip it off entirely. */
   body {
     padding: 6px;
+    user-select: none;
   }
 
   /* Matches the desktop character window's WINDOW_WIDTH (constants.json)
@@ -62,6 +63,11 @@
 
   <script type="module">
     import { renderBubble } from './bubble/vibemon-bubble.js';
+    import { installWindowInteraction, hitTestBubble } from './shared/window-interaction.js';
+    const cleanupInteraction = installWindowInteraction({
+      hitTest: (x, y) => hitTestBubble(document.getElementById('bubble'), x, y)
+    });
+    window.addEventListener('unload', cleanupInteraction);
 
     // Called from the main process via webContents.executeJavaScript(). See
     // bubble/vibemon-bubble.js's renderBubble() for the `fields` shape.
