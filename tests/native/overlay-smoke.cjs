@@ -91,6 +91,21 @@ async function nativeClickTest(mouse, receiver, win, inside, outside) {
   await until(async () => await receiver.webContents.executeJavaScript('window.clicks') === count + 1, 'transparent click reaches receiver');
 }
 
+async function nativeDragTest(mouse, win, point) {
+  const bounds = win.getBounds();
+  const character = characterManager.getActiveWindow();
+  const origin = character.getBounds();
+  const cursor = { x: bounds.x + point.x, y: bounds.y + point.y };
+  await mouse.send('move', cursor);
+  await until(() => ignored.get(win.webContents.id) === false, 'drag hit');
+  await mouse.send('down');
+  await until(() => characterManager.dragOrigin !== null, 'drag begins');
+  await mouse.send('move', { x: cursor.x + 40, y: cursor.y + 20 });
+  await until(() => character.getBounds().x === origin.x + 40, 'native drag follows cursor');
+  await mouse.send('up');
+  await until(() => characterManager.dragOrigin === null, 'drag ends');
+}
+
 async function run() {
   await app.whenReady();
   // Keep the remote-first image/CORS path deterministic without depending on CDN availability.
@@ -134,10 +149,10 @@ async function run() {
         await delay(100);
         const start = { character: win.getBounds(), bubble: bubble.getBounds() };
         for (let i = 1; i <= 30; i++) {
-          win.setPosition(origin.x + i, origin.y + i);
+          characterManager.positionWindow(win, origin.x + i, origin.y + i);
           await delay(10);
         }
-        win.setPosition(origin.x, origin.y);
+        characterManager.positionWindow(win, origin.x, origin.y);
         await until(() => {
           const b = bubble.getBounds();
           return b.x === start.bubble.x && b.y === start.bubble.y;
@@ -147,15 +162,9 @@ async function run() {
         if (mouse) {
           await nativeClickTest(mouse, receiver, win, center, { x: 1, y: 1 });
           await nativeClickTest(mouse, receiver, bubble, { x: 30, y: 20 }, { x: 1, y: 1 });
-          // Native held-button moves exercise the actual renderer -> IPC -> DIP drag path.
-          await mouse.send('move', { x: origin.x + center.x, y: origin.y + center.y });
-          await until(() => ignored.get(win.webContents.id) === false, 'drag hit');
-          await mouse.send('down');
-          await until(() => characterManager.dragOrigin !== null, 'drag begins');
-          await mouse.send('move', { x: origin.x + center.x + 40, y: origin.y + center.y + 20 });
-          await until(() => win.getBounds().x === origin.x + 40, 'native drag follows cursor');
-          await mouse.send('up');
-          await until(() => characterManager.dragOrigin === null, 'drag ends');
+          await nativeDragTest(mouse, win, center);
+          await delay(100);
+          await nativeDragTest(mouse, bubble, { x: 30, y: 20 });
         }
         const label = `${mode}-${scale}`;
         fs.writeFileSync(path.join(output, `${label}.png`), (await win.webContents.capturePage()).toPNG());

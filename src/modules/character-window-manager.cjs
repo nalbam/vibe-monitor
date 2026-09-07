@@ -345,6 +345,7 @@ class CharacterWindowManager {
     window.setResizable(true);
     window.setBounds({ x: position.x, y: position.y, width: size.width, height: size.height });
     window.setResizable(false);
+    this.positionWindow(window, position.x, position.y);
 
     // A resize on its own fires no 'move' event, so without this the speech
     // bubble keeps pointing at the old bounds.
@@ -546,7 +547,7 @@ class CharacterWindowManager {
       }
 
       if (newX !== bounds.x || newY !== bounds.y) {
-        entry.window.setPosition(newX, newY);
+        this.positionWindow(entry.window, newX, newY);
       }
 
       this.saveWindowPosition({ x: newX, y: newY });
@@ -572,6 +573,12 @@ class CharacterWindowManager {
     this.dragOrigin = { winX: x, winY: y, cursorX: cursor.x, cursorY: cursor.y };
   }
 
+  // Electron setPosition reads the current rounded native size and writes it
+  // back, growing windows on fractional Windows DPI. Always use design sizes.
+  positionWindow(window, x, y) {
+    window.setBounds({ x, y, ...this.windowSize() });
+  }
+
   endUserDrag() {
     this.dragOrigin = null;
     this.handleWindowMove();
@@ -586,7 +593,8 @@ class CharacterWindowManager {
   moveUserDrag() {
     if (!this.dragOrigin || !this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
     const cursor = screen.getCursorScreenPoint();
-    this.entry.window.setPosition(
+    this.positionWindow(
+      this.entry.window,
       this.dragOrigin.winX + (cursor.x - this.dragOrigin.cursorX),
       this.dragOrigin.winY + (cursor.y - this.dragOrigin.cursorY)
     );
@@ -635,7 +643,7 @@ class CharacterWindowManager {
 
       const [x, y] = this.entry.window.getPosition();
       if (x !== target.x || y !== target.y) {
-        this.entry.window.setPosition(target.x, target.y);
+        this.positionWindow(this.entry.window, target.x, target.y);
       }
     }, POSITION_RESTORE_DELAY_MS);
   }
@@ -696,6 +704,7 @@ class CharacterWindowManager {
     }
 
     const window = new BrowserWindow(windowOptions);
+    this.positionWindow(window, position.x, position.y);
     trackWindowPointer(window);
 
     if (typeof window.webContents.setWindowOpenHandler === 'function') {

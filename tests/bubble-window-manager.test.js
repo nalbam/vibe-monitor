@@ -259,7 +259,7 @@ describe('bubble movement ordering', () => {
     expect(bubble.isVisible()).toBe(false);
   });
 
-  test('repeated movement changes position without resizing the bubble', async () => {
+  test('repeated movement always writes the measured content size', async () => {
     const { manager, bubble } = setup();
     const resize = jest.spyOn(bubble, 'setBounds');
     for (let i = 0; i < 50; i++) {
@@ -267,7 +267,10 @@ describe('bubble movement ordering', () => {
       manager.reposition('a');
       await flush();
     }
-    expect(resize).not.toHaveBeenCalled();
+    expect(resize).toHaveBeenCalledTimes(50);
+    for (const [bounds] of resize.mock.calls) {
+      expect(bounds).toMatchObject({ width: 146, height: 52 });
+    }
     expect(bubble.getBounds()).toEqual({ x: 649, y: 249, width: 146, height: 52 });
   });
 });

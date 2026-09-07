@@ -327,6 +327,7 @@ class BubbleWindowManager {
     win.setResizable(true);
     win.setBounds({ x: placement.x, y: placement.y, width: size.width, height: size.height });
     win.setResizable(false);
+    win.setBounds({ x: placement.x, y: placement.y, width: size.width, height: size.height });
     this.syncAlwaysOnTop(projectId);
     if (!win.isVisible()) win.showInactive();
     this.reposition(projectId);
@@ -365,7 +366,8 @@ class BubbleWindowManager {
 
       if (!isCurrent()) return;
       // Follow directly: restarting easing on every move leaves the bubble behind.
-      win.setPosition(placement.x, placement.y);
+      // setPosition round-trips rounded native sizes and grows at fractional DPI.
+      win.setBounds({ x: placement.x, y: placement.y, width: size.width, height: size.height });
     }).catch((err) => console.error('Bubble reposition failed:', err));
   }
 
