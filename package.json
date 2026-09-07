@@ -1,6 +1,6 @@
 {
   "name": "vibemon",
-  "version": "2.7.4",
+  "version": "2.7.5",
   "description": "AI assistant status monitor",
   "engines": {
     "node": "24.x"
@@ -127,5 +127,9 @@
         "repo": "vibemon-app"
       }
     ]
+  },
+  "overrides": {
+    "js-yaml@^3.0.0": "3.15.1",
+    "js-yaml@^4.0.0": "4.3.1"
   }
 }
