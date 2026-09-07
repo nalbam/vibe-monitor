@@ -126,3 +126,36 @@ test('hiding a held renderer releases capture and restores its interaction state
   expect(api.setIgnoreMouseEvents).toHaveBeenLastCalledWith(true);
   cleanup();
 });
+
+test.each(['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'])('unrelated %s cannot move or end a held pointer', type => {
+  const { installWindowInteraction, api, events } = loadInteraction();
+  const cleanup = installWindowInteraction({ hitTest: () => true });
+  const primary = { pointerId: 1, isPrimary: true, button: 0, buttons: 1, clientX: 20, clientY: 20, screenX: 100, screenY: 100 };
+  events.get('pointerdown')(primary);
+  events.get(type)({ ...primary, pointerId: 2, isPrimary: false, buttons: 0, screenX: 300 });
+  expect(api.moveWindowDrag).not.toHaveBeenCalled();
+  expect(api.endWindowDrag).not.toHaveBeenCalled();
+  events.get('pointerup')(primary);
+  expect(api.endWindowDrag).toHaveBeenCalledTimes(1);
+  cleanup();
+});
+
+test('a second pointer cannot replace the active drag anchor', () => {
+  const { installWindowInteraction, api, events, document } = loadInteraction();
+  const cleanup = installWindowInteraction({ hitTest: () => true });
+  const primary = { pointerId: 1, isPrimary: true, button: 0, buttons: 1, clientX: 20, clientY: 20, screenX: 100, screenY: 100 };
+  events.get('pointerdown')(primary);
+  events.get('pointerdown')({ ...primary, pointerId: 2, isPrimary: true });
+  expect(api.beginWindowDrag).toHaveBeenCalledTimes(1);
+  events.get('pointerup')(primary);
+  expect(document.documentElement.releasePointerCapture).toHaveBeenCalledWith(1);
+  cleanup();
+});
+
+test('a non-primary contact does not start a drag', () => {
+  const { installWindowInteraction, api, events } = loadInteraction();
+  const cleanup = installWindowInteraction({ hitTest: () => true });
+  events.get('pointerdown')({ pointerId: 2, isPrimary: false, button: 0, clientX: 20, clientY: 20 });
+  expect(api.beginWindowDrag).not.toHaveBeenCalled();
+  cleanup();
+});

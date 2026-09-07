@@ -80,7 +80,7 @@ export function installWindowInteraction({ hitTest, onInteraction = () => {} }) 
     refresh();
   });
   listen(document, 'pointerdown', (event) => {
-    if (event.button !== 0 || !hitTest(event.clientX, event.clientY)) return;
+    if (held !== null || event.isPrimary === false || event.button !== 0 || !hitTest(event.clientX, event.clientY)) return;
     remember(event);
     held = event.pointerId;
     origin = { x: event.screenX, y: event.screenY };
@@ -91,6 +91,7 @@ export function installWindowInteraction({ hitTest, onInteraction = () => {} }) 
     api.beginWindowDrag();
   });
   listen(document, 'pointermove', (event) => {
+    if (event.isPrimary === false || (held !== null && event.pointerId !== held)) return;
     remember(event);
     if (held === null) return;
     if ((event.buttons & 1) === 0) { end(); return; }
@@ -98,12 +99,13 @@ export function installWindowInteraction({ hitTest, onInteraction = () => {} }) 
     api.moveWindowDrag();
   });
   listen(document, 'pointerup', (event) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || event.pointerId !== held) return;
     remember(event);
     end();
   });
-  listen(document, 'pointercancel', end);
-  listen(document, 'lostpointercapture', end);
+  const endPointer = (event) => { if (event.pointerId === held) end(); };
+  listen(document, 'pointercancel', endPointer);
+  listen(document, 'lostpointercapture', endPointer);
   listen(window, 'blur', end);
   listen(document, 'visibilitychange', () => { if (document.hidden) end(); });
   listen(document, 'mouseleave', () => { pointer = null; refresh(); });
