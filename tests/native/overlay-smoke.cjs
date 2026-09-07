@@ -151,7 +151,11 @@ async function run() {
           await win.webContents.executeJavaScript(`document.dispatchEvent(new MouseEvent('mousemove', { clientX: ${center.x}, clientY: ${center.y} }))`);
           return ignored.get(win.webContents.id) === false;
         }, `${mode}/${scale} renderer initialized`);
-        const replayedState = await win.webContents.executeJavaScript('(() => { let state; const stop = window.electronAPI.onStateUpdate(value => { state = value; }); stop(); return state; })()');
+        let replayedState;
+        await until(async () => {
+          replayedState = await win.webContents.executeJavaScript('(() => { let state; const stop = window.electronAPI.onStateUpdate(value => { state = value; }); stop(); return state; })()');
+          return replayedState !== undefined;
+        }, 'initial state IPC arrives');
         assert.deepEqual(replayedState, initialState, 'startup state survives asynchronous image loading');
         await win.webContents.executeJavaScript("window.mouseEvents = []; for (const type of ['mousemove', 'pointermove', 'mouseleave']) document.addEventListener(type, e => { window.mouseEvents.push({ type, x: e.clientX, y: e.clientY }); if (window.mouseEvents.length > 20) window.mouseEvents.shift(); }); document.dispatchEvent(new MouseEvent('mousemove', { clientX: 0, clientY: 0 }))");
         await until(() => ignored.get(win.webContents.id) === true, 'transparent corner');
