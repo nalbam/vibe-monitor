@@ -105,6 +105,7 @@ export function installWindowInteraction({ hitTest, onInteraction = () => {} }) 
   listen(document, 'pointercancel', end);
   listen(document, 'lostpointercapture', end);
   listen(window, 'blur', end);
+  listen(document, 'visibilitychange', () => { if (document.hidden) end(); });
   listen(document, 'mouseleave', () => { pointer = null; refresh(); });
   listen(document, 'contextmenu', (event) => {
     event.preventDefault();

@@ -43,9 +43,9 @@ ipcMain.on('window-ignore-mouse', (event, ignore) => {
   ignored.set(event.sender.id, ignore);
   BrowserWindow.fromWebContents(event.sender).setIgnoreMouseEvents(ignore, { forward: true });
 });
-ipcMain.on('window-drag-start', () => characterManager.beginUserDrag());
-ipcMain.on('window-drag-move', () => characterManager.moveUserDrag());
-ipcMain.on('window-drag-end', () => characterManager.endUserDrag());
+ipcMain.on('window-drag-start', event => characterManager.beginUserDrag(BrowserWindow.fromWebContents(event.sender)));
+ipcMain.on('window-drag-move', event => characterManager.moveUserDrag(BrowserWindow.fromWebContents(event.sender)));
+ipcMain.on('window-drag-end', event => characterManager.endUserDrag(BrowserWindow.fromWebContents(event.sender)));
 app.on('web-contents-created', (_event, contents) => {
   contents.on('console-message', event => {
     if (event.level === 'error') errors.push(event.message);
@@ -171,6 +171,14 @@ async function run() {
           await nativeClickTest(mouse, receiver, bubble, { x: 30, y: 20 }, { x: 1, y: 1 });
           await nativeDragTest(mouse, win, center);
           await nativeDragTest(mouse, bubble, { x: 30, y: 20 });
+          const bubbleBounds = bubble.getBounds();
+          await mouse.send('move', { x: bubbleBounds.x + 30, y: bubbleBounds.y + 20 });
+          await until(() => ignored.get(bubble.webContents.id) === false, 'bubble drag hit before removal');
+          await mouse.send('down');
+          await until(() => characterManager.dragOrigin !== null, 'bubble drag before removal');
+          bubbleManager.destroy('test');
+          await until(() => characterManager.dragOrigin === null, 'removed bubble ends its drag');
+          await mouse.send('up');
         }
         const label = `${mode}-${scale}`;
         fs.writeFileSync(path.join(output, `${label}.png`), (await win.webContents.capturePage()).toPNG());

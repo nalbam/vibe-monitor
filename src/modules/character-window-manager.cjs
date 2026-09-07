@@ -100,6 +100,8 @@ class CharacterWindowManager {
     // Anchor of an in-progress manual drag ({winX, winY, cursorX, cursorY})
     // — see beginUserDrag()/moveUserDrag().
     this.dragOrigin = null;
+    this.dragWindow = null;
+    this.dragUnavailableListener = null;
 
     this.onWindowClosed = null;  // callback: (projectId) => void
     this.onStateUpdated = null;  // callback: (projectId) => void, fires after state/info changes
@@ -562,8 +564,9 @@ class CharacterWindowManager {
    * goes down), so the renderer drives dragging through the
    * window-drag-start/window-drag-move IPC.
    */
-  beginUserDrag() {
-    if (!this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
+  beginUserDrag(sourceWindow = this.entry?.window) {
+    if (!this.isWindowValid(this.entry) || !sourceWindow || sourceWindow.isDestroyed() || this.positionTrackingSuspended) return;
+    this.clearUserDrag();
     if (this.snapTimer) {
       clearTimeout(this.snapTimer);
       this.snapTimer = null;
@@ -571,6 +574,11 @@ class CharacterWindowManager {
     const [x, y] = this.entry.window.getPosition();
     const cursor = screen.getCursorScreenPoint();
     this.dragOrigin = { winX: x, winY: y, cursorX: cursor.x, cursorY: cursor.y };
+    this.dragWindow = sourceWindow;
+    this.dragUnavailableListener = () => this.endUserDrag(sourceWindow);
+    // A removed bubble can no longer send an authorized pointerup IPC.
+    sourceWindow.once('hide', this.dragUnavailableListener);
+    sourceWindow.once('closed', this.dragUnavailableListener);
   }
 
   // Electron setPosition reads the current rounded native size and writes it
@@ -579,8 +587,19 @@ class CharacterWindowManager {
     window.setBounds({ x, y, ...this.windowSize() });
   }
 
-  endUserDrag() {
+  clearUserDrag() {
+    if (this.dragWindow) {
+      this.dragWindow.removeListener('hide', this.dragUnavailableListener);
+      this.dragWindow.removeListener('closed', this.dragUnavailableListener);
+    }
     this.dragOrigin = null;
+    this.dragWindow = null;
+    this.dragUnavailableListener = null;
+  }
+
+  endUserDrag(sourceWindow = this.dragWindow) {
+    if (!this.dragOrigin || sourceWindow !== this.dragWindow) return;
+    this.clearUserDrag();
     this.handleWindowMove();
   }
 
@@ -590,7 +609,8 @@ class CharacterWindowManager {
    * math in one coordinate space. The resulting 'move' events feed the
    * usual snap/persist debounce in handleWindowMove().
    */
-  moveUserDrag() {
+  moveUserDrag(sourceWindow = this.dragWindow) {
+    if (sourceWindow !== this.dragWindow) return;
     if (!this.dragOrigin || !this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
     const cursor = screen.getCursorScreenPoint();
     this.positionWindow(
@@ -607,7 +627,7 @@ class CharacterWindowManager {
    * persisting such a move would overwrite the user's chosen position.
    */
   suspendPositionTracking() {
-    this.dragOrigin = null;
+    this.clearUserDrag();
     this.positionTrackingSuspended = true;
     if (this.snapTimer) {
       clearTimeout(this.snapTimer);
@@ -746,7 +766,7 @@ class CharacterWindowManager {
         clearTimeout(this.snapTimer);
         this.snapTimer = null;
       }
-      this.dragOrigin = null;
+      this.clearUserDrag();
       this.entry = null;
 
       if (this.onWindowClosed) {
@@ -925,6 +945,7 @@ class CharacterWindowManager {
    * Cleanup resources on app quit
    */
   cleanup() {
+    this.clearUserDrag();
     if (this.snapTimer) {
       clearTimeout(this.snapTimer);
       this.snapTimer = null;

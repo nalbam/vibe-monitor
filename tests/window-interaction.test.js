@@ -108,3 +108,21 @@ test('native cursor updates restore input without any forwarded mousemove', () =
   cleanup();
   expect(unsubscribe).toHaveBeenCalledTimes(1);
 });
+
+
+test('hiding a held renderer releases capture and restores its interaction state', () => {
+  const { installWindowInteraction, events, api, document } = loadInteraction();
+  const onInteraction = jest.fn();
+  const cleanup = installWindowInteraction({ hitTest: x => x > 10, onInteraction });
+  events.get('pointerdown')({ clientX: 20, clientY: 20, screenX: 100, screenY: 100, button: 0, pointerId: 1 });
+  document.hidden = true;
+  events.get('visibilitychange')();
+  expect(api.endWindowDrag).toHaveBeenCalledTimes(1);
+  expect(onInteraction).toHaveBeenLastCalledWith(false);
+  expect(document.documentElement.releasePointerCapture).toHaveBeenCalledWith(1);
+  document.hidden = false;
+  events.get('visibilitychange')();
+  events.get('mousemove')({ clientX: 0, clientY: 0 });
+  expect(api.setIgnoreMouseEvents).toHaveBeenLastCalledWith(true);
+  cleanup();
+});

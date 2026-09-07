@@ -14,7 +14,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const { app, ipcMain, dialog, powerMonitor, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, powerMonitor, screen } = require('electron');
 const { exec } = require('child_process');
 
 // Modules
@@ -295,13 +295,13 @@ ipcMain.on('window-ignore-mouse', (event, ignore) => {
 });
 
 ipcMain.on('window-drag-start', (event) => {
-  if (getInteractionProject(event.sender)) windowManager.beginUserDrag();
+  if (getInteractionProject(event.sender)) windowManager.beginUserDrag(BrowserWindow.fromWebContents(event.sender));
 });
 ipcMain.on('window-drag-move', (event) => {
-  if (getInteractionProject(event.sender)) windowManager.moveUserDrag();
+  if (getInteractionProject(event.sender)) windowManager.moveUserDrag(BrowserWindow.fromWebContents(event.sender));
 });
 ipcMain.on('window-drag-end', (event) => {
-  if (getInteractionProject(event.sender)) windowManager.endUserDrag();
+  if (getInteractionProject(event.sender)) windowManager.endUserDrag(BrowserWindow.fromWebContents(event.sender));
 });
 
 // Focus terminal (iTerm2 or Ghostty on macOS)

@@ -610,12 +610,13 @@ describe('position tracking across lock/sleep/display changes', () => {
   const { screen } = require('electron');
 
   function makeWindow(position = [0, 0]) {
-    return {
+    const { EventEmitter } = require('node:events');
+    return Object.assign(new EventEmitter(), {
       getBounds: jest.fn(() => ({ x: position[0], y: position[1], width: 172, height: 160 })),
       getPosition: jest.fn(() => position),
       setBounds: jest.fn(),
       isDestroyed: () => false
-    };
+    });
   }
 
   beforeEach(() => {
@@ -769,4 +770,68 @@ test.each([50, 75, 100])('movement never feeds rounded native size back at chara
   for (let i = 0; i < 100; i++) manager.positionWindow(window, -1000 + i, 200 + i);
   const size = manager.windowSize();
   expect(bounds).toEqual({ x: -901, y: 299, width: size.width + 1, height: size.height + 1 });
+});
+
+
+describe('drag source lifecycle', () => {
+  const { EventEmitter } = require('node:events');
+  function makeSource() {
+    return Object.assign(new EventEmitter(), {
+      isDestroyed: () => false,
+      getPosition: () => [500, 300],
+      getBounds: () => ({ x: 500, y: 300, width: 134, height: 138 }),
+      setBounds: jest.fn()
+    });
+  }
+  beforeEach(() => {
+    jest.useFakeTimers();
+    require('electron').screen.getDisplayMatching.mockReturnValue({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } });
+  });
+  afterEach(() => jest.useRealTimers());
+
+  test.each(['hide', 'closed'])('a bubble %s ends the drag without renderer IPC', event => {
+    const manager = new CharacterWindowManager();
+    const character = makeSource();
+    const bubble = makeSource();
+    manager.entry = { window: character, state: null, projectId: 'a' };
+    manager.beginUserDrag(bubble);
+    expect(manager.dragOrigin).not.toBeNull();
+    bubble.emit(event);
+    expect(manager.dragOrigin).toBeNull();
+    jest.runOnlyPendingTimers();
+    expect(manager.windowPosition).toEqual({ x: 500, y: 300 });
+    expect(bubble.listenerCount('hide')).toBe(0);
+    expect(bubble.listenerCount('closed')).toBe(0);
+  });
+
+  test('events from another overlay cannot move or end the active drag', () => {
+    const manager = new CharacterWindowManager();
+    const character = makeSource();
+    const bubble = makeSource();
+    manager.entry = { window: character, state: null, projectId: 'a' };
+    manager.beginUserDrag(bubble);
+    manager.moveUserDrag(character);
+    manager.endUserDrag(character);
+    expect(character.setBounds).not.toHaveBeenCalled();
+    expect(manager.dragOrigin).not.toBeNull();
+    manager.endUserDrag(bubble);
+    expect(manager.dragOrigin).toBeNull();
+    manager.cleanup();
+  });
+
+  test('switching drag sources and suspending remove obsolete listeners', () => {
+    const manager = new CharacterWindowManager();
+    const character = makeSource();
+    const bubble = makeSource();
+    manager.entry = { window: character, state: null, projectId: 'a' };
+    manager.beginUserDrag(bubble);
+    manager.beginUserDrag(character);
+    bubble.emit('closed');
+    expect(manager.dragOrigin).not.toBeNull();
+    expect(bubble.listenerCount('closed')).toBe(0);
+    manager.suspendPositionTracking();
+    expect(manager.dragOrigin).toBeNull();
+    expect(character.listenerCount('hide')).toBe(0);
+    expect(character.listenerCount('closed')).toBe(0);
+  });
 });
