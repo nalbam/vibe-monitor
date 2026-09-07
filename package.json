@@ -17,6 +17,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "jest",
+    "test:overlays": "electron tests/native/overlay-smoke.cjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "check:registry": "node scripts/check-registry.mjs"
