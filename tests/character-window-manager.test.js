@@ -639,6 +639,24 @@ describe('position tracking across lock/sleep/display changes', () => {
     expect(window.setPosition).toHaveBeenCalledWith(550, 330);
   });
 
+  test('a new drag cancels pending snapping and snaps only after release', () => {
+    const manager = new CharacterWindowManager();
+    const window = makeWindow([2, 2]);
+    manager.entry = { window, state: null, projectId: 'a' };
+    manager.handleWindowMove();
+    manager.beginUserDrag();
+    jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + 1);
+    manager.handleWindowMove();
+    jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + 1);
+    expect(window.setPosition).not.toHaveBeenCalled();
+    manager.endUserDrag();
+    jest.advanceTimersByTime(SNAP_DEBOUNCE_MS + 1);
+    expect(window.setPosition).toHaveBeenCalledWith(0, 0);
+    window.setPosition.mockClear();
+    manager.moveUserDrag();
+    expect(window.setPosition).not.toHaveBeenCalled();
+  });
+
   test('drag moves without an anchored origin are ignored', () => {
     const manager = new CharacterWindowManager();
     const window = makeWindow([500, 300]);

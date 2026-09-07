@@ -1,6 +1,6 @@
 /**
  * Speech bubble window management
- * One small transparent, click-through BrowserWindow per project, positioned
+ * One small transparent BrowserWindow per project, positioned
  * in screen coordinates relative to the character window using a d3-force
  * simulation (forceLink + forceCollide) so it never overlaps the character
  * and stays on-screen.
@@ -139,6 +139,7 @@ class BubbleWindowManager {
    * @param {() => number} [getEdgeMargin] - the configured gap from the
    *   screen's edges, shared with the character window: it widens the
    *   pinned-edge check and is the bubble's own minimum distance from an edge
+   * @param {() => number} [getCharacterScale] - the renderer's configured scale
    */
   constructor(getCharacterWindow, getEdgeMargin = () => 0, getCharacterScale = () => 1) {
     this.getCharacterWindow = getCharacterWindow;
@@ -321,24 +322,8 @@ class BubbleWindowManager {
       return;
     }
 
-    // Second pass: point the tail at the character now that we know the
-    // bubble's final position relative to it.
-    await this.execInBubble(
-      win,
-      `window.__setBubbleContent(${JSON.stringify(fields)}, ${placement.tailOffset}, ${JSON.stringify(placement.tailSide)}, ${JSON.stringify(bgColor)})`
-    );
-    if (!isCurrent()) return;
-    if (!this.isWindowValid(win) || !this.isWindowValid(this.getCharacterWindow(projectId))) {
-      this.destroy(projectId);
-      return;
-    }
-
-    // Tail rendering crosses IPC; the character may have moved meanwhile.
-    const currentPlacement = await this.computePlacement(this.getCharacterWindow(projectId), size);
-    if (!isCurrent() || !currentPlacement || !this.isWindowValid(win) ||
-        !this.isWindowValid(this.getCharacterWindow(projectId))) return;
     win.setResizable(true);
-    win.setBounds({ x: currentPlacement.x, y: currentPlacement.y, width: size.width, height: size.height });
+    win.setBounds({ x: placement.x, y: placement.y, width: size.width, height: size.height });
     win.setResizable(false);
     this.syncAlwaysOnTop(projectId);
     if (!win.isVisible()) win.showInactive();

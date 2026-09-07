@@ -561,10 +561,19 @@ class CharacterWindowManager {
    * window-drag-start/window-drag-move IPC.
    */
   beginUserDrag() {
-    if (!this.isWindowValid(this.entry)) return;
+    if (!this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
+    if (this.snapTimer) {
+      clearTimeout(this.snapTimer);
+      this.snapTimer = null;
+    }
     const [x, y] = this.entry.window.getPosition();
     const cursor = screen.getCursorScreenPoint();
     this.dragOrigin = { winX: x, winY: y, cursorX: cursor.x, cursorY: cursor.y };
+  }
+
+  endUserDrag() {
+    this.dragOrigin = null;
+    this.handleWindowMove();
   }
 
   /**
@@ -573,11 +582,6 @@ class CharacterWindowManager {
    * math in one coordinate space. The resulting 'move' events feed the
    * usual snap/persist debounce in handleWindowMove().
    */
-  endUserDrag() {
-    this.dragOrigin = null;
-    this.handleWindowMove();
-  }
-
   moveUserDrag() {
     if (!this.dragOrigin || !this.isWindowValid(this.entry) || this.positionTrackingSuspended) return;
     const cursor = screen.getCursorScreenPoint();
@@ -594,6 +598,7 @@ class CharacterWindowManager {
    * persisting such a move would overwrite the user's chosen position.
    */
   suspendPositionTracking() {
+    this.dragOrigin = null;
     this.positionTrackingSuspended = true;
     if (this.snapTimer) {
       clearTimeout(this.snapTimer);
@@ -730,6 +735,7 @@ class CharacterWindowManager {
         clearTimeout(this.snapTimer);
         this.snapTimer = null;
       }
+      this.dragOrigin = null;
       this.entry = null;
 
       if (this.onWindowClosed) {

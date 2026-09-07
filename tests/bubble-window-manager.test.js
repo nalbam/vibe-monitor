@@ -269,3 +269,32 @@ describe('bubble movement ordering', () => {
     expect(bubble.getBounds()).toEqual({ x: 649, y: 249, width: 146, height: 52 });
   });
 });
+
+test('native frame size changes cannot inflate the configured sprite anchor', async () => {
+  const character = new BrowserWindow({ x: 500, y: 300, width: 67, height: 69 });
+  const manager = new BubbleWindowManager(() => character, () => 0, () => 0.5);
+  const chain = {};
+  for (const name of ['force', 'stop', 'tick', 'id', 'distance', 'strength']) chain[name] = () => chain;
+  const forceSimulation = jest.fn(() => chain);
+  manager.getD3Force = async () => ({
+    forceSimulation, forceCollide: () => chain, forceLink: () => chain,
+    forceX: () => chain, forceY: () => chain
+  });
+  const before = await manager.computePlacement(character, { width: 146, height: 52 });
+  character.setBounds({ width: 83, height: 77 });
+  const after = await manager.computePlacement(character, { width: 146, height: 52 });
+  expect(after).toEqual(before);
+  for (const [nodes] of forceSimulation.mock.calls) {
+    expect(nodes[0]).toMatchObject({ x: 533.5, y: 334.5, radius: 35 });
+  }
+});
+
+test('transparent overlay construction disables the Windows thick frame', async () => {
+  const manager = freshManager();
+  const pending = manager.ensureBubbleWindow('a');
+  const win = BrowserWindow.instances[0];
+  expect(win.opts).toMatchObject({ frame: false, thickFrame: false, transparent: true });
+  win.webContents.emit('did-finish-load');
+  await pending;
+  manager.cleanup();
+});

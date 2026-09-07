@@ -71,7 +71,7 @@ async function init() {
   } else {
     // 2D pixel-art engine: character images are remote-first
     // (static.vibemon.io), with the bundled asset as offline fallback —
-    // each entry carries its candidate URLs in order.
+    // fetch into origin-clean blobs so alpha hit testing can read the canvas.
     const { createVibeMonEngine } = await import('./engine/vibemon-engine.js');
     const imageUrls = await Promise.all(Object.entries(characters).map(async ([name, config]) => {
       const localUrl = `assets/characters/${config.image}`;
