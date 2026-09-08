@@ -433,6 +433,19 @@ describe('settings:open-external', () => {
 });
 
 describe('open', () => {
+  test.each(['win32', 'darwin', 'linux'])('taskbar visibility on %s', (platform) => {
+    const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+    try {
+      Object.defineProperty(process, 'platform', { value: platform });
+      const { manager } = freshManager();
+      manager.open();
+
+      expect(BrowserWindow.instances[0].opts.skipTaskbar).toBe(platform === 'win32');
+    } finally {
+      Object.defineProperty(process, 'platform', originalPlatform);
+    }
+  });
+
   test('installs navigation guards when supported by Electron', () => {
     const { manager } = freshManager();
     BrowserWindow.secureWebContents = true;

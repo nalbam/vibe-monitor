@@ -303,6 +303,7 @@ class SettingsWindowManager {
       minWidth: 560,
       minHeight: 480,
       show: false,
+      skipTaskbar: process.platform === 'win32',
       title: 'VibeMon Settings',
       webPreferences: {
         contextIsolation: true,

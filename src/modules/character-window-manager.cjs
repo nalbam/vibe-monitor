@@ -706,7 +706,7 @@ class CharacterWindowManager {
       transparent: true,
       alwaysOnTop: this.alwaysOnTopMode !== 'disabled',
       resizable: false,
-      skipTaskbar: false,
+      skipTaskbar: process.platform === 'win32',
       hasShadow: false,
       show: false,
       icon: path.join(__dirname, '..', '..', 'assets', 'icon.png'),

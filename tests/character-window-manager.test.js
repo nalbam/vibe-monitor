@@ -34,6 +34,35 @@ const { CharacterWindowManager } = require('../src/modules/character-window-mana
 const { MAX_STATE_REGISTRY_SIZE, FOCUS_HYSTERESIS_MS } = require('../src/shared/config.cjs');
 const Store = require('electron-store');
 
+describe('taskbar visibility', () => {
+  test.each(['win32', 'darwin', 'linux'])('window creation on %s', (platform) => {
+    const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+    const { BrowserWindow } = require('electron');
+    const window = {
+      setBounds: jest.fn(),
+      webContents: {},
+      setIgnoreMouseEvents: jest.fn(),
+      loadFile: jest.fn(),
+      setVisibleOnAllWorkspaces: jest.fn(),
+      once: jest.fn(),
+      on: jest.fn()
+    };
+    BrowserWindow.mockImplementationOnce(() => window);
+
+    try {
+      Object.defineProperty(process, 'platform', { value: platform });
+      const manager = new CharacterWindowManager();
+      manager.ensureWindow('test');
+
+      expect(BrowserWindow).toHaveBeenLastCalledWith(expect.objectContaining({
+        skipTaskbar: platform === 'win32'
+      }));
+    } finally {
+      Object.defineProperty(process, 'platform', originalPlatform);
+    }
+  });
+});
+
 describe('default settings', () => {
   test('a fresh install defaults to all always-on-top, auto character lock, no saved position', () => {
     const manager = new CharacterWindowManager();
